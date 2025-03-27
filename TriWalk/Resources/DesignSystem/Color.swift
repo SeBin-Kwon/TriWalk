@@ -8,30 +8,12 @@
 import UIKit
 
 enum Color {
-    // 메인 색상
     static let primary = UIColor(named: "Primary")!
-    static let secondary = UIColor(named: "Secondary")!
-    static let accent = UIColor(named: "Accent")!
-    
-    // 기능별 색상
-    static let walking = UIColor(named: "Walking")!
-    static let distance = UIColor(named: "Distance")!
-    static let calories = UIColor(named: "Calories")!
-    
-    // 그레이스케일
     static let background = UIColor(named: "Background")!
-    static let surface = UIColor(named: "Surface")!
-    static let divider = UIColor(named: "Divider")!
     
-    // 텍스트 색상
-    static let textPrimary = UIColor(named: "TextPrimary")!
+    static let contentPrimary = UIColor(named: "ContentPrimary")!
     static let textSecondary = UIColor(named: "TextSecondary")!
-    static let textDisabled = UIColor(named: "TextDisabled")!
-    
-    // 상태 색상
-    static let success = UIColor(named: "Success")!
-    static let error = UIColor(named: "Error")!
-    static let warning = UIColor(named: "Warning")!
-    static let info = UIColor(named: "Info")!
+    static let textRed = UIColor(named: "TextRed")!
+    static let textBlue = UIColor(named: "TextBlue")!
 }
 
