@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		AED799082D954C2A0013D16E /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = AED799072D954C2A0013D16E /* .gitignore */; };
+		AED799A82D95582E0013D16E /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = AED799A72D95582E0013D16E /* SnapKit */; };
+		AED799AB2D95587D0013D16E /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = AED799AA2D95587D0013D16E /* RealmSwift */; };
+		AED799E62D9558ED0013D16E /* FSCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = AED799E52D9558ED0013D16E /* FSCalendar */; };
+		AED799E92D9559170013D16E /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = AED799E82D9559170013D16E /* Alamofire */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +45,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AED799AB2D95587D0013D16E /* RealmSwift in Frameworks */,
+				AED799E92D9559170013D16E /* Alamofire in Frameworks */,
+				AED799E62D9558ED0013D16E /* FSCalendar in Frameworks */,
+				AED799A82D95582E0013D16E /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +92,10 @@
 			);
 			name = TriWalk;
 			packageProductDependencies = (
+				AED799A72D95582E0013D16E /* SnapKit */,
+				AED799AA2D95587D0013D16E /* RealmSwift */,
+				AED799E52D9558ED0013D16E /* FSCalendar */,
+				AED799E82D9559170013D16E /* Alamofire */,
 			);
 			productName = TriWalk;
 			productReference = AED798EF2D954BF80013D16E /* TriWalk.app */;
@@ -113,6 +125,12 @@
 			);
 			mainGroup = AED798E62D954BF80013D16E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AED799A62D95582E0013D16E /* XCRemoteSwiftPackageReference "SnapKit" */,
+				AED799A92D95587D0013D16E /* XCRemoteSwiftPackageReference "realm-swift" */,
+				AED799E42D9558ED0013D16E /* XCRemoteSwiftPackageReference "FSCalendar" */,
+				AED799E72D9559170013D16E /* XCRemoteSwiftPackageReference "Alamofire" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AED798F02D954BF80013D16E /* Products */;
 			projectDirPath = "";
@@ -350,6 +368,64 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AED799A62D95582E0013D16E /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
+		AED799A92D95587D0013D16E /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 20.0.1;
+			};
+		};
+		AED799E42D9558ED0013D16E /* XCRemoteSwiftPackageReference "FSCalendar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WenchaoD/FSCalendar.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.4;
+			};
+		};
+		AED799E72D9559170013D16E /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AED799A72D95582E0013D16E /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AED799A62D95582E0013D16E /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+		AED799AA2D95587D0013D16E /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AED799A92D95587D0013D16E /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
+		AED799E52D9558ED0013D16E /* FSCalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AED799E42D9558ED0013D16E /* XCRemoteSwiftPackageReference "FSCalendar" */;
+			productName = FSCalendar;
+		};
+		AED799E82D9559170013D16E /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AED799E72D9559170013D16E /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AED798E72D954BF80013D16E /* Project object */;
 }
