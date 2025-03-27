@@ -23,7 +23,7 @@
 		AED799012D954BFB0013D16E /* Exceptions for "TriWalk" folder in "TriWalk" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = AED798EE2D954BF80013D16E /* TriWalk */;
 		};
