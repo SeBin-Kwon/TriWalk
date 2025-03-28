@@ -12,7 +12,8 @@ enum SFSymbol: String {
     case chartBar = "chart.bar.fill"
     case chevronForward = "chevron.forward"
     case plus = "plus"
-    case photoStack = "photo.stack"
+    case photo = "photo.on.rectangle"
     case arrowUp = "arrowtriangle.up.fill"
     case arrowDown = "arrowtriangle.down.fill"
+    case home = "house.fill"
 }
