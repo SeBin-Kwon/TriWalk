@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum AppSpacing {
+enum Spacing {
     static let xxxs: CGFloat = 2
     static let xxs: CGFloat = 4
     static let xs: CGFloat = 8
@@ -22,5 +22,5 @@ enum AppSpacing {
     static let cardPadding: CGFloat = 16
     static let sectionSpacing: CGFloat = 24
     
-    static let screenMargin: CGFloat = 20
+    static let screenMargin: CGFloat = 24
 }

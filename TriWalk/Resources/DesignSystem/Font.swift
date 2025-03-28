@@ -25,7 +25,7 @@ enum Font {
         return UIFont.systemFont(ofSize: size, weight: weight.weight)
     }
     
-    static let heading1 = font(size: 28, weight: .bold)
+    static let heading1 = font(size: 27, weight: .bold)
     static let heading2 = font(size: 24, weight: .bold)
     static let heading3 = font(size: 20, weight: .semibold)
     
