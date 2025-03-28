@@ -13,7 +13,7 @@ class HomeViewController: BaseViewController {
     
     let titleLabel = {
         let label = UILabel()
-        label.text = "오늘은 산책하기\n딱 좋은 날씨!"
+        label.text = "오늘은 산책 여행 하기\n딱 좋은 날씨!"
         label.applyHeading1Style()
         return label
     }()
@@ -26,18 +26,18 @@ class HomeViewController: BaseViewController {
     }
     
     override func bindViewModel() {
-        //        chartButton.tapPublisher
-        //            .withUnretained(self)
-        //            .sink { owner, _ in
-        //                print("tap")
-        //            }
-        //            .store(in: &cancellables)
+        startButton.controlPublisher(for: .touchUpInside)
+            .withUnretained(self)
+            .sink { owner, _ in
+                let vc = WalkSetupViewController()
+                owner.navigate(.push(vc))
+            }
+            .store(in: &cancellables)
     }
     
     private func setupNavigationBar() {
         let chartButton = UIBarButtonItem(image: UIImage(symbol: .chartBar), style: .plain, target: self, action: #selector(chartButtonTap))
-        let calendarButton = UIBarButtonItem(image: UIImage(symbol: .calendar), style: .plain, target: self, action: #selector(calendarButtonTap))
-        navigationItem.rightBarButtonItems = [calendarButton, chartButton]
+        navigationItem.rightBarButtonItem = chartButton
     }
     
     @objc private func chartButtonTap() {
