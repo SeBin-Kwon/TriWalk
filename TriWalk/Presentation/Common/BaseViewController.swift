@@ -13,16 +13,16 @@ class BaseViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = Color.background
+        configureHierarchy()
+        configureLayout()
         configureView()
         bindViewModel()
     }
-    
-    func configureView() {
-        view.backgroundColor = Color.background
-    }
-    
-    func bindViewModel() {
-    }
+    func configureHierarchy() {}
+    func configureLayout() {}
+    func configureView() {}
+    func bindViewModel() {}
     
     deinit {
         cancellables.removeAll()

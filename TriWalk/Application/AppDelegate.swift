@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = Color.background
+        appearance.shadowColor = .clear
         appearance.titleTextAttributes = [
             .foregroundColor: Color.contentPrimary,
             .font: Font.heading3
@@ -26,7 +27,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
-        UINavigationBar.appearance().tintColor = Color.primary
+        UINavigationBar.appearance().tintColor = Color.contentPrimary
     }
     
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
