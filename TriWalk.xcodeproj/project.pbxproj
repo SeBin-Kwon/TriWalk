@@ -12,7 +12,22 @@
 		AED799AB2D95587D0013D16E /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = AED799AA2D95587D0013D16E /* RealmSwift */; };
 		AED799E62D9558ED0013D16E /* FSCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = AED799E52D9558ED0013D16E /* FSCalendar */; };
 		AED799E92D9559170013D16E /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = AED799E82D9559170013D16E /* Alamofire */; };
+		AED79B072D97E5280013D16E /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = AED799AA2D95587D0013D16E /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AED79B082D97E5280013D16E /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				AED79B072D97E5280013D16E /* RealmSwift in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AED798EF2D954BF80013D16E /* TriWalk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TriWalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -82,6 +97,7 @@
 				AED798EB2D954BF80013D16E /* Sources */,
 				AED798EC2D954BF80013D16E /* Frameworks */,
 				AED798ED2D954BF80013D16E /* Resources */,
+				AED79B082D97E5280013D16E /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

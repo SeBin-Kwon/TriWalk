@@ -24,7 +24,7 @@ class ConfigButton: UIButton {
     private func setupWithConfiguration(title: String?) {
         var config = UIButton.Configuration.filled()
         config.title = title
-        config.baseBackgroundColor = .primary
+        config.baseBackgroundColor = .triWalkPrimary
         config.baseForegroundColor = .contentPrimary
         config.cornerStyle = .capsule
         

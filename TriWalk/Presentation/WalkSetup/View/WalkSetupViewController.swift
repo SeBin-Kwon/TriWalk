@@ -10,6 +10,7 @@ import Combine
 import SnapKit
 
 class WalkSetupViewController: BaseViewController {
+    weak var delegate: WalkSetupViewControllerDelegate?
     
     let titleLabel = {
         let label = UILabel()
