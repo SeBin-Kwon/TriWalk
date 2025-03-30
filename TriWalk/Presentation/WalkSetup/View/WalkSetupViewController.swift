@@ -11,7 +11,7 @@ import SnapKit
 import MapKit
 import CoreLocation
 
-class WalkSetupViewController: BaseViewController {
+final class WalkSetupViewController: BaseViewController {
     weak var delegate: WalkSetupViewControllerDelegate?
     
     // MARK: - Properties
@@ -160,7 +160,7 @@ class WalkSetupViewController: BaseViewController {
         output.startWalkFlow
             .withUnretained(self)
             .sink { owner, _ in
-                owner.delegate?.didTapStartWalkingButton()
+                owner.startWalking()
             }
             .store(in: &cancellables)
         
@@ -192,6 +192,19 @@ class WalkSetupViewController: BaseViewController {
                 }
             }
             .store(in: &cancellables)
+    }
+    
+    private func startWalking() {
+        // 현재 선택된 도착지 좌표 가져오기
+        var destinationCoordinate: CLLocationCoordinate2D? = nil
+        
+        // 지도에서 도착지 주석 찾기
+        if let destinationAnnotation = mapView.annotations.first(where: { $0.title == "도착지" }) {
+            destinationCoordinate = destinationAnnotation.coordinate
+        }
+        
+        // 델리게이트에 전달
+        delegate?.didTapStartWalkingButton(destinationCoordinate: destinationCoordinate)
     }
     
     override func configureHierarchy() {

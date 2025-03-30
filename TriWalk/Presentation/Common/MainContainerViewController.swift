@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreLocation
 
 class MainContainerViewController: UIPageViewController {
     
@@ -113,27 +114,6 @@ extension MainContainerViewController: UIPageViewControllerDelegate {
     }
 }
 
-// MARK: - HomeViewController Delegate
-protocol HomeViewControllerDelegate: AnyObject {
-    func didTapStartButton()
-}
-
-// MARK: - WalkSetupViewController Delegate
-protocol WalkSetupViewControllerDelegate: AnyObject {
-    func didTapStartWalkingButton()
-    func didTapBackButton()
-}
-
-// MARK: - WalkTrackingViewController Delegate
-protocol WalkTrackingViewControllerDelegate: AnyObject {
-    func didTapFinishButton()
-}
-
-// MARK: - WalkCompletedViewController Delegate
-protocol WalkCompletedViewControllerDelegate: AnyObject {
-    func didTapReturnHomeButton()
-}
-
 // MARK: - MainContainer와 각 화면 간 연결
 extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupViewControllerDelegate, WalkTrackingViewControllerDelegate, WalkCompletedViewControllerDelegate {
     // HomeViewController에서 시작 버튼 탭
@@ -142,21 +122,14 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
     }
     
     // WalkSetupViewController에서 시작 버튼 탭
-    func didTapStartWalkingButton() {
+    func didTapStartWalkingButton(destinationCoordinate: CLLocationCoordinate2D?) {
         let walkTrackingVC = WalkTrackingViewController()
         walkTrackingVC.delegate = self
-        walkTrackingVC.modalPresentationStyle = .fullScreen
         
-        // 이 화면에서는 뒤로 가기 불가능하게 모달로 표시
+        walkTrackingVC.setDestination(coordinate: destinationCoordinate)
+        
+        walkTrackingVC.modalPresentationStyle = .fullScreen
         homeVC.navigationController?.present(walkTrackingVC, animated: true)
-        // 기존 화면 닫고 새 화면 열기 (뒤로가기 방지)
-        //        if let presented = presentedViewController {
-        //            presented.dismiss(animated: false) {
-        //                self.present(walkTrackingVC, animated: true)
-        //            }
-        //        } else {
-        //            present(walkTrackingVC, animated: true)
-        //        }
     }
     
     // WalkSetupViewController에서 뒤로가기 버튼 탭
@@ -193,7 +166,6 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
     }
 }
 
-
 extension MainContainerViewController: UINavigationControllerDelegate {
     
     func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
@@ -208,4 +180,25 @@ extension MainContainerViewController: UINavigationControllerDelegate {
             enableSwiping(false)
         }
     }
+}
+
+// MARK: - HomeViewController Delegate
+protocol HomeViewControllerDelegate: AnyObject {
+    func didTapStartButton()
+}
+
+// MARK: - WalkSetupViewController Delegate
+protocol WalkSetupViewControllerDelegate: AnyObject {
+    func didTapStartWalkingButton(destinationCoordinate: CLLocationCoordinate2D?)
+    func didTapBackButton()
+}
+
+// MARK: - WalkTrackingViewController Delegate
+protocol WalkTrackingViewControllerDelegate: AnyObject {
+    func didTapFinishButton()
+}
+
+// MARK: - WalkCompletedViewController Delegate
+protocol WalkCompletedViewControllerDelegate: AnyObject {
+    func didTapReturnHomeButton()
 }
