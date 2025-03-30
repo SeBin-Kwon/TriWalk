@@ -20,11 +20,12 @@ final class WalkSetupView: BaseView {
     
     let startPointButton = {
         let button = UIButton()
-        button.setTitle("BJK", for: .normal)
+        button.setTitle("현재 위치", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = Font.heading3
         button.backgroundColor = Color.contentPrimary
         button.layer.cornerRadius = 30
+        button.isEnabled = false
         return button
     }()
     
@@ -55,7 +56,7 @@ final class WalkSetupView: BaseView {
     
     let addressLabel = {
         let label = UILabel()
-        label.text = "부천 중동 계남로 126"
+        label.text = "위치 확인 중..."
         label.applyBodySmallStyle(color: Color.textSecondary)
         return label
     }()
@@ -73,7 +74,7 @@ final class WalkSetupView: BaseView {
     // MARK: - Setup
     override func configureHierarchy() {
         addSubviews(dateLabel, startPointButton, directionArrow,
-                   endPointLabel, endPointButton, addressLabel)
+                    endPointLabel, endPointButton, addressLabel)
     }
     
     override func configureLayout() {
