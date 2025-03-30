@@ -81,19 +81,15 @@ class WalkSetupViewController: BaseViewController {
         destinationSearchVC.delegate = self
         
         if let sheet = destinationSearchVC.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
+            sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
-            // 초기 시트 높이 설정 (medium으로 고정)
             sheet.selectedDetentIdentifier = .medium
-            // 드래그로 확장되지 않도록 설정
-            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
         }
         
         present(destinationSearchVC, animated: true)
     }
     
     override func bindViewModel() {
-        // Input 정의
         let input = WalkSetupViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
             startButtonTapped: startButton.controlPublisher(for: .touchUpInside)
@@ -105,11 +101,8 @@ class WalkSetupViewController: BaseViewController {
             longPressGesture: longPressGestureSubject.eraseToAnyPublisher()
         )
         
-        // ViewModel 변환
         let output = viewModel.transform(input: input)
-        
-        // Output 바인딩
-        
+
         // 사용자 위치 업데이트
         output.userLocation
             .withUnretained(self)
@@ -124,9 +117,6 @@ class WalkSetupViewController: BaseViewController {
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 )
                 owner.mapView.setRegion(region, animated: true)
-                
-                // 출발지 버튼 설정
-                owner.setupView.startPointButton.setTitle("현재 위치", for: .normal)
             }
             .store(in: &cancellables)
         
