@@ -13,7 +13,8 @@ class MainContainerViewController: UIPageViewController {
     private var homeVC: HomeViewController!
     private var detailVC: DetailViewController!
     private var homeNavController: UINavigationController!
-    private var detailNavController: UINavigationController!
+    //    private var detailNavController: UINavigationController!
+    private var isSwipeEnabled = true
     
     // 초기화
     init() {
@@ -37,9 +38,9 @@ class MainContainerViewController: UIPageViewController {
         homeVC.delegate = self
         homeNavController = UINavigationController(rootViewController: homeVC)
         
+        homeNavController.delegate = self
         // 디테일 화면 설정
         detailVC = DetailViewController()
-        detailNavController = UINavigationController(rootViewController: detailVC)
         
         // 홈 화면으로 시작
         setViewControllers([homeNavController], direction: .forward, animated: false)
@@ -56,6 +57,9 @@ class MainContainerViewController: UIPageViewController {
         let walkSetupVC = WalkSetupViewController()
         walkSetupVC.delegate = self
         
+        isSwipeEnabled = false
+       enableSwiping(false)
+        
         homeVC.navigate(.push(walkSetupVC))
     }
     
@@ -68,6 +72,7 @@ class MainContainerViewController: UIPageViewController {
         setViewControllers([homeNavController], direction: .forward, animated: true)
         
         // 스와이프 기능 활성화 (Home에서만 스와이프 가능하도록)
+        isSwipeEnabled = true
         enableSwiping()
     }
     
@@ -86,21 +91,18 @@ extension MainContainerViewController: UIPageViewControllerDataSource {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         // 디테일 화면에서 홈 화면으로
         if viewController == detailVC {
-            return homeVC
+            return homeNavController
         }
-//        return nil
-//        if viewController.children.first is DetailViewController {
-//                return homeNavController
-//            }
-            return nil
+        return nil
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
         // 홈 화면에서만 디테일 화면으로 이동 가능
-        if viewController == homeNavController {
-            return detailVC
-        }
-        return nil
+        if viewController == homeNavController && isSwipeEnabled {
+                return detailVC
+            }
+            return nil
+        
     }
 }
 
@@ -148,18 +150,20 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
         // 이 화면에서는 뒤로 가기 불가능하게 모달로 표시
         homeVC.navigationController?.present(walkTrackingVC, animated: true)
         // 기존 화면 닫고 새 화면 열기 (뒤로가기 방지)
-//        if let presented = presentedViewController {
-//            presented.dismiss(animated: false) {
-//                self.present(walkTrackingVC, animated: true)
-//            }
-//        } else {
-//            present(walkTrackingVC, animated: true)
-//        }
+        //        if let presented = presentedViewController {
+        //            presented.dismiss(animated: false) {
+        //                self.present(walkTrackingVC, animated: true)
+        //            }
+        //        } else {
+        //            present(walkTrackingVC, animated: true)
+        //        }
     }
     
     // WalkSetupViewController에서 뒤로가기 버튼 탭
     func didTapBackButton() {
         // 모달 닫기만 하면 됨
+        isSwipeEnabled = true
+        enableSwiping(true)
         homeVC.navigationController?.popViewController(animated: true)
     }
     
@@ -171,27 +175,37 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
         
         // 기존 화면 닫고 새 화면 열기 (뒤로가기 방지)
         
-                if let presented = homeVC.navigationController?.presentedViewController {
-                    presented.dismiss(animated: false) {
-                        self.homeVC.navigationController?.present(walkCompletedVC, animated: true)
-                    }
-                } else {
-                    homeVC.navigationController?.present(walkCompletedVC, animated: true)
-                }
-//        if let presented = presentedViewController {
-//            presented.dismiss(animated: false) {
-//                self.present(walkCompletedVC, animated: true)
-//            }
-//        } else {
-//            present(walkCompletedVC, animated: true)
-//        }
+        if let presented = homeVC.navigationController?.presentedViewController {
+            presented.dismiss(animated: false) {
+                self.homeVC.navigationController?.present(walkCompletedVC, animated: true)
+            }
+        } else {
+            homeVC.navigationController?.present(walkCompletedVC, animated: true)
+        }
     }
     
     // WalkCompletedViewController에서 홈으로 버튼 탭
     func didTapReturnHomeButton() {
         // 모든 화면 닫고 홈으로
         homeVC.navigationController?.dismiss(animated: true) {
-                self.returnToHome()
-            }
+            self.returnToHome()
+        }
+    }
+}
+
+
+extension MainContainerViewController: UINavigationControllerDelegate {
+    
+    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+        // 홈 화면이 다시 표시되었는지 확인
+        if viewController == homeVC {
+            // 홈 화면으로 돌아왔으므로 스와이프 활성화
+            isSwipeEnabled = true
+            enableSwiping(true)
+        } else {
+            // 다른 화면이 표시되었으므로 스와이프 비활성화
+            isSwipeEnabled = false
+            enableSwiping(false)
+        }
     }
 }
