@@ -133,17 +133,26 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     }
     
     // 현재 위치 요청
+    // 위치 요청 메서드 수정
     private func requestCurrentLocation() {
-        if LocationManager.shared.authorizationStatus == .authorizedWhenInUse ||
-           LocationManager.shared.authorizationStatus == .authorizedAlways {
-            LocationManager.shared.requestLocation()
-        } else if LocationManager.shared.authorizationStatus == .notDetermined {
-            LocationManager.shared.requestAuthorization()
-        } else {
-            showAlertSubject.send((
-                title: "위치 서비스 권한 필요",
-                message: "현재 위치를 사용하려면 위치 서비스 권한을 허용해주세요."
-            ))
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            if LocationManager.shared.authorizationStatus == .authorizedWhenInUse ||
+               LocationManager.shared.authorizationStatus == .authorizedAlways {
+                LocationManager.shared.requestLocation()
+            } else if LocationManager.shared.authorizationStatus == .notDetermined {
+                DispatchQueue.main.async {
+                    LocationManager.shared.requestAuthorization()
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.showAlertSubject.send((
+                        title: "위치 서비스 권한 필요",
+                        message: "현재 위치를 사용하려면 위치 서비스 권한을 허용해주세요."
+                    ))
+                }
+            }
         }
     }
     

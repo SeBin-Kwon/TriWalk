@@ -159,6 +159,51 @@ final class WalkTrackingSheetView: BaseView {
         return button
     }()
     
+// MARK: - Properties
+    private var cancellables = Set<AnyCancellable>()
+    
+    // Input/Output 정의
+    private let stepsSubject = PassthroughSubject<Int, Never>()
+    private let distanceSubject = PassthroughSubject<Double, Never>()
+    private let caloriesSubject = PassthroughSubject<Double, Never>()
+    private let timeSubject = PassthroughSubject<TimeInterval, Never>()
+    private let pauseButtonTappedSubject = PassthroughSubject<Void, Never>()
+    private let finishButtonTappedSubject = PassthroughSubject<Void, Never>()
+    private let addPhotoButtonTappedSubject = PassthroughSubject<Void, Never>()
+    
+    var stepsPublisher: AnyPublisher<Int, Never> {
+        return stepsSubject.eraseToAnyPublisher()
+    }
+    
+    var distancePublisher: AnyPublisher<Double, Never> {
+        return distanceSubject.eraseToAnyPublisher()
+    }
+    
+    var caloriesPublisher: AnyPublisher<Double, Never> {
+        return caloriesSubject.eraseToAnyPublisher()
+    }
+    
+    var timePublisher: AnyPublisher<TimeInterval, Never> {
+        return timeSubject.eraseToAnyPublisher()
+    }
+    
+    var pauseButtonTappedPublisher: AnyPublisher<Void, Never> {
+        return pauseButtonTappedSubject.eraseToAnyPublisher()
+    }
+    
+    var finishButtonTappedPublisher: AnyPublisher<Void, Never> {
+        return finishButtonTappedSubject.eraseToAnyPublisher()
+    }
+    
+    var addPhotoButtonTappedPublisher: AnyPublisher<Void, Never> {
+        return addPhotoButtonTappedSubject.eraseToAnyPublisher()
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupBindings()
+    }
+    
     // MARK: - Setup
     override func configureHierarchy() {
         // 메인 컴포넌트 추가
@@ -303,28 +348,28 @@ final class WalkTrackingSheetView: BaseView {
         clipsToBounds = true
     }
     
-    //    private func setupBindings() {
-    //        pauseButton.controlPublisher(for: .touchUpInside)
-    //            .withUnretained(self)
-    //            .sink { owner, _ in
-    //                owner.pauseButtonTappedSubject.send()
-    //            }
-    //            .store(in: &cancellables)
-    //
-    //        finishButton.controlPublisher(for: .touchUpInside)
-    //            .withUnretained(self)
-    //            .sink { owner, _ in
-    //                owner.finishButtonTappedSubject.send()
-    //            }
-    //            .store(in: &cancellables)
-    //
-    //        addPhotoButton.controlPublisher(for: .touchUpInside)
-    //            .withUnretained(self)
-    //            .sink { owner, _ in
-    //                owner.addPhotoButtonTappedSubject.send()
-    //            }
-    //            .store(in: &cancellables)
-    //    }
+    private func setupBindings() {
+            pauseButton.controlPublisher(for: .touchUpInside)
+                .withUnretained(self)
+                .sink { onwer, _ in
+                    onwer.pauseButtonTappedSubject.send()
+                }
+                .store(in: &cancellables)
+            
+            finishButton.controlPublisher(for: .touchUpInside)
+                .withUnretained(self)
+                .sink { onwer, _ in
+                    onwer.finishButtonTappedSubject.send()
+                }
+                .store(in: &cancellables)
+            
+            addPhotoButton.controlPublisher(for: .touchUpInside)
+                .withUnretained(self)
+                .sink { onwer, _ in
+                    onwer.addPhotoButtonTappedSubject.send()
+                }
+                .store(in: &cancellables)
+        }
     
     // MARK: - Public Methods
     
@@ -355,7 +400,6 @@ final class WalkTrackingSheetView: BaseView {
     /// 일시정지/재개 버튼 상태 업데이트
     func updatePauseButton(isPaused: Bool) {
         pauseButton.setTitle(isPaused ? "계속하기" : "일시정지", for: .normal)
-        pauseButton.setBackgroundColor(isPaused ? .triWalkPrimary : .systemGray3)
     }
     
     /// 사진 추가

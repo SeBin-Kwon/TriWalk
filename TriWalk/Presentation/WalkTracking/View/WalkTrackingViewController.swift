@@ -14,14 +14,16 @@ import SnapKit
 final class WalkTrackingViewController: BaseViewController {
     
     // MARK: - Properties
-    weak var delegate: WalkTrackingViewControllerDelegate?
+//    weak var delegate: WalkTrackingViewControllerDelegate?
     private var startLocation: CLLocation?
     private var destinationCoordinate: CLLocationCoordinate2D?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
     private var routeOverlay: MKPolyline?
     
-//    let sheetView = WalkTrackingSheetView()
     private var walkTrackingSheetVC: WalkTrackingSheetViewController?
+    private let viewModel = WalkTrackingViewModel()
+    private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
+    
     
     // MARK: - UI Components
     private let mapView: MKMapView = {
@@ -38,26 +40,22 @@ final class WalkTrackingViewController: BaseViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-            super.viewDidAppear(animated)
-            presentTrackingSheet()
-        }
+        super.viewDidAppear(animated)
+        presentTrackingSheet()
+        viewDidAppearSubject.send(())
+    }
     
     private func presentTrackingSheet() {
-            // ✨ 시트 뷰 컨트롤러 생성
-            let sheetVC = WalkTrackingSheetViewController()
-            walkTrackingSheetVC = sheetVC
-            
-            // 바인딩 설정
-//            setupBindings(with: sheetVC.walkTrackingView)
-            
-            // 초기 데이터 설정
-//            updateSheetData()
-            
-            
-            
-            // ✨ 시트 표시
-            present(sheetVC, animated: true)
-        }
+        // 시트 뷰 컨트롤러 생성
+        let sheetVC = WalkTrackingSheetViewController()
+        walkTrackingSheetVC = sheetVC
+        
+        // 바인딩 설정
+        setupBindings(with: sheetVC.walkTrackingView)
+        
+        // 시트 표시
+        present(sheetVC, animated: true)
+    }
     
     // MARK: - Setup
     private func setupMapView() {
@@ -71,6 +69,93 @@ final class WalkTrackingViewController: BaseViewController {
         
         // 위치 업데이트 시작
         LocationManager.shared.startUpdatingLocation()
+    }
+    
+    private func setupBindings(with sheetView: WalkTrackingSheetView) {
+        // ViewModel Input 구성
+        let input = WalkTrackingViewModel.Input(
+            viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
+            pauseButtonTapped: sheetView.pauseButtonTappedPublisher,
+            finishButtonTapped: sheetView.finishButtonTappedPublisher,
+            addPhotoButtonTapped: sheetView.addPhotoButtonTappedPublisher
+        )
+        
+        // ViewModel Output 처리
+        let output = viewModel.transform(input: input)
+        
+        // 걸음 수 업데이트
+        output.stepsCount
+            .receive(on: RunLoop.main)
+            .sink { [weak sheetView] steps in
+                sheetView?.updateSteps(steps)
+            }
+            .store(in: &cancellables)
+        
+        // 거리 업데이트
+        output.distance
+            .receive(on: RunLoop.main)
+            .sink { [weak sheetView] distance in
+                sheetView?.updateDistance(distance)
+            }
+            .store(in: &cancellables)
+        
+        // 칼로리 업데이트
+        output.calories
+            .receive(on: RunLoop.main)
+            .sink { [weak sheetView] calories in
+                sheetView?.updateCalories(calories)
+            }
+            .store(in: &cancellables)
+        
+        // 시간 업데이트
+        output.time
+            .receive(on: RunLoop.main)
+            .sink { [weak sheetView] time in
+                sheetView?.updateTime(time)
+            }
+            .store(in: &cancellables)
+        
+        // 일시정지/재개 상태 업데이트
+        output.isPaused
+            .receive(on: RunLoop.main)
+            .sink { [weak sheetView] isPaused in
+                sheetView?.updatePauseButton(isPaused: isPaused)
+            }
+            .store(in: &cancellables)
+        
+        // 종료 상태 처리
+        output.isFinished
+            .filter { $0 }
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, _ in
+                print("종료버튼")
+                let newModalVC = WalkCompletedViewController()
+                newModalVC.modalPresentationStyle = .fullScreen
+                newModalVC.modalTransitionStyle = .crossDissolve
+                owner.walkTrackingSheetVC?.present(newModalVC, animated: true)
+            }
+            .store(in: &cancellables)
+        
+        // 위치 업데이트 구독
+        LocationManager.shared.locationPublisher
+            .catch { error -> Empty<CLLocation, Never> in
+                print("위치 서비스 오류: \(error.localizedDescription)")
+                return Empty()
+            }
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, location in
+                // 시작 위치가 없으면 설정
+                if owner.startLocation == nil {
+                    owner.startLocation = location
+                    owner.addStartAnnotation(at: location.coordinate)
+                }
+                
+                // 경로 업데이트
+                owner.updateRoute(with: location.coordinate)
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Public Methods
@@ -130,54 +215,6 @@ final class WalkTrackingViewController: BaseViewController {
         routeOverlay = polyline
     }
     
-    override func bindViewModel() {
-        // 위치 업데이트 구독
-        LocationManager.shared.locationPublisher
-            .catch { error -> Empty<CLLocation, Never> in
-                print("위치 서비스 오류: \(error.localizedDescription)")
-                return Empty()
-            }
-            .withUnretained(self)
-            .sink { owner, location in
-                // 시작 위치가 없으면 설정
-                if owner.startLocation == nil {
-                    owner.startLocation = location
-                    owner.addStartAnnotation(at: location.coordinate)
-                }
-                
-                // 경로 업데이트
-                owner.updateRoute(with: location.coordinate)
-            }
-            .store(in: &cancellables)
-//
-//        // 시트 뷰의 버튼 액션 구독
-//        sheetView.pauseButtonTappedPublisher
-//            .withUnretained(self)
-//            .sink { owner, _ in
-//                print("pause")
-//                // 일시정지/재개 토글 로직
-//                // 예: owner.togglePause()
-//            }
-//            .store(in: &cancellables)
-//
-//        sheetView.finishButtonTappedPublisher
-//            .withUnretained(self)
-//            .sink { owner, _ in
-//                print("finish")
-//                owner.delegate?.didTapFinishButton()
-//            }
-//            .store(in: &cancellables)
-//
-//        sheetView.addPhotoButtonTappedPublisher
-//            .withUnretained(self)
-//            .sink { owner, _ in
-//                print("Photo")
-//                // 사진 추가 로직
-//                // 예: owner.takePicture()
-//            }
-//            .store(in: &cancellables)
-    }
-    
     override func configureHierarchy() {
         view.addSubviews(mapView)
     }
@@ -185,16 +222,7 @@ final class WalkTrackingViewController: BaseViewController {
     override func configureLayout() {
         mapView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-//            make.top.leading.trailing.equalToSuperview()
-//            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-200)
         }
-        
-//        sheetView.snp.makeConstraints { make in
-////            make.top.equalTo(mapView.snp.bottom).offset(20)
-//            make.horizontalEdges.bottom.equalToSuperview()
-//            make.height.equalTo(400)
-////            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
-//        }
     }
 }
 

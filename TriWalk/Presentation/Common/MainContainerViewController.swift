@@ -115,7 +115,7 @@ extension MainContainerViewController: UIPageViewControllerDelegate {
 }
 
 // MARK: - MainContainer와 각 화면 간 연결
-extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupViewControllerDelegate, WalkTrackingViewControllerDelegate, WalkCompletedViewControllerDelegate {
+extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupViewControllerDelegate, WalkCompletedViewControllerDelegate {
     // HomeViewController에서 시작 버튼 탭
     func didTapStartButton() {
         startWalkFlow()
@@ -124,11 +124,12 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
     // WalkSetupViewController에서 시작 버튼 탭
     func didTapStartWalkingButton(destinationCoordinate: CLLocationCoordinate2D?) {
         let walkTrackingVC = WalkTrackingViewController()
-        walkTrackingVC.delegate = self
+//        walkTrackingVC.delegate = self
         
         walkTrackingVC.setDestination(coordinate: destinationCoordinate)
         
         walkTrackingVC.modalPresentationStyle = .fullScreen
+        walkTrackingVC.modalTransitionStyle = .crossDissolve
         homeVC.navigationController?.present(walkTrackingVC, animated: true)
     }
     
@@ -141,21 +142,22 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
     }
     
     // WalkTrackingViewController에서 종료 버튼 탭
-    func didTapFinishButton() {
-        let walkCompletedVC = WalkCompletedViewController()
-        walkCompletedVC.delegate = self
-        walkCompletedVC.modalPresentationStyle = .fullScreen
-        
-        // 기존 화면 닫고 새 화면 열기 (뒤로가기 방지)
-        
-        if let presented = homeVC.navigationController?.presentedViewController {
-            presented.dismiss(animated: false) {
-                self.homeVC.navigationController?.present(walkCompletedVC, animated: true)
-            }
-        } else {
-            homeVC.navigationController?.present(walkCompletedVC, animated: true)
-        }
-    }
+//    func didTapFinishButton() {
+//        print("MainContainer에서 종료 버튼 처리")
+//        let walkCompletedVC = WalkCompletedViewController()
+//        walkCompletedVC.delegate = self
+//        walkCompletedVC.modalPresentationStyle = .fullScreen
+//        
+//        // 현재 화면 닫기
+//        homeVC.navigationController?.dismiss(animated: false) { [weak self] in
+//            guard let self = self else { return }
+//            print("화면 닫기 완료")
+//            
+//            // 네비게이션 스택에 푸시
+//            self.homeVC.navigationController?.pushViewController(walkCompletedVC, animated: true)
+//            print("새 화면 푸시 시도")
+//        }
+//    }
     
     // WalkCompletedViewController에서 홈으로 버튼 탭
     func didTapReturnHomeButton() {
@@ -193,10 +195,10 @@ protocol WalkSetupViewControllerDelegate: AnyObject {
     func didTapBackButton()
 }
 
-// MARK: - WalkTrackingViewController Delegate
-protocol WalkTrackingViewControllerDelegate: AnyObject {
-    func didTapFinishButton()
-}
+//// MARK: - WalkTrackingViewController Delegate
+//protocol WalkTrackingViewControllerDelegate: AnyObject {
+//    func didTapFinishButton()
+//}
 
 // MARK: - WalkCompletedViewController Delegate
 protocol WalkCompletedViewControllerDelegate: AnyObject {
