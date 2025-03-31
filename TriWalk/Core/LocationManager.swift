@@ -65,12 +65,18 @@ final class LocationManager: NSObject {
     
     /// 단일 위치 업데이트 요청
     func requestLocation() {
-        if locationManager.authorizationStatus == .authorizedWhenInUse ||
-           locationManager.authorizationStatus == .authorizedAlways {
-            locationManager.requestLocation()
-        } else {
-            let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
-            locationSubject.send(completion: .failure(error))
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            if self.locationManager.authorizationStatus == .authorizedWhenInUse ||
+               self.locationManager.authorizationStatus == .authorizedAlways {
+                self.locationManager.requestLocation()
+            } else {
+                let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
+                DispatchQueue.main.async {
+                    self.locationSubject.send(completion: .failure(error))
+                }
+            }
         }
     }
     
