@@ -20,6 +20,9 @@ final class WalkTrackingViewController: BaseViewController {
     private var routeCoordinates: [CLLocationCoordinate2D] = []
     private var routeOverlay: MKPolyline?
     
+//    let sheetView = WalkTrackingSheetView()
+    private var walkTrackingSheetVC: WalkTrackingSheetViewController?
+    
     // MARK: - UI Components
     private let mapView: MKMapView = {
         let map = MKMapView()
@@ -28,17 +31,33 @@ final class WalkTrackingViewController: BaseViewController {
         return map
     }()
     
-    private let finishButton: ConfigButton = {
-        let button = ConfigButton(title: "여행 종료")
-        button.setBackgroundColor(.systemRed)
-        return button
-    }()
-    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupMapView()
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            presentTrackingSheet()
+        }
+    
+    private func presentTrackingSheet() {
+            // ✨ 시트 뷰 컨트롤러 생성
+            let sheetVC = WalkTrackingSheetViewController()
+            walkTrackingSheetVC = sheetVC
+            
+            // 바인딩 설정
+//            setupBindings(with: sheetVC.walkTrackingView)
+            
+            // 초기 데이터 설정
+//            updateSheetData()
+            
+            
+            
+            // ✨ 시트 표시
+            present(sheetVC, animated: true)
+        }
     
     // MARK: - Setup
     private func setupMapView() {
@@ -112,15 +131,7 @@ final class WalkTrackingViewController: BaseViewController {
     }
     
     override func bindViewModel() {
-        // 여행 종료 버튼 탭
-        finishButton.controlPublisher(for: .touchUpInside)
-            .withUnretained(self)
-            .sink { owner, _ in
-                owner.delegate?.didTapFinishButton()
-            }
-            .store(in: &cancellables)
-        
-        // 현재 위치 업데이트 구독
+        // 위치 업데이트 구독
         LocationManager.shared.locationPublisher
             .catch { error -> Empty<CLLocation, Never> in
                 print("위치 서비스 오류: \(error.localizedDescription)")
@@ -138,24 +149,52 @@ final class WalkTrackingViewController: BaseViewController {
                 owner.updateRoute(with: location.coordinate)
             }
             .store(in: &cancellables)
+//
+//        // 시트 뷰의 버튼 액션 구독
+//        sheetView.pauseButtonTappedPublisher
+//            .withUnretained(self)
+//            .sink { owner, _ in
+//                print("pause")
+//                // 일시정지/재개 토글 로직
+//                // 예: owner.togglePause()
+//            }
+//            .store(in: &cancellables)
+//
+//        sheetView.finishButtonTappedPublisher
+//            .withUnretained(self)
+//            .sink { owner, _ in
+//                print("finish")
+//                owner.delegate?.didTapFinishButton()
+//            }
+//            .store(in: &cancellables)
+//
+//        sheetView.addPhotoButtonTappedPublisher
+//            .withUnretained(self)
+//            .sink { owner, _ in
+//                print("Photo")
+//                // 사진 추가 로직
+//                // 예: owner.takePicture()
+//            }
+//            .store(in: &cancellables)
     }
     
     override func configureHierarchy() {
-        view.addSubviews(mapView, finishButton)
+        view.addSubviews(mapView)
     }
     
     override func configureLayout() {
         mapView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-80)
+            make.edges.equalToSuperview()
+//            make.top.leading.trailing.equalToSuperview()
+//            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-200)
         }
         
-        finishButton.snp.makeConstraints { make in
-            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
-            make.centerX.equalToSuperview()
-            make.width.equalTo(200)
-            make.height.equalTo(50)
-        }
+//        sheetView.snp.makeConstraints { make in
+////            make.top.equalTo(mapView.snp.bottom).offset(20)
+//            make.horizontalEdges.bottom.equalToSuperview()
+//            make.height.equalTo(400)
+////            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
+//        }
     }
 }
 

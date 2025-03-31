@@ -11,14 +11,6 @@ import SnapKit
 
 final class WalkTrackingSheetView: BaseView {
     
-    // MARK: - UI Components
-    private let handleView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGray4
-        view.layer.cornerRadius = 2.5
-        return view
-    }()
-    
     private let metricsStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -31,7 +23,7 @@ final class WalkTrackingSheetView: BaseView {
     private let stepsContainerView = UIView()
     private let stepsLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.heading3
+        label.applyHeading3Style()
         label.textAlignment = .center
         label.text = "0"
         return label
@@ -39,8 +31,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let stepsTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodySmall
-        label.textColor = .textSecondary
+        label.applyBodySmallStyle(color: .textSecondary)
         label.textAlignment = .center
         label.text = "걸음수"
         return label
@@ -50,7 +41,7 @@ final class WalkTrackingSheetView: BaseView {
     private let distanceContainerView = UIView()
     private let distanceLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.heading3
+        label.applyHeading3Style()
         label.textAlignment = .center
         label.text = "0.0"
         return label
@@ -58,7 +49,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let distanceUnitLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodyMedium
+        label.applyBodyMediumStyle()
         label.textAlignment = .center
         label.text = "km"
         return label
@@ -66,8 +57,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let distanceTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodySmall
-        label.textColor = .textSecondary
+        label.applyBodySmallStyle(color: .textSecondary)
         label.textAlignment = .center
         label.text = "거리"
         return label
@@ -77,7 +67,7 @@ final class WalkTrackingSheetView: BaseView {
     private let caloriesContainerView = UIView()
     private let caloriesLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.heading3
+        label.applyHeading3Style()
         label.textAlignment = .center
         label.text = "0"
         return label
@@ -85,7 +75,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let caloriesUnitLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodyMedium
+        label.applyBodyMediumStyle()
         label.textAlignment = .center
         label.text = "kcal"
         return label
@@ -93,8 +83,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let caloriesTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodySmall
-        label.textColor = .textSecondary
+        label.applyBodySmallStyle(color: .textSecondary)
         label.textAlignment = .center
         label.text = "칼로리"
         return label
@@ -104,7 +93,7 @@ final class WalkTrackingSheetView: BaseView {
     private let timeContainerView = UIView()
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.heading2
+        label.applyHeading2Style()
         label.textAlignment = .center
         label.text = "00:00:00"
         return label
@@ -112,8 +101,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let timeTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodySmall
-        label.textColor = .textSecondary
+        label.applyBodySmallStyle(color: .textSecondary)
         label.textAlignment = .center
         label.text = "소요시간"
         return label
@@ -122,7 +110,7 @@ final class WalkTrackingSheetView: BaseView {
     // 갤러리 영역
     private let galleryContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .background
+        view.backgroundColor = .clear
         return view
     }()
     
@@ -147,7 +135,7 @@ final class WalkTrackingSheetView: BaseView {
         return collectionView
     }()
     
-    private let addPhotoButton: UIButton = {
+    let addPhotoButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .systemGray5
         button.tintColor = .contentPrimary
@@ -155,89 +143,26 @@ final class WalkTrackingSheetView: BaseView {
         button.setImage(UIImage(systemName: "plus"), for: .normal)
         return button
     }()
-    
-    // 버튼
-    private let pauseButton: ConfigButton = {
+
+    let pauseButton: ConfigButton = {
         let button = ConfigButton(title: "일시정지")
-        button.setBackgroundColor(.systemGray3)
+        button.setBackgroundColor(.contentPrimary)
+        button.setTextColor(.white)
         button.setCornerRadius(12)
         return button
     }()
     
-    private let finishButton: ConfigButton = {
+    let finishButton: ConfigButton = {
         let button = ConfigButton(title: "여행 종료")
         button.setBackgroundColor(.triWalkPrimary)
         button.setCornerRadius(12)
         return button
     }()
     
-    // MARK: - Properties
-    private var cancellables = Set<AnyCancellable>()
-    
-    // Input/Output 정의
-    private let stepsSubject = PassthroughSubject<Int, Never>()
-    private let distanceSubject = PassthroughSubject<Double, Never>()
-    private let caloriesSubject = PassthroughSubject<Double, Never>()
-    private let timeSubject = PassthroughSubject<TimeInterval, Never>()
-    private let pauseButtonTappedSubject = PassthroughSubject<Void, Never>()
-    private let finishButtonTappedSubject = PassthroughSubject<Void, Never>()
-    private let addPhotoButtonTappedSubject = PassthroughSubject<Void, Never>()
-    
-    var stepsPublisher: AnyPublisher<Int, Never> {
-        return stepsSubject.eraseToAnyPublisher()
-    }
-    
-    var distancePublisher: AnyPublisher<Double, Never> {
-        return distanceSubject.eraseToAnyPublisher()
-    }
-    
-    var caloriesPublisher: AnyPublisher<Double, Never> {
-        return caloriesSubject.eraseToAnyPublisher()
-    }
-    
-    var timePublisher: AnyPublisher<TimeInterval, Never> {
-        return timeSubject.eraseToAnyPublisher()
-    }
-    
-    var pauseButtonTappedPublisher: AnyPublisher<Void, Never> {
-        return pauseButtonTappedSubject.eraseToAnyPublisher()
-    }
-    
-    var finishButtonTappedPublisher: AnyPublisher<Void, Never> {
-        return finishButtonTappedSubject.eraseToAnyPublisher()
-    }
-    
-    var addPhotoButtonTappedPublisher: AnyPublisher<Void, Never> {
-        return addPhotoButtonTappedSubject.eraseToAnyPublisher()
-    }
-    
-    // MARK: - Initialization
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupUI()
-        setupBindings()
-    }
-    
     // MARK: - Setup
-    private func setupUI() {
-        backgroundColor = .systemBackground
-        layer.cornerRadius = 20
-        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        clipsToBounds = true
-        
-        // 그림자 설정
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOffset = CGSize(width: 0, height: -3)
-        layer.shadowOpacity = 0.1
-        layer.shadowRadius = 4
-        
-        // 컴포넌트 추가
-        addSubview(handleView)
-        addSubview(metricsStackView)
-        addSubview(timeContainerView)
-        addSubview(galleryContainerView)
-        addSubview(pauseButton)
-        addSubview(finishButton)
+    override func configureHierarchy() {
+        // 메인 컴포넌트 추가
+        addSubviews(metricsStackView, timeContainerView, galleryContainerView, pauseButton, finishButton)
         
         // 메트릭 스택뷰에 항목 추가
         metricsStackView.addArrangedSubview(stepsContainerView)
@@ -245,44 +170,27 @@ final class WalkTrackingSheetView: BaseView {
         metricsStackView.addArrangedSubview(caloriesContainerView)
         
         // 걸음수 컨테이너 설정
-        stepsContainerView.addSubview(stepsLabel)
-        stepsContainerView.addSubview(stepsTitleLabel)
+        stepsContainerView.addSubviews(stepsLabel, stepsTitleLabel)
         
         // 거리 컨테이너 설정
-        distanceContainerView.addSubview(distanceLabel)
-        distanceContainerView.addSubview(distanceUnitLabel)
-        distanceContainerView.addSubview(distanceTitleLabel)
+        distanceContainerView.addSubviews(distanceLabel, distanceUnitLabel, distanceTitleLabel)
         
         // 칼로리 컨테이너 설정
-        caloriesContainerView.addSubview(caloriesLabel)
-        caloriesContainerView.addSubview(caloriesUnitLabel)
-        caloriesContainerView.addSubview(caloriesTitleLabel)
+        caloriesContainerView.addSubviews(caloriesLabel, caloriesUnitLabel, caloriesTitleLabel)
         
         // 시간 컨테이너 설정
-        timeContainerView.addSubview(timeLabel)
-        timeContainerView.addSubview(timeTitleLabel)
+        timeContainerView.addSubviews(timeLabel, timeTitleLabel)
         
         // 갤러리 컨테이너 설정
-        galleryContainerView.addSubview(galleryTitleLabel)
-        galleryContainerView.addSubview(galleryCollectionView)
-        galleryContainerView.addSubview(addPhotoButton)
-        
-        setupConstraints()
+        galleryContainerView.addSubviews(galleryTitleLabel, galleryCollectionView, addPhotoButton)
     }
     
-    private func setupConstraints() {
-        // 핸들 뷰
-        handleView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.centerX.equalToSuperview()
-            make.width.equalTo(40)
-            make.height.equalTo(5)
-        }
+    override func configureLayout() {
         
         // 메트릭 스택뷰
         metricsStackView.snp.makeConstraints { make in
-            make.top.equalTo(handleView.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview()
+            make.top.equalToSuperview().inset(20)
+            make.horizontalEdges.equalToSuperview()
             make.height.equalTo(70)
         }
         
@@ -332,7 +240,7 @@ final class WalkTrackingSheetView: BaseView {
         // 시간 컨테이너
         timeContainerView.snp.makeConstraints { make in
             make.top.equalTo(metricsStackView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
+            make.horizontalEdges.equalToSuperview()
             make.height.equalTo(80)
         }
         
@@ -377,7 +285,7 @@ final class WalkTrackingSheetView: BaseView {
             make.leading.equalToSuperview().offset(16)
             make.bottom.equalToSuperview().offset(-30)
             make.width.equalTo((UIScreen.main.bounds.width - (16 * 3)) / 2)
-            make.height.equalTo(50)
+            make.height.equalTo(55)
         }
         
         finishButton.snp.makeConstraints { make in
@@ -388,25 +296,35 @@ final class WalkTrackingSheetView: BaseView {
         }
     }
     
-    private func setupBindings() {
-        pauseButton.controlPublisher(for: .touchUpInside)
-            .sink { [weak self] _ in
-                self?.pauseButtonTappedSubject.send()
-            }
-            .store(in: &cancellables)
-        
-        finishButton.controlPublisher(for: .touchUpInside)
-            .sink { [weak self] _ in
-                self?.finishButtonTappedSubject.send()
-            }
-            .store(in: &cancellables)
-        
-        addPhotoButton.controlPublisher(for: .touchUpInside)
-            .sink { [weak self] _ in
-                self?.addPhotoButtonTappedSubject.send()
-            }
-            .store(in: &cancellables)
+    override func configureView() {
+        backgroundColor = .background
+        layer.cornerRadius = 30
+        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        clipsToBounds = true
     }
+    
+    //    private func setupBindings() {
+    //        pauseButton.controlPublisher(for: .touchUpInside)
+    //            .withUnretained(self)
+    //            .sink { owner, _ in
+    //                owner.pauseButtonTappedSubject.send()
+    //            }
+    //            .store(in: &cancellables)
+    //
+    //        finishButton.controlPublisher(for: .touchUpInside)
+    //            .withUnretained(self)
+    //            .sink { owner, _ in
+    //                owner.finishButtonTappedSubject.send()
+    //            }
+    //            .store(in: &cancellables)
+    //
+    //        addPhotoButton.controlPublisher(for: .touchUpInside)
+    //            .withUnretained(self)
+    //            .sink { owner, _ in
+    //                owner.addPhotoButtonTappedSubject.send()
+    //            }
+    //            .store(in: &cancellables)
+    //    }
     
     // MARK: - Public Methods
     
@@ -443,6 +361,21 @@ final class WalkTrackingSheetView: BaseView {
     /// 사진 추가
     func addPhoto(_ image: UIImage) {
         galleryCollectionView.reloadData()
+    }
+    
+    func fadeOutContentForMinimize() {
+        // 손잡이를 제외한 모든 요소 숨기기
+        [metricsStackView, timeContainerView, galleryContainerView, pauseButton, finishButton].forEach {
+            $0.alpha = 0
+        }
+    }
+
+    // 시트가 최대화될 때 컨텐츠 페이드 인
+    func fadeInContentAfterMaximize() {
+        // 모든 요소 다시 표시
+        [metricsStackView, timeContainerView, galleryContainerView, pauseButton, finishButton].forEach {
+            $0.alpha = 1
+        }
     }
 }
 
