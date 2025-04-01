@@ -29,11 +29,6 @@ final class DestinationSearchViewController: BaseViewController {
         bindViewModel()
     }
     
-//    override func viewDidAppear(_ animated: Bool) {
-//        super.viewDidAppear(animated)
-//        searchBar.becomeFirstResponder() // 키보드 자동 표시
-//    }
-    
     // MARK: - Setup
     private func setupUI() {
         title = "도착지 선택"
