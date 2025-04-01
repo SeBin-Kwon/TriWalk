@@ -38,10 +38,8 @@ final class WalkCompletedViewController: BaseViewController {
         walkCompletedView.homeButton.controlPublisher(for: .touchUpInside)
             .withUnretained(self)
             .sink { owner, _ in
-                print("홈으로")
-                owner.dismiss(animated: true)
-                // 홈 화면으로 돌아가기
-                owner.delegate?.didTapReturnHomeButton()
+                let vc = MainContainerViewController()
+                owner.changeRootViewController(rootView: vc)
             }
             .store(in: &cancellables)
     }

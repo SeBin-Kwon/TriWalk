@@ -14,7 +14,7 @@ import SnapKit
 final class WalkTrackingViewController: BaseViewController {
     
     // MARK: - Properties
-//    weak var delegate: WalkTrackingViewControllerDelegate?
+    weak var delegate: WalkCompletedViewControllerDelegate?
     private var startLocation: CLLocation?
     private var destinationCoordinate: CLLocationCoordinate2D?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
@@ -130,10 +130,10 @@ final class WalkTrackingViewController: BaseViewController {
             .withUnretained(self)
             .sink { owner, _ in
                 print("종료버튼")
-                let newModalVC = WalkCompletedViewController()
-                newModalVC.modalPresentationStyle = .fullScreen
-                newModalVC.modalTransitionStyle = .crossDissolve
-                owner.walkTrackingSheetVC?.present(newModalVC, animated: true)
+                let completedVC = WalkCompletedViewController()
+                completedVC.modalPresentationStyle = .fullScreen
+                completedVC.modalTransitionStyle = .crossDissolve
+                owner.walkTrackingSheetVC?.present(completedVC, animated: true)
             }
             .store(in: &cancellables)
         

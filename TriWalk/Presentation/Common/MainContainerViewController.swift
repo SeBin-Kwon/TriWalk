@@ -163,6 +163,7 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
     func didTapReturnHomeButton() {
         // 모든 화면 닫고 홈으로
         homeVC.navigationController?.dismiss(animated: true) {
+            print("home가기")
             self.returnToHome()
         }
     }

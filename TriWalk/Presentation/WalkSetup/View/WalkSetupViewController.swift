@@ -203,8 +203,10 @@ final class WalkSetupViewController: BaseViewController {
             destinationCoordinate = destinationAnnotation.coordinate
         }
         
-        // 델리게이트에 전달
-        delegate?.didTapStartWalkingButton(destinationCoordinate: destinationCoordinate)
+        let vc = WalkTrackingViewController()
+        vc.setDestination(coordinate: destinationCoordinate)
+        
+        changeRootViewController(rootView: vc)
     }
     
     override func configureHierarchy() {
