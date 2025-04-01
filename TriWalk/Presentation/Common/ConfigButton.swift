@@ -50,11 +50,10 @@ class ConfigButton: UIButton {
             default:
                 updatedConfig?.baseBackgroundColor = button.configuration?.baseBackgroundColor?.withAlphaComponent(1.0)
             }
-            
             button.configuration = updatedConfig
         }
-        
         self.configuration = config
+        
     }
     
     // MARK: - 기본 스타일 설정 메소드

@@ -22,6 +22,16 @@ final class WalkSetupView: BaseView {
     let startPointButton = {
         let button = ConfigButton(title: "현재 위치")
         button.applySetupPointButtonStyle()
+        button.isEnabled = false
+        
+//        let button = UIButton()
+//        button.setTitle("현재 위치", for: .normal)
+//        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+//        button.backgroundColor = Color.contentPrimary.withAlphaComponent(0.4)
+//        button.setTitleColor(.background, for: .disabled)
+//        button.layer.cornerRadius = 30
+//        button.isEnabled = false
+        
         return button
     }()
     
@@ -54,13 +64,11 @@ final class WalkSetupView: BaseView {
         return label
     }()
     
-    let roundTripButton = {
+    let tripTypeButton = {
         let button = ConfigButton.text(title: "왕복")
         return button
     }()
-    
-    // MARK: - Properties
-    var cancellables = Set<AnyCancellable>()
+
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -72,7 +80,7 @@ final class WalkSetupView: BaseView {
     // MARK: - Setup
     override func configureHierarchy() {
         addSubviews(dateLabel, startPointButton, directionArrow,
-                    endPointLabel, endPointButton, addressLabel, roundTripButton)
+                    endPointLabel, endPointButton, addressLabel, tripTypeButton)
     }
     
     override func configureLayout() {
@@ -111,7 +119,7 @@ final class WalkSetupView: BaseView {
             make.bottom.equalToSuperview()
         }
         
-        roundTripButton.snp.makeConstraints { make in
+        tripTypeButton.snp.makeConstraints { make in
             make.bottom.equalTo(directionArrow.snp.top)
             make.size.equalTo(24)
             make.centerX.equalToSuperview()

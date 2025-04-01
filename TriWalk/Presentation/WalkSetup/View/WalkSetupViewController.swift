@@ -46,9 +46,8 @@ final class WalkSetupViewController: BaseViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupMapView()
+        mapView.delegate = self
         setupLongPressGesture()
-        view.backgroundColor = Color.background
         bindViewModel()
     }
     
@@ -56,11 +55,7 @@ final class WalkSetupViewController: BaseViewController {
         super.viewDidAppear(animated)
         viewDidAppearSubject.send(())
     }
-    
-    private func setupMapView() {
-        mapView.delegate = self
-    }
-    
+
     private func setupLongPressGesture() {
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         longPressGesture.minimumPressDuration = 0.8
@@ -90,15 +85,17 @@ final class WalkSetupViewController: BaseViewController {
     }
     
     override func bindViewModel() {
+        cancellables.removeAll()
+        
         let input = WalkSetupViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
-            startButtonTapped: startButton.controlPublisher(for: .touchUpInside)
-                .map { _ in () }
-                .eraseToAnyPublisher(),
             endPointButtonTapped: setupView.endPointButton.controlPublisher(for: .touchUpInside)
                 .map { _ in () }
                 .eraseToAnyPublisher(),
-            longPressGesture: longPressGestureSubject.eraseToAnyPublisher()
+            longPressGesture: longPressGestureSubject.eraseToAnyPublisher(),
+            tripTypeButtonTapped: setupView.tripTypeButton.controlPublisher(for: .touchUpInside)
+                .map { _ in () }
+                .eraseToAnyPublisher()
         )
         
         let output = viewModel.transform(input: input)
@@ -190,6 +187,14 @@ final class WalkSetupViewController: BaseViewController {
                         }
                     }
                 }
+            }
+            .store(in: &cancellables)
+        
+        output.tripType
+            .withUnretained(self)
+            .sink { owner, tripType in
+                print("tripType \(tripType)")
+                owner.setupView.tripTypeButton.setTitle(tripType.title, for: .normal)
             }
             .store(in: &cancellables)
     }

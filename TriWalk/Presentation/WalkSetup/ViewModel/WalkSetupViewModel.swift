@@ -14,9 +14,9 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     // Input-Output 패턴 정의
     struct Input {
         let viewDidAppear: AnyPublisher<Void, Never>
-        let startButtonTapped: AnyPublisher<Void, Never>
         let endPointButtonTapped: AnyPublisher<Void, Never>
         let longPressGesture: AnyPublisher<CLLocationCoordinate2D, Never>
+        let tripTypeButtonTapped: AnyPublisher<Void, Never>
     }
     
     struct Output {
@@ -27,6 +27,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         let showDestinationSearchSheet: AnyPublisher<Void, Never>
         let startWalkFlow: AnyPublisher<Void, Never>
         let showAlert: AnyPublisher<(title: String, message: String), Never>
+        let tripType: AnyPublisher<TripType, Never>
     }
     
     // 프라이빗 Subject들
@@ -37,14 +38,11 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     private let showDestinationSearchSheetSubject = PassthroughSubject<Void, Never>()
     private let startWalkFlowSubject = PassthroughSubject<Void, Never>()
     private let showAlertSubject = PassthroughSubject<(title: String, message: String), Never>()
-    
-    override init() {
-        super.init()
-        setupLocationSubscriptions()
-    }
-    
-    private func setupLocationSubscriptions() {
-        // 위치 업데이트 구독
+    private let tripTypeSubject = CurrentValueSubject<TripType, Never>(.roundTrip)
+
+    func transform(input: Input) -> Output {
+        cancellables.removeAll()
+        
         LocationManager.shared.locationPublisher
             .catch { error -> Empty<CLLocation, Never> in
                 print("위치 서비스 오류: \(error.localizedDescription)")
@@ -86,22 +84,13 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
                 }
             }
             .store(in: &cancellables)
-    }
-    
-    func transform(input: Input) -> Output {
+        
+        
         // 화면이 나타날 때 위치 요청
         input.viewDidAppear
             .withUnretained(self)
             .sink { owner, _ in
                 owner.requestCurrentLocation()
-            }
-            .store(in: &cancellables)
-        
-        // 시작 버튼 탭
-        input.startButtonTapped
-            .withUnretained(self)
-            .sink { owner, _ in
-                owner.startWalkFlowSubject.send()
             }
             .store(in: &cancellables)
         
@@ -121,6 +110,15 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             }
             .store(in: &cancellables)
         
+        input.tripTypeButtonTapped
+                .withUnretained(self)
+                .sink { owner, _ in
+                    var currentType = owner.tripTypeSubject.value
+                    currentType.toggle()
+                    owner.tripTypeSubject.send(currentType)
+                }
+                .store(in: &cancellables)
+        
         return Output(
             userLocation: userLocationSubject.eraseToAnyPublisher(),
             userAddress: userAddressSubject.eraseToAnyPublisher(),
@@ -128,7 +126,8 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             destinationTitle: destinationTitleSubject.eraseToAnyPublisher(),
             showDestinationSearchSheet: showDestinationSearchSheetSubject.eraseToAnyPublisher(),
             startWalkFlow: startWalkFlowSubject.eraseToAnyPublisher(),
-            showAlert: showAlertSubject.eraseToAnyPublisher()
+            showAlert: showAlertSubject.eraseToAnyPublisher(),
+            tripType: tripTypeSubject.eraseToAnyPublisher()
         )
     }
     
@@ -196,6 +195,24 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         } else {
             // 어디든지 옵션 선택
             destinationTitleSubject.send("어디든지")
+        }
+    }
+    
+    enum TripType {
+        case roundTrip, oneWay
+        
+        var title: String {
+            switch self {
+            case .roundTrip: return "왕복"
+            case .oneWay: return "편도"
+            }
+        }
+        
+        mutating func toggle() {
+            switch self {
+            case .roundTrip: self = .oneWay
+            case .oneWay: self = .roundTrip
+            }
         }
     }
 }
