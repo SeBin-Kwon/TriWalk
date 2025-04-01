@@ -5,9 +5,9 @@
 //  Created by Sebin Kwon on 4/2/25.
 //
 
-import Foundation
-import RealmSwift
 import UIKit
+import RealmSwift
+import CoreLocation
 
 // 산책 중 촬영한 사진 정보를 저장하는 Realm 객체
 class WalkPhoto: Object {
