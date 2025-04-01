@@ -221,7 +221,7 @@ final class WalkSetupViewController: BaseViewController {
         mapView.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(Spacing.m)
             make.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(view.snp.height).multipliedBy(0.45)
+            make.height.equalTo(view.snp.height).multipliedBy(0.43)
         }
         
         setupView.snp.makeConstraints { make in

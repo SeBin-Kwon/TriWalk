@@ -185,12 +185,10 @@ extension ConfigButton {
         let button = ConfigButton(title: title)
         var config = UIButton.Configuration.plain()
         config.title = title
-        config.baseForegroundColor = Color.textBlue
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
-        
+        config.baseForegroundColor = Color.contentPrimary
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var outgoing = incoming
-            outgoing.font = Font.font(size: 14, weight: .medium)
+            outgoing.font = Font.font(size: 14, weight: .bold)
             return outgoing
         }
         
