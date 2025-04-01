@@ -70,7 +70,7 @@ class WalkRepository: WalkRepositoryProtocol {
                 let photo = WalkPhoto(image: image, coordinate: photoCoordinate)
                 walkPhotos.append(photo)
             }
-//            walkRecord.photos = walkPhotos
+            walkRecord.photos = walkPhotos
             
             // Realm에 저장
             self.realmRepository.save(walkRecord) { result in
@@ -114,9 +114,9 @@ class WalkRepository: WalkRepositoryProtocol {
             }
             
             // 사진 파일 삭제
-//            for photo in walkRecord.photos {
-//                photo.deleteImageFile()
-//            }
+            for photo in walkRecord.photos {
+                photo.deleteImageFile()
+            }
             
             // Realm 객체 삭제
             self.realmRepository.delete(walkRecord) { result in

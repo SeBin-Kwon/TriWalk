@@ -8,7 +8,6 @@
 import Foundation
 import RealmSwift
 import CoreLocation
-import UIKit
 
 // Realm 객체로 저장할 수 있는 모델
 class WalkRecord: Object {
@@ -23,7 +22,7 @@ class WalkRecord: Object {
     @Persisted var endLatitude = 0.0
     @Persisted var endLongitude = 0.0
     @Persisted var routeData = Data()  // 경로 좌표를 Data로 변환하여 저장
-//    @Persisted var photos = List<WalkPhoto>()
+    @Persisted var photos = List<WalkPhoto>()
     
     // 좌표 배열을 Data로 변환하는 함수
     func saveCoordinates(_ coordinates: [CLLocationCoordinate2D]) {
