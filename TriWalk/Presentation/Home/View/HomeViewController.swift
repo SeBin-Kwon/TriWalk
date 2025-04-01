@@ -38,12 +38,8 @@ class HomeViewController: BaseViewController {
     }
     
     private func setupNavigationBar() {
-        let chartButton = UIBarButtonItem(image: UIImage(symbol: .chartBar), style: .plain, target: self, action: #selector(chartButtonTap))
+        let chartButton = UIBarButtonItem(image: UIImage(symbol: .calendar), style: .plain, target: self, action: #selector(calendarButtonTap))
         navigationItem.rightBarButtonItem = chartButton
-    }
-    
-    @objc private func chartButtonTap() {
-        print("chart")
     }
     
     @objc private func calendarButtonTap() {
