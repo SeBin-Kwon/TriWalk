@@ -28,8 +28,7 @@ final class ReportView: BaseView {
     let subtitleLabel = {
         let label = UILabel()
         label.text = "이번 주 총 0번 산책"
-        label.applyBodySmallStyle(color: .textSecondary)
-        label.textAlignment = .center
+        label.applyHeading2Style()
         return label
     }()
     
