@@ -9,7 +9,7 @@ import UIKit
 import MapKit
 import SnapKit
 
-final class WalkMapView: BaseView {
+final class ChartView: BaseView {
     
     // MARK: - UI Components
     let headerView = {

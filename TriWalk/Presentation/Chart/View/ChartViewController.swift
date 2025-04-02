@@ -9,15 +9,15 @@ import UIKit
 import MapKit
 import Combine
 
-final class WalkMapViewController: BaseViewController {
+final class ChartViewController: BaseViewController {
     
     // MARK: - Properties
-    private let walkMapView = WalkMapView()
-    private let viewModel: WalkMapViewModel
+    private let chartView = ChartView()
+    private let viewModel: ChartViewModel
     private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
     
     // MARK: - Lifecycle
-    init(viewModel: WalkMapViewModel = WalkMapViewModel()) {
+    init(viewModel: ChartViewModel = ChartViewModel()) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -27,12 +27,12 @@ final class WalkMapViewController: BaseViewController {
     }
     
     override func loadView() {
-        view = walkMapView
+        view = chartView
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        walkMapView.mapView.delegate = self
+        chartView.mapView.delegate = self
         title = "산책 기록"
     }
     
@@ -43,7 +43,7 @@ final class WalkMapViewController: BaseViewController {
     
     // MARK: - Configuration
     override func bindViewModel() {
-        let input = WalkMapViewModel.Input(
+        let input = ChartViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher()
         )
         
@@ -55,7 +55,7 @@ final class WalkMapViewController: BaseViewController {
             .withUnretained(self)
             .sink { owner, routeItems in
                 RouteVisualizationManager.visualizeHistoricalRoutes(
-                    on: owner.walkMapView.mapView,
+                    on: owner.chartView.mapView,
                     routeItems: routeItems,
                     fadeOlder: true
                 )
@@ -67,7 +67,7 @@ final class WalkMapViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, isLoading in
-                owner.walkMapView.showLoading(isLoading)
+                owner.chartView.showLoading(isLoading)
             }
             .store(in: &cancellables)
         
@@ -76,14 +76,14 @@ final class WalkMapViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, count in
-                owner.walkMapView.updateSubtitle(walkCount: count)
+                owner.chartView.updateSubtitle(walkCount: count)
             }
             .store(in: &cancellables)
     }
 }
 
 // MARK: - MKMapViewDelegate
-extension WalkMapViewController: MKMapViewDelegate {
+extension ChartViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let routeOverlay = overlay as? RouteOverlay {
             let renderer = MKPolylineRenderer(polyline: routeOverlay)

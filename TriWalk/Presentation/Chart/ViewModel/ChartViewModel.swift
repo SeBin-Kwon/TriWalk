@@ -11,7 +11,7 @@ import CoreLocation
 import MapKit
 import UIKit
 
-final class WalkMapViewModel: BaseViewModel, ViewModelType {
+final class ChartViewModel: BaseViewModel, ViewModelType {
     
     // MARK: - Input-Output 정의
     struct Input {
