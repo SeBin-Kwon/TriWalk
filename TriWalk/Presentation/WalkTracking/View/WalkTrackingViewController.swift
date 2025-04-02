@@ -13,8 +13,6 @@ import SnapKit
 
 final class WalkTrackingViewController: BaseViewController {
     
-    // MARK: - Properties
-    weak var delegate: WalkCompletedViewControllerDelegate?
     private var startLocation: CLLocation?
     private var destinationCoordinate: CLLocationCoordinate2D?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
@@ -220,16 +218,14 @@ final class WalkTrackingViewController: BaseViewController {
     private func updateRoute(with newCoordinate: CLLocationCoordinate2D) {
         // 새 좌표 추가
         routeCoordinates.append(newCoordinate)
-        
-        // 기존 경로 오버레이 제거
-        if let existingOverlay = routeOverlay {
-            mapView.removeOverlay(existingOverlay)
-        }
-        
-        // 새 경로 오버레이 생성 및 추가
-        let polyline = MKPolyline(coordinates: routeCoordinates, count: routeCoordinates.count)
-        mapView.addOverlay(polyline)
-        routeOverlay = polyline
+                
+        // 경로 시각화 업데이트 (공통 유틸리티 사용)
+        RouteVisualizationManager.visualizeCurrentRoute(
+            on: mapView,
+            coordinates: routeCoordinates,
+            color: .triWalkPrimary,
+            lineWidth: 5.0
+        )
     }
     
     override func configureHierarchy() {
@@ -246,10 +242,12 @@ final class WalkTrackingViewController: BaseViewController {
 // MARK: - MKMapViewDelegate
 extension WalkTrackingViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        if let polyline = overlay as? MKPolyline {
-            let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = .triWalkPrimary
-            renderer.lineWidth = 5
+        if let routeOverlay = overlay as? RouteOverlay {
+            let renderer = MKPolylineRenderer(polyline: routeOverlay)
+            renderer.strokeColor = routeOverlay.color
+            renderer.lineWidth = routeOverlay.lineWidth
+            renderer.lineCap = .round
+            renderer.lineJoin = .round
             return renderer
         }
         return MKOverlayRenderer(overlay: overlay)

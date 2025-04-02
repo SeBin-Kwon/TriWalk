@@ -59,6 +59,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             .withUnretained(self)
             .sink { owner, location in
                 owner.userLocationSubject.send(location)
+                LocationManager.shared.lookupAddress(for: location.coordinate)
             }
             .store(in: &cancellables)
         
