@@ -14,6 +14,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     // Input-Output 패턴 정의
     struct Input {
         let viewDidAppear: AnyPublisher<Void, Never>
+        let startButtonTapped: AnyPublisher<Void, Never>
         let endPointButtonTapped: AnyPublisher<Void, Never>
         let longPressGesture: AnyPublisher<CLLocationCoordinate2D, Never>
         let tripTypeButtonTapped: AnyPublisher<Void, Never>
@@ -41,7 +42,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     private let tripTypeSubject = CurrentValueSubject<TripType, Never>(.roundTrip)
 
     func transform(input: Input) -> Output {
-        cancellables.removeAll()
+        cancellables.removeAll() 
         
         LocationManager.shared.locationPublisher
             .catch { error -> Empty<CLLocation, Never> in
@@ -93,6 +94,13 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
                 owner.requestCurrentLocation()
             }
             .store(in: &cancellables)
+        
+        input.startButtonTapped
+             .withUnretained(self)
+             .sink { owner, _ in
+                 owner.startWalkFlowSubject.send()
+             }
+             .store(in: &cancellables)
         
         // 도착지 버튼 탭
         input.endPointButtonTapped

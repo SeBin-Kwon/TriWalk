@@ -89,6 +89,9 @@ final class WalkSetupViewController: BaseViewController {
         
         let input = WalkSetupViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
+            startButtonTapped: startButton.controlPublisher(for: .touchUpInside)
+                             .map { _ in () }
+                             .eraseToAnyPublisher(),
             endPointButtonTapped: setupView.endPointButton.controlPublisher(for: .touchUpInside)
                 .map { _ in () }
                 .eraseToAnyPublisher(),
