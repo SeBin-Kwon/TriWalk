@@ -12,9 +12,9 @@ class MainContainerViewController: UIPageViewController {
     
     // 페이지 관리
     private var homeVC: HomeViewController!
-    private var detailVC: DetailViewController!
+    private var chartVC: ReportViewController!
     private var homeNavController: UINavigationController!
-    //    private var detailNavController: UINavigationController!
+//    private var chartNavController: UINavigationController!
     private var isSwipeEnabled = true
     
     // 초기화
@@ -40,8 +40,9 @@ class MainContainerViewController: UIPageViewController {
         homeNavController = UINavigationController(rootViewController: homeVC)
         
         homeNavController.delegate = self
-        // 디테일 화면 설정
-        detailVC = DetailViewController()
+        
+        chartVC = ReportViewController()
+//        chartNavController = UINavigationController(rootViewController: chartVC)
         
         // 홈 화면으로 시작
         setViewControllers([homeNavController], direction: .forward, animated: false)
@@ -64,18 +65,18 @@ class MainContainerViewController: UIPageViewController {
         homeVC.navigate(.push(walkSetupVC))
     }
     
-    // Home 화면으로 돌아가기
-    func returnToHome() {
-        // 네비게이션 스택의 루트 뷰 컨트롤러로 이동 (모든 중간 화면 제거)
-        homeVC.navigationController?.popToRootViewController(animated: true)
-        
-        // 페이지 뷰 컨트롤러를 홈 네비게이션 컨트롤러로 설정
-        setViewControllers([homeNavController], direction: .forward, animated: true)
-        
-        // 스와이프 기능 활성화 (Home에서만 스와이프 가능하도록)
-        isSwipeEnabled = true
-        enableSwiping()
-    }
+//    // Home 화면으로 돌아가기
+//    func returnToHome() {
+//        // 네비게이션 스택의 루트 뷰 컨트롤러로 이동 (모든 중간 화면 제거)
+//        homeVC.navigationController?.popToRootViewController(animated: true)
+//        
+//        // 페이지 뷰 컨트롤러를 홈 네비게이션 컨트롤러로 설정
+//        setViewControllers([homeNavController], direction: .forward, animated: true)
+//        
+//        // 스와이프 기능 활성화 (Home에서만 스와이프 가능하도록)
+//        isSwipeEnabled = true
+//        enableSwiping()
+//    }
     
     
     
@@ -91,7 +92,7 @@ class MainContainerViewController: UIPageViewController {
 extension MainContainerViewController: UIPageViewControllerDataSource {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         // 디테일 화면에서 홈 화면으로
-        if viewController == detailVC {
+        if viewController == chartVC {
             return homeNavController
         }
         return nil
@@ -100,7 +101,7 @@ extension MainContainerViewController: UIPageViewControllerDataSource {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
         // 홈 화면에서만 디테일 화면으로 이동 가능
         if viewController == homeNavController && isSwipeEnabled {
-                return detailVC
+                return chartVC
             }
             return nil
         
@@ -110,12 +111,11 @@ extension MainContainerViewController: UIPageViewControllerDataSource {
 // MARK: - UIPageViewControllerDelegate
 extension MainContainerViewController: UIPageViewControllerDelegate {
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        // 페이지 전환이 완료된 후 처리할 내용
     }
 }
 
 // MARK: - MainContainer와 각 화면 간 연결
-extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupViewControllerDelegate, WalkCompletedViewControllerDelegate {
+extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupViewControllerDelegate {
     // HomeViewController에서 시작 버튼 탭
     func didTapStartButton() {
         startWalkFlow()
@@ -160,13 +160,13 @@ extension MainContainerViewController: HomeViewControllerDelegate, WalkSetupView
 //    }
     
     // WalkCompletedViewController에서 홈으로 버튼 탭
-    func didTapReturnHomeButton() {
-        // 모든 화면 닫고 홈으로
-        homeVC.navigationController?.dismiss(animated: true) {
-            print("home가기")
-            self.returnToHome()
-        }
-    }
+//    func didTapReturnHomeButton() {
+//        // 모든 화면 닫고 홈으로
+//        homeVC.navigationController?.dismiss(animated: true) {
+//            print("home가기")
+//            self.returnToHome()
+//        }
+//    }
 }
 
 extension MainContainerViewController: UINavigationControllerDelegate {
@@ -201,7 +201,7 @@ protocol WalkSetupViewControllerDelegate: AnyObject {
 //    func didTapFinishButton()
 //}
 
-// MARK: - WalkCompletedViewController Delegate
-protocol WalkCompletedViewControllerDelegate: AnyObject {
-    func didTapReturnHomeButton()
-}
+//// MARK: - WalkCompletedViewController Delegate
+//protocol WalkCompletedViewControllerDelegate: AnyObject {
+//    func didTapReturnHomeButton()
+//}
