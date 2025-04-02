@@ -10,6 +10,13 @@ import Combine
 import SnapKit
 
 final class WalkTrackingSheetView: BaseView {
+    private let formatManager: FormatManagerProtocol
+    
+    init(formatManager: FormatManagerProtocol = FormatManager.shared) {
+        self.formatManager = formatManager
+        super.init(frame: .zero)
+        setupBindings()
+    }
     
     private let metricsStackView: UIStackView = {
         let stackView = UIStackView()
@@ -199,11 +206,6 @@ final class WalkTrackingSheetView: BaseView {
         return addPhotoButtonTappedSubject.eraseToAnyPublisher()
     }
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupBindings()
-    }
-    
     // MARK: - Setup
     override func configureHierarchy() {
         // 메인 컴포넌트 추가
@@ -390,11 +392,7 @@ final class WalkTrackingSheetView: BaseView {
     
     /// 시간 업데이트
     func updateTime(_ timeInterval: TimeInterval) {
-        let hours = Int(timeInterval) / 3600
-        let minutes = Int(timeInterval) % 3600 / 60
-        let seconds = Int(timeInterval) % 60
-        
-        timeLabel.text = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        timeLabel.text = formatManager.formattedDuration(seconds: timeInterval)
     }
     
     /// 일시정지/재개 버튼 상태 업데이트
