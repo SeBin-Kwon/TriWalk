@@ -64,7 +64,7 @@ final class FormatManager: FormatManagerProtocol {
         
         // 출발지/도착지 설정 (약어 3글자로)
         let startLocationAbbr = String(walkRecord.startAddress.prefix(3))
-        let endLocationAbbr = walkRecord.hasDestination ? String(walkRecord.endAddress.prefix(3)) : "어디든"
+        let endLocationAbbr = walkRecord.hasDestination ? String(walkRecord.endAddress.prefix(3)) : "어디든지"
         
         // 데이터 구성
         return WalkCompletedData(
