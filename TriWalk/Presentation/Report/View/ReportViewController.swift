@@ -1,5 +1,5 @@
 //
-//  ChartViewController.swift
+//  ReportViewController.swift
 //  TriWalk
 //
 //  Created by Sebin Kwon on 4/2/25.
@@ -9,15 +9,15 @@ import UIKit
 import MapKit
 import Combine
 
-final class ChartViewController: BaseViewController {
+final class ReportViewController: BaseViewController {
     
     // MARK: - Properties
-    private let chartView = ChartView()
-    private let viewModel: ChartViewModel
+    private let chartView = ReportView()
+    private let viewModel: ReportViewModel
     private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
     
     // MARK: - Lifecycle
-    init(viewModel: ChartViewModel = ChartViewModel()) {
+    init(viewModel: ReportViewModel = ReportViewModel()) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -43,7 +43,7 @@ final class ChartViewController: BaseViewController {
     
     // MARK: - Configuration
     override func bindViewModel() {
-        let input = ChartViewModel.Input(
+        let input = ReportViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher()
         )
         
@@ -83,7 +83,7 @@ final class ChartViewController: BaseViewController {
 }
 
 // MARK: - MKMapViewDelegate
-extension ChartViewController: MKMapViewDelegate {
+extension ReportViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let routeOverlay = overlay as? RouteOverlay {
             let renderer = MKPolylineRenderer(polyline: routeOverlay)

@@ -1,5 +1,5 @@
 //
-//  ChartView.swift
+//  ReportView.swift
 //  TriWalk
 //
 //  Created by Sebin Kwon on 4/2/25.
@@ -9,18 +9,11 @@ import UIKit
 import MapKit
 import SnapKit
 
-final class ChartView: BaseView {
-    
-    // MARK: - UI Components
-    let headerView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        return view
-    }()
+final class ReportView: BaseView {
     
     let titleLabel = {
         let label = UILabel()
-        label.text = "이번 주 산책 지도"
+        label.text = "산책 여행 리포트"
         label.applyHeading2Style()
         return label
     }()
@@ -55,31 +48,22 @@ final class ChartView: BaseView {
     
     // MARK: - Setup
     override func configureHierarchy() {
-        backgroundColor = .background
-        
         addSubviews(
-            headerView,
+            titleLabel,
             mapView,
             subtitleLabel,
             loadingIndicator
         )
         
-        headerView.addSubview(titleLabel)
     }
     
     override func configureLayout() {
-        headerView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.height.equalTo(60)
-        }
-        
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Spacing.screenMargin)
-            make.centerY.equalToSuperview()
+            make.top.horizontalEdges.equalTo(safeAreaLayoutGuide).inset(Spacing.screenMargin)
         }
         
         mapView.snp.makeConstraints { make in
-            make.top.equalTo(headerView.snp.bottom)
+            make.top.equalTo(titleLabel.snp.bottom).offset(Spacing.m)
             make.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
             make.height.equalTo(300)
         }

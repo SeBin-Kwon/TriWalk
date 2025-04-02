@@ -1,5 +1,5 @@
 //
-//  ChartViewModel.swift
+//  ReportViewModel.swift
 //  TriWalk
 //
 //  Created by Sebin Kwon on 4/2/25.
@@ -11,7 +11,7 @@ import CoreLocation
 import MapKit
 import UIKit
 
-final class ChartViewModel: BaseViewModel, ViewModelType {
+final class ReportViewModel: BaseViewModel, ViewModelType {
     
     // MARK: - Input-Output 정의
     struct Input {
