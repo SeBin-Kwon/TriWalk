@@ -27,6 +27,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         let time: AnyPublisher<TimeInterval, Never>  // 초 단위
         let isPaused: AnyPublisher<Bool, Never>
         let isFinished: AnyPublisher<Bool, Never>
+        let walkRecord: AnyPublisher<WalkRecord, Never>
     }
     
     // MARK: - Private Subjects
@@ -36,6 +37,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private let timeSubject = CurrentValueSubject<TimeInterval, Never>(0.0)
     private let isPausedSubject = CurrentValueSubject<Bool, Never>(false)
     private let isFinishedSubject = CurrentValueSubject<Bool, Never>(false)
+    private let walkRecordSubject = PassthroughSubject<WalkRecord, Never>()
     
     // MARK: - Private Properties
     private let pedometer = CMPedometer()
@@ -52,6 +54,8 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private let walkRepository: WalkRepositoryProtocol = WalkRepository()
     // 사용자 정보 (칼로리 계산에 필요)
     private let userWeight: Double = 70.0  // kg 단위, 기본값 (나중에 설정에서 변경 가능하게 만들 수 있음)
+    private var savedWalkRecord: WalkRecord?
+        
     
     // MARK: - Initialization
     override init() {
@@ -95,7 +99,8 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             calories: caloriesSubject.eraseToAnyPublisher(),
             time: timeSubject.eraseToAnyPublisher(),
             isPaused: isPausedSubject.eraseToAnyPublisher(),
-            isFinished: isFinishedSubject.eraseToAnyPublisher()
+            isFinished: isFinishedSubject.eraseToAnyPublisher(),
+            walkRecord: walkRecordSubject.eraseToAnyPublisher()
         )
     }
     
@@ -198,8 +203,10 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             if case .failure(let error) = completion {
                 print("산책 데이터 저장 실패: \(error.localizedDescription)")
             }
-        }, receiveValue: { _ in
+        }, receiveValue: { [weak self] savedRecord in
             print("산책 데이터가 성공적으로 저장되었습니다.")
+            self?.savedWalkRecord = savedRecord
+            self?.walkRecordSubject.send(savedRecord)
         })
         .store(in: &cancellables)
     }

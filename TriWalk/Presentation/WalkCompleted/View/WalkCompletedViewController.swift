@@ -10,12 +10,17 @@ import Combine
 
 final class WalkCompletedViewController: BaseViewController {
     
-    // MARK: - Properties
-    weak var delegate: WalkCompletedViewControllerDelegate?
     private let walkCompletedView = WalkCompletedView()
     
     // 산책 데이터
     private var walkData: WalkCompletedData?
+    private let viewModel: WalkCompletedViewModel
+    private let viewDidLoadSubject = PassthroughSubject<Void, Never>()
+    
+    init(walkRecord: WalkRecord? = nil, formatManager: FormatManagerProtocol = FormatManager.shared) {
+        self.viewModel = WalkCompletedViewModel(walkRecord: walkRecord, formatManager: formatManager)
+        super.init(nibName: nil, bundle: nil)
+    }
     
     // MARK: - Lifecycle
     override func loadView() {
@@ -24,43 +29,40 @@ final class WalkCompletedViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // 샘플 데이터 설정 - 실제로는 ViewModel이나 파라미터로 전달받아야 함
-        setupSampleData()
-        
         // 이미지 설정
         setupImages()
+        viewDidLoadSubject.send(())
     }
     
     // MARK: - Setup
     override func bindViewModel() {
-        // 홈으로 버튼 탭 이벤트 바인딩
-        walkCompletedView.homeButton.controlPublisher(for: .touchUpInside)
+        let input = WalkCompletedViewModel.Input(
+            viewDidLoad: viewDidLoadSubject.eraseToAnyPublisher(),
+            homeButtonTapped: walkCompletedView.homeButton.controlPublisher(for: .touchUpInside)
+                .map { _ in () }
+                .eraseToAnyPublisher()
+        )
+        
+        // ViewModel 변환
+        let output = viewModel.transform(input: input)
+        
+        output.walkCompletedData
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, data in
+                owner.walkCompletedView.configure(with: data)
+            }
+            .store(in: &cancellables)
+        
+        // 화면 닫기
+        output.dismissView
+            .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, _ in
                 let vc = MainContainerViewController()
                 owner.changeRootViewController(rootView: vc)
             }
             .store(in: &cancellables)
-    }
-    
-    private func setupSampleData() {
-        // 샘플 데이터 - 실제 구현 시에는 이전 화면에서 전달받은 데이터 사용
-        let data = WalkCompletedData(
-            date: "2025.03.26",
-            weekday: "WED",
-            startLocation: "BJK",
-            startTime: "04:26 PM",
-            endLocation: "OPS",
-            endTime: "05:38 PM",
-            steps: 426,
-            distance: 1.3,
-            calories: 122,
-            duration: "01:12:48"
-        )
-        
-        walkData = data
-        walkCompletedView.configure(with: data)
     }
     
     private func setupImages() {
@@ -104,17 +106,6 @@ final class WalkCompletedViewController: BaseViewController {
             )
             
             text.draw(in: textRect, withAttributes: textAttributes)
-        }
-    }
-    
-    // MARK: - Public Methods
-    /// 산책 완료 데이터 설정
-    func configure(with data: WalkCompletedData) {
-        walkData = data
-        
-        // 뷰가 로드된 경우에만 설정
-        if isViewLoaded {
-            walkCompletedView.configure(with: data)
         }
     }
 }
