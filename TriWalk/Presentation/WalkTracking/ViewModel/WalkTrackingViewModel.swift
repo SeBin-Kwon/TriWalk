@@ -46,7 +46,10 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private var previousSteps: Int = 0
     private var previousDistance: Double = 0
     private var previousRouteCoordinates: [CLLocationCoordinate2D] = []
-    
+    private var startAddress: String?
+    private var destinationAddress: String?
+    private var tripType: TripType = .roundTrip
+    private let walkRepository: WalkRepositoryProtocol = WalkRepository()
     // 사용자 정보 (칼로리 계산에 필요)
     private let userWeight: Double = 70.0  // kg 단위, 기본값 (나중에 설정에서 변경 가능하게 만들 수 있음)
     
@@ -157,11 +160,48 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         }
     }
     
+    func setWalkInfo(startAddress: String?, destinationAddress: String?, tripType: TripType) {
+        self.startAddress = startAddress
+        self.destinationAddress = destinationAddress
+        self.tripType = tripType
+    }
+    
+    // 종료 및 저장 로직
     private func finishTracking() {
         stopTracking()
         isFinishedSubject.send(true)
         
-        // 여기서 데이터 저장 처리 (나중에 구현)
+        // 산책 종료 시간 기록
+        let endDate = Date()
+        
+        // 산책 데이터 생성
+        let walkRecord = WalkRecord()
+        walkRecord.date = startDate ?? Date()  // 산책한 날짜
+        walkRecord.startTime = startDate ?? Date()  // 산책 시작 시간
+        walkRecord.endTime = endDate  // 산책 종료 시간
+        walkRecord.steps = stepsCountSubject.value
+        walkRecord.distance = distanceSubject.value
+        walkRecord.calories = caloriesSubject.value
+        walkRecord.duration = timeSubject.value
+        
+        // 데이터 저장 (주소 및 이동 방식 정보 포함)
+        walkRepository.saveWalk(
+            walkRecord,
+            photos: [], // 사진 기능 미룸
+            routeCoordinates: previousRouteCoordinates,
+            startAddress: startAddress,
+            destinationAddress: destinationAddress,
+            tripType: tripType.rawValue
+        )
+        .receive(on: DispatchQueue.main)
+        .sink(receiveCompletion: { completion in
+            if case .failure(let error) = completion {
+                print("산책 데이터 저장 실패: \(error.localizedDescription)")
+            }
+        }, receiveValue: { _ in
+            print("산책 데이터가 성공적으로 저장되었습니다.")
+        })
+        .store(in: &cancellables)
     }
     
     private func startTimer() {

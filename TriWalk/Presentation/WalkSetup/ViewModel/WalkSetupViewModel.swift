@@ -11,7 +11,6 @@ import MapKit
 import CoreLocation
 
 final class WalkSetupViewModel: BaseViewModel, ViewModelType {
-    // Input-Output 패턴 정의
     struct Input {
         let viewDidAppear: AnyPublisher<Void, Never>
         let startButtonTapped: AnyPublisher<Void, Never>
@@ -26,21 +25,28 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         let destinationAnnotation: AnyPublisher<(coordinate: CLLocationCoordinate2D, title: String), Never>
         let destinationTitle: AnyPublisher<String, Never>
         let showDestinationSearchSheet: AnyPublisher<Void, Never>
-        let startWalkFlow: AnyPublisher<Void, Never>
+        let startWalkFlow: AnyPublisher<WalkInfo, Never>
         let showAlert: AnyPublisher<(title: String, message: String), Never>
         let tripType: AnyPublisher<TripType, Never>
     }
     
-    // 프라이빗 Subject들
+    struct WalkInfo {
+        let startAddress: String?
+        let destinationAddress: String?
+        let destinationCoordinate: CLLocationCoordinate2D?
+        let tripType: TripType
+    }
+    
     private let userLocationSubject = PassthroughSubject<CLLocation, Never>()
-    private let userAddressSubject = PassthroughSubject<String, Never>()
+    private let userAddressSubject = CurrentValueSubject<String, Never>("")
     private let destinationAnnotationSubject = PassthroughSubject<(coordinate: CLLocationCoordinate2D, title: String), Never>()
-    private let destinationTitleSubject = PassthroughSubject<String, Never>()
+    private let destinationTitleSubject = CurrentValueSubject<String, Never>("어디든지")
     private let showDestinationSearchSheetSubject = PassthroughSubject<Void, Never>()
-    private let startWalkFlowSubject = PassthroughSubject<Void, Never>()
+    private let startWalkFlowSubject = PassthroughSubject<WalkInfo, Never>()
     private let showAlertSubject = PassthroughSubject<(title: String, message: String), Never>()
     private let tripTypeSubject = CurrentValueSubject<TripType, Never>(.roundTrip)
-
+    private var destinationAnnotation: (coordinate: CLLocationCoordinate2D, title: String)?
+    
     func transform(input: Input) -> Output {
         cancellables.removeAll() 
         
@@ -98,7 +104,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         input.startButtonTapped
              .withUnretained(self)
              .sink { owner, _ in
-                 owner.startWalkFlowSubject.send()
+                 owner.collectWalkInfo()
              }
              .store(in: &cancellables)
         
@@ -127,6 +133,13 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
                 }
                 .store(in: &cancellables)
         
+        destinationAnnotationSubject
+            .withUnretained(self)
+            .sink { owner, annotation in
+                owner.destinationAnnotation = annotation
+            }
+            .store(in: &cancellables)
+        
         return Output(
             userLocation: userLocationSubject.eraseToAnyPublisher(),
             userAddress: userAddressSubject.eraseToAnyPublisher(),
@@ -137,6 +150,44 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             showAlert: showAlertSubject.eraseToAnyPublisher(),
             tripType: tripTypeSubject.eraseToAnyPublisher()
         )
+    }
+    
+    
+    // 산책 정보 수집 메서드 추가
+    private func collectWalkInfo() {
+        // 현재 선택된 도착지 좌표와 주소 가져오기
+        var destinationCoordinate: CLLocationCoordinate2D? = nil
+        var destinationAddress: String? = nil
+        
+        // 저장된 도착지 데이터 확인
+        if let annotation = destinationAnnotation {
+            destinationCoordinate = annotation.coordinate
+            
+            // 가장 최근에 발행된 도착지 제목 가져오기
+            let lastDestinationTitle = destinationTitleSubject.value
+                destinationAddress = lastDestinationTitle
+                
+                // "어디든지"인 경우 nil로 처리
+                if destinationAddress == "어디든지" {
+                    destinationAddress = nil
+                }
+            
+        }
+        
+        // 현재 주소
+        let startAddress = userAddressSubject.value
+        let tripType = tripTypeSubject.value
+        
+        // 수집된 정보로 WalkInfo 생성
+        let walkInfo = WalkInfo(
+            startAddress: startAddress,
+            destinationAddress: destinationAddress,
+            destinationCoordinate: destinationCoordinate,
+            tripType: tripType
+        )
+        
+        // Subject를 통해 전달
+        startWalkFlowSubject.send(walkInfo)
     }
     
     // 현재 위치 요청
@@ -203,24 +254,6 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         } else {
             // 어디든지 옵션 선택
             destinationTitleSubject.send("어디든지")
-        }
-    }
-    
-    enum TripType {
-        case roundTrip, oneWay
-        
-        var title: String {
-            switch self {
-            case .roundTrip: return "왕복"
-            case .oneWay: return "편도"
-            }
-        }
-        
-        mutating func toggle() {
-            switch self {
-            case .roundTrip: self = .oneWay
-            case .oneWay: self = .roundTrip
-            }
         }
     }
 }

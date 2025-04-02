@@ -159,8 +159,8 @@ final class WalkSetupViewController: BaseViewController {
         // 여행 시작
         output.startWalkFlow
             .withUnretained(self)
-            .sink { owner, _ in
-                owner.startWalking()
+            .sink { owner, walkInfo in
+                owner.startWalking(walkInfo)
             }
             .store(in: &cancellables)
         
@@ -202,18 +202,14 @@ final class WalkSetupViewController: BaseViewController {
             .store(in: &cancellables)
     }
     
-    private func startWalking() {
-        // 현재 선택된 도착지 좌표 가져오기
-        var destinationCoordinate: CLLocationCoordinate2D? = nil
-        
-        // 지도에서 도착지 주석 찾기
-        if let destinationAnnotation = mapView.annotations.first(where: { $0.title == "도착지" }) {
-            destinationCoordinate = destinationAnnotation.coordinate
-        }
-        
+    private func startWalking(_ walkInfo: WalkSetupViewModel.WalkInfo) {
         let vc = WalkTrackingViewController()
-        vc.setDestination(coordinate: destinationCoordinate)
-        
+        vc.setDestination(coordinate: walkInfo.destinationCoordinate)
+        vc.setWalkInfo(
+            startAddress: walkInfo.startAddress,
+            destinationAddress: walkInfo.destinationAddress,
+            tripType: walkInfo.tripType
+        )
         changeRootViewController(rootView: vc)
     }
     

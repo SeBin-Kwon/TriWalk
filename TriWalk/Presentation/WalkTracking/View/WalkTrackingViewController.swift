@@ -23,7 +23,9 @@ final class WalkTrackingViewController: BaseViewController {
     private var walkTrackingSheetVC: WalkTrackingSheetViewController?
     private let viewModel = WalkTrackingViewModel()
     private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
-    
+    private var startAddress: String?
+    private var destinationAddress: String?
+    private var tripType: TripType?
     
     // MARK: - UI Components
     private let mapView: MKMapView = {
@@ -37,12 +39,28 @@ final class WalkTrackingViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupMapView()
+        if startAddress == nil && destinationAddress == nil {
+            setWalkInfo(startAddress: "알 수 없음", destinationAddress: "어디든지", tripType: .roundTrip)
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         presentTrackingSheet()
         viewDidAppearSubject.send(())
+    }
+    
+    func setWalkInfo(startAddress: String?, destinationAddress: String?, tripType: TripType = .roundTrip) {
+        self.startAddress = startAddress
+        self.destinationAddress = destinationAddress
+        self.tripType = tripType
+        
+        // 뷰모델에 정보 전달
+        viewModel.setWalkInfo(
+            startAddress: startAddress,
+            destinationAddress: destinationAddress,
+            tripType: tripType
+        )
     }
     
     private func presentTrackingSheet() {
