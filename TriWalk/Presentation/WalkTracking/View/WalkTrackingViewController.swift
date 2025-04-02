@@ -26,7 +26,6 @@ final class WalkTrackingViewController: BaseViewController {
     private var startAddress: String?
     private var destinationAddress: String?
     private var tripType: TripType?
-    private var savedWalkRecord: WalkRecord?
     
     // MARK: - UI Components
     private let mapView: MKMapView = {
@@ -143,13 +142,12 @@ final class WalkTrackingViewController: BaseViewController {
             .store(in: &cancellables)
         
         // 종료 상태 처리
-        output.isFinished
-            .filter { $0 }
+        output.walkRecord
             .receive(on: RunLoop.main)
             .withUnretained(self)
-            .sink { owner, _ in
-                print("종료버튼")
-                let completedVC = WalkCompletedViewController(walkRecord: owner.savedWalkRecord)
+            .sink { owner, value in
+                print("종료버튼 - savedWalkRecord: \(value)")
+                let completedVC = WalkCompletedViewController(walkRecord: value)
                 completedVC.modalPresentationStyle = .fullScreen
                 completedVC.modalTransitionStyle = .crossDissolve
                 owner.walkTrackingSheetVC?.present(completedVC, animated: true)
@@ -173,15 +171,6 @@ final class WalkTrackingViewController: BaseViewController {
                 
                 // 경로 업데이트
                 owner.updateRoute(with: location.coordinate)
-            }
-            .store(in: &cancellables)
-        
-        output.walkRecord
-            .compactMap { $0 }
-            .receive(on: RunLoop.main)
-            .withUnretained(self)
-            .sink { owner, record in
-                owner.savedWalkRecord = record
             }
             .store(in: &cancellables)
     }

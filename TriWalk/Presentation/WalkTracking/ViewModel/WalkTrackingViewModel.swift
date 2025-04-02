@@ -26,7 +26,6 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         let calories: AnyPublisher<Double, Never>  // kcal 단위
         let time: AnyPublisher<TimeInterval, Never>  // 초 단위
         let isPaused: AnyPublisher<Bool, Never>
-        let isFinished: AnyPublisher<Bool, Never>
         let walkRecord: AnyPublisher<WalkRecord, Never>
     }
     
@@ -36,7 +35,6 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private let caloriesSubject = CurrentValueSubject<Double, Never>(0.0)
     private let timeSubject = CurrentValueSubject<TimeInterval, Never>(0.0)
     private let isPausedSubject = CurrentValueSubject<Bool, Never>(false)
-    private let isFinishedSubject = CurrentValueSubject<Bool, Never>(false)
     private let walkRecordSubject = PassthroughSubject<WalkRecord, Never>()
     
     // MARK: - Private Properties
@@ -99,7 +97,6 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             calories: caloriesSubject.eraseToAnyPublisher(),
             time: timeSubject.eraseToAnyPublisher(),
             isPaused: isPausedSubject.eraseToAnyPublisher(),
-            isFinished: isFinishedSubject.eraseToAnyPublisher(),
             walkRecord: walkRecordSubject.eraseToAnyPublisher()
         )
     }
@@ -174,7 +171,6 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     // 종료 및 저장 로직
     private func finishTracking() {
         stopTracking()
-        isFinishedSubject.send(true)
         
         // 산책 종료 시간 기록
         let endDate = Date()
