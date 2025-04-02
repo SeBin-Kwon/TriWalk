@@ -14,7 +14,12 @@ import UIKit
 // 워크 레포지토리 프로토콜
 protocol WalkRepositoryProtocol {
     // 저장
-    func saveWalk(_ walkRecord: WalkRecord, photos: [UIImage], routeCoordinates: [CLLocationCoordinate2D]) -> AnyPublisher<WalkRecord, Error>
+    func saveWalk(_ walkRecord: WalkRecord,
+                  photos: [UIImage],
+                  routeCoordinates: [CLLocationCoordinate2D],
+                  startAddress: String?,
+                  destinationAddress: String?,
+                  tripType: String) -> AnyPublisher<WalkRecord, Error>
     
     // 조회
     func getAllWalks() -> Results<WalkRecord>?
@@ -34,7 +39,13 @@ class WalkRepository: WalkRepositoryProtocol {
     }
     
     // 산책 기록 저장
-    func saveWalk(_ walkRecord: WalkRecord, photos: [UIImage], routeCoordinates: [CLLocationCoordinate2D]) -> AnyPublisher<WalkRecord, Error> {
+    func saveWalk(_ walkRecord: WalkRecord,
+                 photos: [UIImage],
+                 routeCoordinates: [CLLocationCoordinate2D],
+                 startAddress: String?,
+                 destinationAddress: String?,
+                  tripType: String = "Round Trip") -> AnyPublisher<WalkRecord, Error> {
+        
         return Future<WalkRecord, Error> { [weak self] promise in
             guard let self = self else {
                 promise(.failure(RealmError.initializationFailed))
@@ -56,21 +67,24 @@ class WalkRepository: WalkRepositoryProtocol {
             }
             
             // 사진 객체 생성
-            let walkPhotos = List<WalkPhoto>()
-            for (index, image) in photos.enumerated() {
-                // 사진 촬영 위치 (가능하면)
-                var photoCoordinate: CLLocationCoordinate2D? = nil
-                if routeCoordinates.count > 0 {
-                    // 간단하게 경로의 중간 지점을 사진 촬영 위치로 가정
-                    // 실제로는 촬영 시점의 위치를 저장해야 함
-                    let positionIndex = min(index * routeCoordinates.count / photos.count, routeCoordinates.count - 1)
-                    photoCoordinate = routeCoordinates[positionIndex]
-                }
-                
-                let photo = WalkPhoto(image: image, coordinate: photoCoordinate)
-                walkPhotos.append(photo)
-            }
-            walkRecord.photos = walkPhotos
+//            let walkPhotos = List<WalkPhoto>()
+//            for (index, image) in photos.enumerated() {
+//                // 사진 촬영 위치 (가능하면)
+//                var photoCoordinate: CLLocationCoordinate2D? = nil
+//                if routeCoordinates.count > 0 {
+//                    // 간단하게 경로의 중간 지점을 사진 촬영 위치로 가정
+//                    // 실제로는 촬영 시점의 위치를 저장해야 함
+//                    let positionIndex = min(index * routeCoordinates.count / photos.count, routeCoordinates.count - 1)
+//                    photoCoordinate = routeCoordinates[positionIndex]
+//                }
+//                
+//                let photo = WalkPhoto(image: image, coordinate: photoCoordinate)
+//                walkPhotos.append(photo)
+//            }
+//            walkRecord.photos = walkPhotos
+            
+            walkRecord.setAddresses(start: startAddress, destination: destinationAddress)
+            walkRecord.tripType = tripType
             
             // Realm에 저장
             self.realmRepository.save(walkRecord) { result in

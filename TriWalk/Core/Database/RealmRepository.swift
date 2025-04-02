@@ -43,11 +43,9 @@ protocol RealmRepositoryProtocol {
     func deleteAll<T: Object>(_ type: T.Type, completion: @escaping (RealmOperationResult<Void>) -> Void)
 }
 
-// Realm 레포지토리 구현
+
 class RealmRepository: RealmRepositoryProtocol {
     private var realm: Realm?
-    
-    // 싱글톤 인스턴스
     static let shared = RealmRepository()
     
     private init() {
