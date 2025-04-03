@@ -21,5 +21,9 @@ class BaseViewModel {
     deinit {
         cancellables.removeAll()
         print("\(type(of: self)) deinited")
+        if LocationManager.shared.authorizationStatus == .authorizedWhenInUse ||
+            LocationManager.shared.authorizationStatus == .authorizedAlways {
+            LocationManager.shared.stopUpdatingLocation()
+        }
     }
 }

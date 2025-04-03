@@ -17,6 +17,8 @@ final class LocationManager: NSObject {
     
     // MARK: - Properties
     private let locationManager = CLLocationManager()
+    private var lastLocationUpdate: Date = Date(timeIntervalSince1970: 0)
+    private let walkingUpdateInterval: TimeInterval = 1.0
     
     // Publishers
     private let locationSubject = PassthroughSubject<CLLocation, Error>()
@@ -53,6 +55,7 @@ final class LocationManager: NSObject {
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.distanceFilter = 5.0
         authorizationSubject.send(locationManager.authorizationStatus)
     }
     
@@ -69,7 +72,7 @@ final class LocationManager: NSObject {
             guard let self = self else { return }
             
             if self.locationManager.authorizationStatus == .authorizedWhenInUse ||
-               self.locationManager.authorizationStatus == .authorizedAlways {
+                self.locationManager.authorizationStatus == .authorizedAlways {
                 self.locationManager.requestLocation()
             } else {
                 let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
@@ -83,7 +86,7 @@ final class LocationManager: NSObject {
     /// 지속적인 위치 업데이트 시작
     func startUpdatingLocation() {
         if locationManager.authorizationStatus == .authorizedWhenInUse ||
-           locationManager.authorizationStatus == .authorizedAlways {
+            locationManager.authorizationStatus == .authorizedAlways {
             locationManager.startUpdatingLocation()
         } else {
             let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
@@ -97,22 +100,22 @@ final class LocationManager: NSObject {
     }
     
     /// 좌표로부터 주소 찾기
-    func lookupAddress(for coordinate: CLLocationCoordinate2D) {
+    func lookupAddress(for coordinate: CLLocationCoordinate2D, completion: @escaping (String?) -> Void) {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         let geocoder = CLGeocoder()
         
         geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
             if let error = error {
-                self?.addressSubject.send(completion: .failure(error))
+                print("역지오코딩 오류: \(error.localizedDescription)")
+                completion(nil)
                 return
             }
             
-            if let placemark = placemarks?.first {
-                let address = self?.formattedAddress(from: placemark) ?? "알 수 없는 주소"
-                self?.addressSubject.send(address)
+            if let placemark = placemarks?.first, let self = self {
+                let address = self.formattedAddress(from: placemark)
+                completion(address)
             } else {
-                let noAddressError = NSError(domain: "com.app.location", code: 2, userInfo: [NSLocalizedDescriptionKey: "주소를 찾을 수 없습니다."])
-                self?.addressSubject.send(completion: .failure(noAddressError))
+                completion(nil)
             }
         }
     }
@@ -159,12 +162,35 @@ final class LocationManager: NSObject {
 // MARK: - CLLocationManagerDelegate
 extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let location = locations.first {
-            locationSubject.send(location)
+        guard let location = locations.last else { return }
+        
+        // 산책 중 위치 업데이트 간격 제한
+        let now = Date()
+        guard now.timeIntervalSince(lastLocationUpdate) >= walkingUpdateInterval else {
+            return // 너무 빈번한 업데이트는 무시
         }
+        
+        lastLocationUpdate = now
+        locationSubject.send(location)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("위치 서비스 오류 발생: \(error.localizedDescription)")
+        
+        // 특정 오류 타입에 따른 처리
+        if let clError = error as? CLError {
+            switch clError.code {
+            case .denied:
+                print("위치 권한 거부됨")
+            case .network:
+                print("네트워크 연결 문제")
+            case .locationUnknown:
+                print("위치를 확인할 수 없음")
+            default:
+                print("기타 위치 오류: \(clError.code.rawValue)")
+            }
+        }
+        
         locationSubject.send(completion: .failure(error))
     }
     

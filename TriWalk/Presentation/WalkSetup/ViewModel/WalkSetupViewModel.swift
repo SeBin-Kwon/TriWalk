@@ -59,7 +59,11 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             .withUnretained(self)
             .sink { owner, location in
                 owner.userLocationSubject.send(location)
-                LocationManager.shared.lookupAddress(for: location.coordinate)
+                LocationManager.shared.lookupAddress(for: location.coordinate) { address in
+                            if let address = address {
+                                owner.userAddressSubject.send(address)
+                            }
+                        }
             }
             .store(in: &cancellables)
         
@@ -192,27 +196,21 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     }
     
     // 현재 위치 요청
-    // 위치 요청 메서드 수정
     private func requestCurrentLocation() {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
+        print("현재 위치 요청 시작")
+            userAddressSubject.send("위치 정보를 불러오는 중...")
             
             if LocationManager.shared.authorizationStatus == .authorizedWhenInUse ||
                LocationManager.shared.authorizationStatus == .authorizedAlways {
                 LocationManager.shared.requestLocation()
             } else if LocationManager.shared.authorizationStatus == .notDetermined {
-                DispatchQueue.main.async {
-                    LocationManager.shared.requestAuthorization()
-                }
+                LocationManager.shared.requestAuthorization()
             } else {
-                DispatchQueue.main.async {
-                    self.showAlertSubject.send((
-                        title: "위치 서비스 권한 필요",
-                        message: "현재 위치를 사용하려면 위치 서비스 권한을 허용해주세요."
-                    ))
-                }
+                showAlertSubject.send((
+                    title: "위치 서비스 권한 필요",
+                    message: "현재 위치를 사용하려면 위치 서비스 권한을 허용해주세요."
+                ))
             }
-        }
     }
     
     // 길게 누르기 처리
@@ -221,7 +219,11 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         destinationAnnotationSubject.send((coordinate: coordinate, title: "도착지"))
         
         // 주소 찾기 요청
-        LocationManager.shared.lookupAddress(for: coordinate)
+        LocationManager.shared.lookupAddress(for: coordinate) { address in
+            if let address = address {
+                print("도착지 주소: \(address)")
+            }
+        }
         
         // 임시 구현: 직접 주소 찾기 호출
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)

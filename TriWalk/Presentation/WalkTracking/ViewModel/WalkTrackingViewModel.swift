@@ -54,6 +54,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private let userWeight: Double = 70.0  // kg 단위, 기본값 (나중에 설정에서 변경 가능하게 만들 수 있음)
     private var savedWalkRecord: WalkRecord?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
+    private var lastStartLocationLookup: Bool = false
     
     // MARK: - Initialization
     override init() {
@@ -105,19 +106,50 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private func setupLocationTracking() {
         // 위치 업데이트 구독
         locationManager.locationPublisher
-                .catch { error -> Empty<CLLocation, Never> in
-                    print("위치 서비스 오류: \(error.localizedDescription)")
-                    return Empty()
-                }
-                .sink { [weak self] location in
-                    guard let self = self else { return }
-                    
-                    // 위치 변경을 경로에 추가
-                    self.updateRoute(with: location)
-                    self.updateDistance(with: location)
-                }
-                .store(in: &cancellables)
+                    .catch { error -> Empty<CLLocation, Never> in
+                        print("위치 서비스 오류: \(error.localizedDescription)")
+                        return Empty()
+                    }
+                    .sink { [weak self] location in
+                        guard let self = self, !self.isPausedSubject.value else { return }
+                        
+                        // 첫 위치 기록 및 출발 주소 조회 (최초 1회만)
+                        if self.startDate != nil && !self.lastStartLocationLookup {
+                            self.lastStartLocationLookup = true
+                            
+                            // 출발 주소 조회 (역지오코딩 - 산책 시작시 1회만)
+                            if self.startAddress == nil {
+                                self.lookupStartAddress(at: location.coordinate)
+                            }
+                        }
+                        
+                        // 위치 업데이트 처리 - 주소 조회 없이 경로만 업데이트
+                        self.updateRoute(with: location)
+                        self.updateDistance(with: location)
+                    }
+                    .store(in: &cancellables)
     }
+    
+    // 출발 위치 주소 조회 (최초 1회만 실행)
+        private func lookupStartAddress(at coordinate: CLLocationCoordinate2D) {
+            locationManager.lookupAddress(for: coordinate) { [weak self] address in
+                if let address = address {
+                    self?.startAddress = address
+                    print("출발 주소 확인: \(address)")
+                }
+            }
+        }
+        
+        // 도착 위치 주소 조회 (산책 종료 시 1회만 실행)
+        private func lookupEndAddress(at coordinate: CLLocationCoordinate2D, completion: @escaping () -> Void) {
+            locationManager.lookupAddress(for: coordinate) { [weak self] address in
+                if let address = address {
+                    self?.destinationAddress = address
+                    print("도착 주소 확인: \(address)")
+                }
+                completion()
+            }
+        }
     
     // 새로운 메서드 추가
     private func updateRoute(with location: CLLocation) {

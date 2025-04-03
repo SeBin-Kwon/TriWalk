@@ -70,12 +70,14 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
     private func loadWalkRecords() {
         isLoadingSubject.send(true)
         
-        // 최근 2주 이내의 산책 기록만 가져오기
+        // 최근 1주 이내의 산책 기록만 가져오기
         let today = Date()
-        let twoWeeksAgo = Calendar.current.date(byAdding: .day, value: -14, to: today) ?? today
+        let oneWeeksAgo = Calendar.current.date(byAdding: .day, value: -7, to: today) ?? today
         
-        guard let walkRecords = walkRepository.getWalks(fromDate: twoWeeksAgo, toDate: today) else {
+        guard let walkRecords = walkRepository.getWalks(fromDate: oneWeeksAgo, toDate: today) else {
             isLoadingSubject.send(false)
+            routeItemsSubject.send([])
+            walkCountSubject.send(0)
             return
         }
         
