@@ -63,8 +63,6 @@ final class WalkTrackingSheetViewController: BaseViewController {
             }
             
             sheet.prefersGrabberVisible = true
-            
-            // 🔵 시트 동작 설정 - 완전히 닫히지 않도록 설정
             sheet.prefersScrollingExpandsWhenScrolledToEdge = false
             sheet.prefersEdgeAttachedInCompactHeight = true
             sheet.preferredCornerRadius = 20
@@ -128,12 +126,13 @@ extension WalkTrackingSheetViewController: UISheetPresentationControllerDelegate
         
         // 최소 높이(손잡이만 보이는 상태)일 때 시각적 피드백 처리 가능
         if #available(iOS 16.0, *) {
-            UIView.animate(withDuration: 0.1) { [weak self] in
+            UIView.animate(withDuration: 0.2) { [weak self] in
                 if sheetPresentationController.selectedDetentIdentifier == .init(rawValue: "normal") {
                     self?.walkTrackingView.fadeInContentAfterMaximize()
                 } else {
                     self?.walkTrackingView.fadeOutContentForMinimize()
                 }
+                self?.walkTrackingView.layoutIfNeeded()
             }
         }
     }

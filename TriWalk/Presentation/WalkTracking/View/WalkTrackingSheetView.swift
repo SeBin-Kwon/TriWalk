@@ -238,7 +238,7 @@ final class WalkTrackingSheetView: BaseView {
         metricsStackView.snp.makeConstraints { make in
             make.top.equalToSuperview().inset(20)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(70)
+            make.height.equalTo(70).priority(.high)
         }
         
         // 걸음수 레이블들
@@ -323,14 +323,14 @@ final class WalkTrackingSheetView: BaseView {
             make.top.equalTo(galleryTitleLabel.snp.bottom).offset(8)
             make.leading.equalToSuperview().offset(16)
             make.trailing.equalToSuperview().offset(-16)
-            make.bottom.equalToSuperview().offset(-12)
+            make.bottom.lessThanOrEqualToSuperview().offset(-12)
         }
         
         // 버튼들
         pauseButton.snp.makeConstraints { make in
-            make.top.equalTo(galleryContainerView.snp.bottom).offset(16)
+            make.top.equalTo(galleryContainerView.snp.bottom).offset(16).priority(.medium)
             make.leading.equalToSuperview().offset(16)
-            make.bottom.equalToSuperview().offset(-30)
+            make.bottom.equalToSuperview().offset(-30).priority(.high)
             make.width.equalTo((UIScreen.main.bounds.width - (16 * 3)) / 2)
             make.height.equalTo(55)
         }
@@ -409,6 +409,7 @@ final class WalkTrackingSheetView: BaseView {
         // 손잡이를 제외한 모든 요소 숨기기
         [metricsStackView, timeContainerView, galleryContainerView, pauseButton, finishButton].forEach {
             $0.alpha = 0
+            $0.isHidden = true
         }
     }
 
@@ -417,6 +418,7 @@ final class WalkTrackingSheetView: BaseView {
         // 모든 요소 다시 표시
         [metricsStackView, timeContainerView, galleryContainerView, pauseButton, finishButton].forEach {
             $0.alpha = 1
+            $0.isHidden = false
         }
     }
 }
