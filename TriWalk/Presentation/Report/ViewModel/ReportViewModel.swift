@@ -11,6 +11,14 @@ import CoreLocation
 import MapKit
 import UIKit
 
+// 통계 데이터 구조체
+struct WalkStats {
+    let maxSteps: Int
+    let maxDistance: Double
+    let maxCalories: Int
+    let maxDuration: String
+}
+
 final class ReportViewModel: BaseViewModel, ViewModelType {
     
     // MARK: - Input-Output 정의
@@ -22,6 +30,7 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
         let routeItems: AnyPublisher<[RouteVisualizationManager.RouteItem], Never>
         let isLoading: AnyPublisher<Bool, Never>
         let walkCount: AnyPublisher<Int, Never>
+        let walkStats: AnyPublisher<WalkStats, Never> // 통계 데이터 추가
     }
     
     // MARK: - Private Properties
@@ -29,6 +38,7 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
     private let routeItemsSubject = CurrentValueSubject<[RouteVisualizationManager.RouteItem], Never>([])
     private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     private let walkCountSubject = CurrentValueSubject<Int, Never>(0)
+    private let walkStatsSubject = PassthroughSubject<WalkStats, Never>() // 통계 데이터 Subject
     
     // MARK: - Initialization
     init(walkRepository: WalkRepositoryProtocol = WalkRepository()) {
@@ -49,7 +59,8 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
         return Output(
             routeItems: routeItemsSubject.eraseToAnyPublisher(),
             isLoading: isLoadingSubject.eraseToAnyPublisher(),
-            walkCount: walkCountSubject.eraseToAnyPublisher()
+            walkCount: walkCountSubject.eraseToAnyPublisher(),
+            walkStats: walkStatsSubject.eraseToAnyPublisher() // 통계 출력 추가
         )
     }
     
@@ -74,6 +85,9 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
         // 지도에 표시할 경로 아이템 생성
         processWalkRecords(Array(walkRecords))
         
+        // 통계 데이터 계산 및 업데이트
+        calculateStats(from: Array(walkRecords))
+        
         isLoadingSubject.send(false)
     }
     
@@ -95,6 +109,9 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
             // 경로 좌표 로드
             let coordinates = record.loadCoordinates()
             
+            // 디버깅
+            print("Record ID: \(record.id), Coordinates count: \(coordinates.count)")
+            
             // 유효한 경로가 있는지 확인
             guard coordinates.count >= 2 else { continue }
             
@@ -111,5 +128,51 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
         }
         
         routeItemsSubject.send(routeItems)
+    }
+    
+    /// 통계 데이터 계산
+    private func calculateStats(from records: [WalkRecord]) {
+        guard !records.isEmpty else {
+            // 기본 값 전송
+            let defaultStats = WalkStats(
+                maxSteps: 0,
+                maxDistance: 0.0,
+                maxCalories: 0,
+                maxDuration: "00:00:00"
+            )
+            walkStatsSubject.send(defaultStats)
+            return
+        }
+        
+        // 최대 걸음 수
+        let maxStepsRecord = records.max { $0.steps < $1.steps } ?? records.first!
+        let maxSteps = maxStepsRecord.steps
+        
+        // 최대 거리
+        let maxDistanceRecord = records.max { $0.distance < $1.distance } ?? records.first!
+        let maxDistance = maxDistanceRecord.distance
+        
+        // 최대 칼로리
+        let maxCaloriesRecord = records.max { $0.calories < $1.calories } ?? records.first!
+        let maxCalories = Int(maxCaloriesRecord.calories)
+        
+        // 최대 시간
+        let maxDurationRecord = records.max { $0.duration < $1.duration } ?? records.first!
+        let maxDuration = formatDuration(maxDurationRecord.duration)
+        
+        // 통계 데이터 전송
+        let stats = WalkStats(
+            maxSteps: maxSteps,
+            maxDistance: maxDistance,
+            maxCalories: maxCalories,
+            maxDuration: maxDuration
+        )
+        
+        walkStatsSubject.send(stats)
+    }
+    
+    /// 시간 포맷팅 (초 -> HH:MM:SS)
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        return FormatManager.shared.formattedDuration(seconds: seconds)
     }
 }

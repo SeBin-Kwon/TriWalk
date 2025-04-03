@@ -79,6 +79,20 @@ final class ReportViewController: BaseViewController {
                 owner.chartView.updateSubtitle(walkCount: count)
             }
             .store(in: &cancellables)
+        
+        // 통계 데이터 업데이트
+        output.walkStats
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, stats in
+                owner.chartView.updateStats(
+                    steps: stats.maxSteps,
+                    distance: stats.maxDistance,
+                    calories: stats.maxCalories,
+                    time: stats.maxDuration
+                )
+            }
+            .store(in: &cancellables)
     }
 }
 
