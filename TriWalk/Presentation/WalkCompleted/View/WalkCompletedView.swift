@@ -19,12 +19,26 @@ final class WalkCompletedView: BaseView {
         return view
     }()
     
+    private let circleBackgroundView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .triWalkPrimary
+        view.layer.cornerRadius = 760 / 2
+        return view
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "산책 여행 완료!"
         label.applyHeading1Style()
         label.textAlignment = .center
         return label
+    }()
+    
+    private let ticketImage = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(resource: .ticket)
+        imageView.contentMode = .scaleAspectFit
+        return imageView
     }()
     
     private let cardView: UIView = {
@@ -79,7 +93,8 @@ final class WalkCompletedView: BaseView {
     
     private let arrowImageView: UIImageView = {
         let imageView = UIImageView()
-        // 화살표 이미지는 나중에 주입
+        imageView.image = UIImage(resource: .dotArrow)
+        imageView.contentMode = .scaleAspectFit
         return imageView
     }()
     
@@ -193,15 +208,16 @@ final class WalkCompletedView: BaseView {
     
     private let logoImageView: UIImageView = {
         let imageView = UIImageView()
-        // 로고 이미지는 나중에 주입
+        imageView.image = UIImage(resource: .logoS)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
     
     let homeButton: ConfigButton = {
         let button = ConfigButton(title: "홈으로")
-        button.setBackgroundColor(.triWalkPrimary)
-        button.setCornerRadius(12)
+        button.applyHomeButtonStyle()
+        button.setTextColor(.background)
+        button.setBackgroundColor(.contentPrimary)
         return button
     }()
     
@@ -209,9 +225,9 @@ final class WalkCompletedView: BaseView {
     override func configureHierarchy() {
         backgroundColor = Color.primary
         
-        addSubviews(titleLabel, cardView, homeButton)
+        addSubviews(circleBackgroundView, titleLabel, ticketImage, cardView, homeButton)
         
-        cardView.addSubviews(
+        ticketImage.addSubviews(
             dateContainerView,
             locationContainerView,
             divider1,
@@ -242,21 +258,28 @@ final class WalkCompletedView: BaseView {
     }
     
     override func configureLayout() {
+        circleBackgroundView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(safeAreaLayoutGuide).offset(140)
+            make.size.equalTo(760)
+        }
+        
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(safeAreaLayoutGuide.snp.top).offset(Spacing.xl)
             make.centerX.equalToSuperview()
         }
         
-        cardView.snp.makeConstraints { make in
+        ticketImage.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(Spacing.xl)
             make.centerX.equalToSuperview()
-            make.width.equalToSuperview().multipliedBy(0.85)
+            make.width.equalToSuperview()
+            make.height.equalTo(550)
         }
         
         // 날짜 컨테이너
         dateContainerView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.m)
+            make.top.equalToSuperview().offset(Spacing.xxl)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
             make.height.equalTo(24)
         }
         
@@ -271,7 +294,7 @@ final class WalkCompletedView: BaseView {
         // 위치 컨테이너
         locationContainerView.snp.makeConstraints { make in
             make.top.equalTo(dateContainerView.snp.bottom).offset(Spacing.s)
-            make.leading.trailing.equalToSuperview().inset(Spacing.m)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
             make.height.equalTo(60)
         }
         
@@ -304,14 +327,14 @@ final class WalkCompletedView: BaseView {
         // 첫 번째 구분선
         divider1.snp.makeConstraints { make in
             make.top.equalTo(locationContainerView.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.m)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
             make.height.equalTo(1)
         }
         
         // 통계 컨테이너
         statsContainerView.snp.makeConstraints { make in
             make.top.equalTo(divider1.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.m)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
             make.height.equalTo(70)
         }
         
@@ -354,14 +377,14 @@ final class WalkCompletedView: BaseView {
         // 두 번째 구분선
         divider2.snp.makeConstraints { make in
             make.top.equalTo(statsContainerView.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.m)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
             make.height.equalTo(1)
         }
         
         // 소요 시간 컨테이너
         durationContainerView.snp.makeConstraints { make in
             make.top.equalTo(divider2.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.m)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
             make.height.equalTo(70)
         }
         
@@ -378,7 +401,7 @@ final class WalkCompletedView: BaseView {
         // 세 번째 구분선
         divider3.snp.makeConstraints { make in
             make.top.equalTo(durationContainerView.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.m)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
             make.height.equalTo(1)
         }
         
@@ -388,15 +411,12 @@ final class WalkCompletedView: BaseView {
             make.centerX.equalToSuperview()
             make.width.equalTo(120)
             make.height.equalTo(40)
-            make.bottom.equalToSuperview().offset(-Spacing.m)
+//            make.bottom.equalToSuperview().offset(-Spacing.xxl)
         }
         
         // 홈으로 버튼
         homeButton.snp.makeConstraints { make in
-            make.bottom.equalTo(safeAreaLayoutGuide.snp.bottom).offset(-Spacing.l)
-            make.centerX.equalToSuperview()
-            make.width.equalToSuperview().multipliedBy(0.8)
-            make.height.equalTo(54)
+            make.bottom.horizontalEdges.equalTo(safeAreaLayoutGuide).inset(Spacing.screenMargin)
         }
     }
     
@@ -417,16 +437,6 @@ final class WalkCompletedView: BaseView {
         distanceValueLabel.text = String(format: "%.1f km", data.distance)
         caloriesValueLabel.text = "\(data.calories) kcal"
         durationValueLabel.text = data.duration
-    }
-    
-    /// 화살표 이미지 설정
-    func setArrowImage(_ image: UIImage?) {
-        arrowImageView.image = image
-    }
-    
-    /// 로고 이미지 설정
-    func setLogoImage(_ image: UIImage?) {
-        logoImageView.image = image
     }
 }
 
