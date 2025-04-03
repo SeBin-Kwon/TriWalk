@@ -9,8 +9,62 @@ import UIKit
 import Combine
 import SnapKit
 
+enum CardType {
+    case history
+    case today
+}
+
+enum WeatherType {
+    case sunny
+    case rainy
+    case clear
+    
+    var description: String {
+        switch self {
+        case .sunny:
+            return "좋음"
+        case .rainy:
+            return "나쁨"
+        case .clear:
+            return "보통"
+        }
+    }
+    
+    var color: UIColor {
+        switch self {
+        case .sunny:
+            return .systemGreen
+        case .rainy:
+            return .systemRed
+        case .clear:
+            return .systemBlue
+        }
+    }
+}
+
+struct CardItem: Hashable {
+    let id = UUID()
+    let date: String
+    let temperature: Int
+    let weatherType: WeatherType
+    let cardType: CardType
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: CardItem, rhs: CardItem) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
 class HomeViewController: BaseViewController {
     weak var delegate: HomeViewControllerDelegate?
+    private var dataSource: UICollectionViewDiffableDataSource<Int, CardItem>?
+    private var weatherCards: [CardItem] = []
+
+    // 상수 추가
+    static let sectionIdentifier = 0
     
     let titleLabel = {
         let label = UILabel()
@@ -19,13 +73,22 @@ class HomeViewController: BaseViewController {
         return label
     }()
     
-    let cardView = HomeCardView()
+    private let collectionView: UICollectionView = {
+        let layout = UICollectionViewCompositionalLayout { sectionIndex, _ in
+            HomeViewController.createLayout()
+        }
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .clear
+        collectionView.showsVerticalScrollIndicator = false
+        return collectionView
+    }()
     
     let startButton = ConfigButton(title: "산책 여행 떠나기")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigationBar()
+        setupCollectionView()
     }
     
     override func bindViewModel() {
@@ -35,6 +98,12 @@ class HomeViewController: BaseViewController {
                 owner.delegate?.didTapStartButton()
             }
             .store(in: &cancellables)
+    }
+    
+    private func setupCollectionView() {
+        collectionView.delegate = self
+        collectionView.register(HomeCardCell.self, forCellWithReuseIdentifier: HomeCardCell.identifier)
+        configureDataSource()
     }
     
     private func setupNavigationBar() {
@@ -47,7 +116,7 @@ class HomeViewController: BaseViewController {
     }
     
     override func configureHierarchy() {
-        view.addSubviews(titleLabel, startButton, cardView)
+        view.addSubviews(titleLabel, startButton, collectionView)
     }
     
     override func configureLayout() {
@@ -55,7 +124,7 @@ class HomeViewController: BaseViewController {
             make.top.leading.equalTo(view.safeAreaLayoutGuide).inset(Spacing.screenMargin)
         }
         
-        cardView.snp.makeConstraints { make in
+        collectionView.snp.makeConstraints { make in
             make.center.equalTo(view.safeAreaLayoutGuide)
             make.width.equalTo(310)
             make.height.equalTo(480)
@@ -71,38 +140,74 @@ class HomeViewController: BaseViewController {
     }
 }
 
-
-// 상세 화면
-class DetailViewController: UIViewController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+extension HomeViewController: UICollectionViewDelegate {
+    private func configureDataSource() {
+        dataSource = UICollectionViewDiffableDataSource<Int, CardItem>(
+            collectionView: collectionView
+        ) { collectionView, indexPath, item in
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: HomeCardCell.identifier,
+                for: indexPath
+            ) as? HomeCardCell else {
+                return UICollectionViewCell()
+            }
+            
+            cell.configure(with: item)
+            return cell
+        }
         
-        // UI 요소 설정
-        let titleLabel = UILabel()
-        titleLabel.text = "상세 화면"
-        titleLabel.font = .boldSystemFont(ofSize: 24)
-        titleLabel.textAlignment = .center
+        // 초기 데이터 생성 및 적용
+        weatherCards = [
+            CardItem(date: "3.25 TUE", temperature: 26, weatherType: .sunny, cardType: .history),
+            CardItem(date: "3.25 TUE", temperature: 26, weatherType: .rainy, cardType: .history),
+            CardItem(date: "3.26 WED", temperature: 26, weatherType: .clear, cardType: .today)
+        ]
         
-        view.addSubview(titleLabel)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20)
-        ])
+        updateSnapshot(animated: false)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+            print("HomeCellTapped")
+        }
+    
+    private func updateSnapshot(animated: Bool = true) {
+        guard let dataSource = dataSource else { return }
         
-        // 스와이프 안내 레이블
-        let instructionLabel = UILabel()
-        instructionLabel.text = "아래로 스와이프하여 홈 페이지로 돌아가기"
-        instructionLabel.font = .systemFont(ofSize: 16)
-        instructionLabel.textAlignment = .center
-        instructionLabel.textColor = .systemGray
+        var snapshot = NSDiffableDataSourceSnapshot<Int, CardItem>()
+        snapshot.appendSections([HomeViewController.sectionIdentifier])
+        snapshot.appendItems(weatherCards, toSection: HomeViewController.sectionIdentifier)
         
-        view.addSubview(instructionLabel)
-        instructionLabel.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            instructionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            instructionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30)
-        ])
+        dataSource.apply(snapshot, animatingDifferences: animated) { [weak self] in
+            self?.scrollToLastItem()
+        }
+    }
+    
+    // 마지막 아이템으로 스크롤
+    private func scrollToLastItem() {
+        guard !weatherCards.isEmpty else { return }
+        
+        let lastIndex = weatherCards.count - 1
+        let indexPath = IndexPath(item: lastIndex, section: HomeViewController.sectionIdentifier)
+        
+        DispatchQueue.main.async {
+            self.collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: false)
+        }
+    }
+    
+    static func createLayout() -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                              heightDimension: .fractionalHeight(1.0))
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.85),
+                                               heightDimension: .absolute(420))
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.orthogonalScrollingBehavior = .groupPagingCentered
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16)
+        section.interGroupSpacing = 12
+        
+        return section
     }
 }
