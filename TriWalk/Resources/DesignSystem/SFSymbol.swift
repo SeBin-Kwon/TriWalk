@@ -16,4 +16,11 @@ enum SFSymbol: String {
     case arrowUp = "arrowtriangle.up.fill"
     case arrowDown = "arrowtriangle.down.fill"
     case home = "house.fill"
+    case checkmark = "checkmark.circle.fill"
+    case exclamation = "exclamationmark.circle.fill"
+    case info = "info.circle.fill"
+    case location = "mappin.and.ellipse"
+    case success = "checkmark.circle"
+    case error = "xmark.circle"
+    case warning = "exclamationmark.triangle"
 }

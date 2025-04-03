@@ -168,13 +168,13 @@ final class WalkSetupViewController: BaseViewController {
         output.showAlert
             .withUnretained(self)
             .sink { owner, alertInfo in
-                let alert = UIAlertController(
-                    title: alertInfo.title,
-                    message: alertInfo.message,
-                    preferredStyle: .alert
-                )
-                
                 if alertInfo.title == "위치 서비스 권한 필요" {
+                    let alert = UIAlertController(
+                        title: alertInfo.title,
+                        message: alertInfo.message,
+                        preferredStyle: .alert
+                    )
+                    
                     alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             UIApplication.shared.open(url)
@@ -182,13 +182,16 @@ final class WalkSetupViewController: BaseViewController {
                     })
                     alert.addAction(UIAlertAction(title: "취소", style: .cancel))
                     owner.present(alert, animated: true)
+                    return
+                }
+                
+                // 나머지 모든 알림은 토스트로 표시
+                if alertInfo.title == "도착지 설정 완료" {
+                    ToastView.showLocation(in: owner, message: alertInfo.message)
+                } else if alertInfo.title.contains("오류") || alertInfo.title.contains("실패") {
+                    ToastView.showAlert(in: owner, message: alertInfo.message)
                 } else {
-                    // 자동으로 사라지는 알림
-                    owner.present(alert, animated: true) {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            alert.dismiss(animated: true)
-                        }
-                    }
+                    ToastView.showInfo(in: owner, message: alertInfo.message)
                 }
             }
             .store(in: &cancellables)
