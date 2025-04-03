@@ -16,7 +16,7 @@ final class WalkTrackingViewController: BaseViewController {
     private var startLocation: CLLocation?
     private var destinationCoordinate: CLLocationCoordinate2D?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
-    private var routeOverlay: MKPolyline?
+    private var routeOverlay: RouteOverlay?
     
     private var walkTrackingSheetVC: WalkTrackingSheetViewController?
     private let viewModel = WalkTrackingViewModel()
@@ -218,9 +218,10 @@ final class WalkTrackingViewController: BaseViewController {
     private func updateRoute(with newCoordinate: CLLocationCoordinate2D) {
         // 새 좌표 추가
         routeCoordinates.append(newCoordinate)
-                
-        // 경로 시각화 업데이트 (공통 유틸리티 사용)
-        RouteVisualizationManager.visualizeCurrentRoute(
+        print("ViewController 경로 좌표 추가: 현재 \(routeCoordinates.count)개")
+        
+        // 실시간 경로 시각화 (RouteVisualizationManager 사용)
+        routeOverlay = RouteVisualizationManager.visualizeCurrentRoute(
             on: mapView,
             coordinates: routeCoordinates,
             color: .triWalkPrimary,
@@ -248,6 +249,14 @@ extension WalkTrackingViewController: MKMapViewDelegate {
             renderer.lineWidth = routeOverlay.lineWidth
             renderer.lineCap = .round
             renderer.lineJoin = .round
+            return renderer
+        }
+        
+        // 기본 폴리라인 렌더러 (필요한 경우를 위한 대비책)
+        if let polyline = overlay as? MKPolyline {
+            let renderer = MKPolylineRenderer(polyline: polyline)
+            renderer.strokeColor = .triWalkPrimary
+            renderer.lineWidth = 5.0
             return renderer
         }
         return MKOverlayRenderer(overlay: overlay)

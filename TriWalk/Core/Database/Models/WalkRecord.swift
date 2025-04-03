@@ -57,14 +57,26 @@ class WalkRecord: Object {
     @Persisted var photos = List<WalkPhoto>()
     
     // 좌표 배열을 Data로 변환하는 함수
+
     func saveCoordinates(_ coordinates: [CLLocationCoordinate2D]) {
-        let encoder = JSONEncoder()
-        let coordinateData = coordinates.map {
-            ["latitude": $0.latitude, "longitude": $0.longitude]
+        if coordinates.isEmpty {
+            print("경고: 저장할 좌표가 없습니다!")
+            return
         }
         
-        if let data = try? encoder.encode(coordinateData) {
-            routeData = data
+        print("WalkRecord: \(coordinates.count)개 좌표 저장 시도")
+        
+        let encoder = JSONEncoder()
+        let coordinateData = coordinates.map { coord -> [String: Double] in
+            return ["latitude": coord.latitude, "longitude": coord.longitude]
+        }
+        
+        do {
+            let data = try encoder.encode(coordinateData)
+            self.routeData = data
+            print("WalkRecord: 좌표 인코딩 성공 (\(data.count) 바이트)")
+        } catch {
+            print("WalkRecord: 좌표 인코딩 실패 - \(error.localizedDescription)")
         }
     }
     

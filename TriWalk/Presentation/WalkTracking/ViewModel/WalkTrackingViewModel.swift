@@ -53,7 +53,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     // 사용자 정보 (칼로리 계산에 필요)
     private let userWeight: Double = 70.0  // kg 단위, 기본값 (나중에 설정에서 변경 가능하게 만들 수 있음)
     private var savedWalkRecord: WalkRecord?
-        
+    private var routeCoordinates: [CLLocationCoordinate2D] = []
     
     // MARK: - Initialization
     override init() {
@@ -105,14 +105,29 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private func setupLocationTracking() {
         // 위치 업데이트 구독
         locationManager.locationPublisher
-            .catch { error -> Empty<CLLocation, Never> in
-                print("위치 서비스 오류: \(error.localizedDescription)")
-                return Empty()
-            }
-            .sink { [weak self] location in
-                self?.updateDistance(with: location)
-            }
-            .store(in: &cancellables)
+                .catch { error -> Empty<CLLocation, Never> in
+                    print("위치 서비스 오류: \(error.localizedDescription)")
+                    return Empty()
+                }
+                .sink { [weak self] location in
+                    guard let self = self else { return }
+                    
+                    // 위치 변경을 경로에 추가
+                    self.updateRoute(with: location)
+                    self.updateDistance(with: location)
+                }
+                .store(in: &cancellables)
+    }
+    
+    // 새로운 메서드 추가
+    private func updateRoute(with location: CLLocation) {
+        // 경로 좌표 배열에 새 위치 추가
+        let newCoordinate = location.coordinate
+        self.routeCoordinates.append(newCoordinate)
+        print("경로 좌표 추가됨: 현재 좌표 수 = \(self.routeCoordinates.count)")
+        
+        // previousRouteCoordinates 업데이트 (finishTracking에서 사용)
+        self.previousRouteCoordinates = self.routeCoordinates
     }
     
     private func startTracking() {
@@ -185,11 +200,23 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         walkRecord.calories = caloriesSubject.value
         walkRecord.duration = timeSubject.value
         
+        // 경로 좌표 상태 확인
+        print("저장할 경로 좌표 수: \(routeCoordinates.count)")
+        print("previousRouteCoordinates 수: \(previousRouteCoordinates.count)")
+        
+        if routeCoordinates.isEmpty && !previousRouteCoordinates.isEmpty {
+            print("routeCoordinates가 비어있어 previousRouteCoordinates를 사용합니다")
+        }
+        
+        // 최종 경로 데이터 설정 (둘 중 더 많은 좌표가 있는 배열 사용)
+        let finalRouteCoordinates = routeCoordinates.count > previousRouteCoordinates.count ?
+                                    routeCoordinates : previousRouteCoordinates
+        
         // 데이터 저장 (주소 및 이동 방식 정보 포함)
         walkRepository.saveWalk(
             walkRecord,
             photos: [], // 사진 기능 미룸
-            routeCoordinates: previousRouteCoordinates,
+            routeCoordinates: finalRouteCoordinates,
             startAddress: startAddress,
             destinationAddress: destinationAddress,
             tripType: tripType.rawValue
@@ -200,9 +227,10 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
                 print("산책 데이터 저장 실패: \(error.localizedDescription)")
             }
         }, receiveValue: { [weak self] savedRecord in
-            print("산책 데이터가 성공적으로 저장되었습니다.")
             self?.savedWalkRecord = savedRecord
             self?.walkRecordSubject.send(savedRecord)
+            print("산책 데이터가 성공적으로 저장되었습니다.")
+            print("저장된 경로 좌표 수: \(savedRecord.loadCoordinates().count)")
         })
         .store(in: &cancellables)
     }
