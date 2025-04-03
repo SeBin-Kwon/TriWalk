@@ -12,7 +12,7 @@ import Combine
 final class ReportViewController: BaseViewController {
     
     // MARK: - Properties
-    private let chartView = ReportView()
+    private let reportView = ReportView()
     private let viewModel: ReportViewModel
     private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
     
@@ -27,13 +27,12 @@ final class ReportViewController: BaseViewController {
     }
     
     override func loadView() {
-        view = chartView
+        view = reportView
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        chartView.mapView.delegate = self
-        title = "산책 기록"
+        reportView.mapView.delegate = self
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -54,11 +53,13 @@ final class ReportViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, routeItems in
+                // 경로 데이터가 있는 경우 경로 시각화
                 RouteVisualizationManager.visualizeHistoricalRoutes(
-                    on: owner.chartView.mapView,
+                    on: owner.reportView.mapView,
                     routeItems: routeItems,
                     fadeOlder: true
                 )
+                
             }
             .store(in: &cancellables)
         
@@ -67,7 +68,7 @@ final class ReportViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, isLoading in
-                owner.chartView.showLoading(isLoading)
+                owner.reportView.showLoading(isLoading)
             }
             .store(in: &cancellables)
         
@@ -76,7 +77,7 @@ final class ReportViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, count in
-                owner.chartView.updateSubtitle(walkCount: count)
+                owner.reportView.updateSubtitle(walkCount: count)
             }
             .store(in: &cancellables)
         
@@ -85,7 +86,7 @@ final class ReportViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, stats in
-                owner.chartView.updateStats(
+                owner.reportView.updateStats(
                     steps: stats.maxSteps,
                     distance: stats.maxDistance,
                     calories: stats.maxCalories,

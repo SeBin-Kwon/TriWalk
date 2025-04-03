@@ -42,6 +42,16 @@ final class ReportView: BaseView {
         return indicator
     }()
     
+    let emptyStateView: EmptyStateView = {
+        let view = EmptyStateView(
+            icon: .location,
+            title: "아직 산책 기록이 없어요",
+            message: "새로운 산책을 시작해보세요!"
+        )
+        view.isHidden = true
+        return view
+    }()
+    
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -54,7 +64,8 @@ final class ReportView: BaseView {
             mapView,
             subtitleLabel,
             statsCardView,
-            loadingIndicator
+            loadingIndicator,
+            emptyStateView
         )
         
     }
@@ -86,6 +97,11 @@ final class ReportView: BaseView {
         loadingIndicator.snp.makeConstraints { make in
             make.center.equalTo(mapView)
         }
+        
+        emptyStateView.snp.makeConstraints { make in
+            make.top.equalTo(mapView)
+            make.horizontalEdges.bottom.equalTo(safeAreaLayoutGuide)
+        }
     }
     
     // MARK: - Public Methods
@@ -98,6 +114,7 @@ final class ReportView: BaseView {
 //        attributedText.addAttribute(.foregroundColor, value: UIColor.textRed, range: range)
 //        
 //        subtitleLabel.attributedText = attributedText
+        showEmptyStateIfNeeded(walkCount: walkCount)
     }
     
     func updateStats(steps: Int, distance: Double, calories: Int, time: String) {
@@ -109,6 +126,22 @@ final class ReportView: BaseView {
             loadingIndicator.startAnimating()
         } else {
             loadingIndicator.stopAnimating()
+        }
+    }
+    
+    func showEmptyStateIfNeeded(walkCount: Int) {
+        if walkCount == 0 {
+            emptyStateView.isHidden = false
+            statsCardView.isHidden = true
+            
+            emptyStateView.update(
+                    icon: .location,
+                    title: "산책 기록이 없어요",
+                    message: "새로운 산책을 시작해보세요!"
+                )
+        } else {
+            emptyStateView.isHidden = true
+            statsCardView.isHidden = false
         }
     }
 }

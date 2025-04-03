@@ -69,11 +69,21 @@ final class StatusCardView: BaseView {
     
     // MARK: - Public Methods
     func updateStats(steps: Int, distance: Double, calories: Int, time: String) {
-        stepsCardView.setValue("\(steps)")
-        distanceCardView.setValue(String(format: "%.1f", distance))
-        caloriesCardView.setValue("\(calories)")
-        timeCardView.setValue(time)
-    }
+            // 데이터가 없는 경우 "- -" 표시
+            if steps == 0 && distance == 0.0 && calories == 0 && time == "00:00:00" {
+                stepsCardView.setValue("--")
+                distanceCardView.setValue("--")
+                caloriesCardView.setValue("--")
+                timeCardView.setValue("--")
+                return
+            }
+            
+            // 개별 데이터 업데이트
+            stepsCardView.setValue(steps > 0 ? "\(steps)" : "--")
+            distanceCardView.setValue(distance > 0 ? String(format: "%.1f", distance) : "--")
+            caloriesCardView.setValue(calories > 0 ? "\(calories)" : "--")
+            timeCardView.setValue(time != "00:00:00" ? time : "--")
+        }
 }
 
 // MARK: - 개별 카드 뷰
