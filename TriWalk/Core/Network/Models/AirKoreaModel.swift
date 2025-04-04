@@ -5,6 +5,13 @@
 //  Created by Sebin Kwon on 4/4/25.
 //
 
+//
+//  AirKoreaModel.swift
+//  TriWalk
+//
+//  Created by Sebin Kwon on 4/4/25.
+//
+
 import UIKit
 
 // MARK: - 미세먼지 모델
@@ -30,16 +37,34 @@ struct AirKoreaBody: Codable {
 }
 
 struct AirKoreaItem: Codable {
-    let stationName: String
+    // API 응답에 맞게 필드 수정
     let dataTime: String
+    let so2Value: String?
+    let coValue: String?
+    let o3Value: String?
+    let no2Value: String?
     let pm10Value: String?
     let pm25Value: String?
     
-    // 미세먼지(PM10) 등급 (1: 좋음, 2: 보통, 3: 나쁨, 4: 매우나쁨)
+    // 등급 필드
+    let so2Grade: String?
+    let coGrade: String?
+    let o3Grade: String?
+    let no2Grade: String?
     let pm10Grade: String?
-    
-    // 초미세먼지(PM2.5) 등급 (1: 좋음, 2: 보통, 3: 나쁨, 4: 매우나쁨)
     let pm25Grade: String?
+    
+    // 통합대기환경지수
+    let khaiValue: String?
+    let khaiGrade: String?
+    
+    // 플래그 필드
+    let so2Flag: String?
+    let coFlag: String?
+    let o3Flag: String?
+    let no2Flag: String?
+    let pm10Flag: String?
+    let pm25Flag: String?
 }
 
 // MARK: - 확장 - 미세먼지 등급 변환
@@ -54,6 +79,15 @@ extension AirKoreaItem {
     
     var pm25GradeStatus: DustGrade {
         guard let gradeString = pm25Grade, let grade = Int(gradeString) else {
+            return .unknown
+        }
+        
+        return DustGrade(rawValue: grade) ?? .unknown
+    }
+    
+    // 통합대기환경지수 등급
+    var khaiGradeStatus: DustGrade {
+        guard let gradeString = khaiGrade, let grade = Int(gradeString) else {
             return .unknown
         }
         

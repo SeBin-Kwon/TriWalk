@@ -95,12 +95,12 @@ enum AirKoreaEndpoint: Endpoint {
         switch self {
         case .dustInfo(let stationName, let apiKey):
             return [
-                "stationName": stationName,
                 "dataTerm": "DAILY",
-                "pageNo": "1",
                 "numOfRows": "1",
+                "pageNo": "1",
                 "returnType": "json",
-                "serviceKey": apiKey
+                "serviceKey": apiKey,
+                "stationName": stationName
             ]
         }
     }

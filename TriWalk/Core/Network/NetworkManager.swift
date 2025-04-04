@@ -9,36 +9,36 @@ import Foundation
 import Alamofire
 import Combine
 
-enum APIError: Error {
-    case networkError
-    case serverError(statusCode: Int)
-    case decodingError
-    case unknown
-}
-
 final class NetworkManager {
     static let shared = NetworkManager()
     private init() {}
     
-    func request<T: Decodable>(_ endpoint: String,
-                               method: HTTPMethod = .get,
-                               parameters: Parameters? = nil) -> AnyPublisher<T, Error> {
+    func request<T: Decodable>(_ endpoint: Endpoint) -> AnyPublisher<T, Error> {
+        let url = endpoint.baseURL + endpoint.path
         
-        return AF.request(endpoint,
-                          method: method,
-                          parameters: parameters)
-            .validate()
-            .publishDecodable(type: T.self)
-            .value()
-            .mapError { error -> Error in
-                    if let statusCode = error.responseCode {
-                        return APIError.serverError(statusCode: statusCode)
-                    }
-                    if case .responseSerializationFailed = error {
-                        return APIError.decodingError
-                    }
-                    return APIError.networkError
+        return AF.request(
+            url,
+            method: endpoint.method,
+            parameters: endpoint.parameters,
+            encoding: URLEncoding(destination: .queryString)
+        )
+        .validate()
+        .publishDecodable(type: T.self)
+        .value()
+        .mapError { error in
+            print("최종 에러: \(error)")
+            if case .responseSerializationFailed(let reason) = error {
+                print("직렬화 실패 이유: \(reason)")
+                if case .decodingFailed(let decodingError) = reason {
+                    print("디코딩 에러 세부: \(decodingError)")
+                }
             }
-            .eraseToAnyPublisher()
+            if let statusCode = error.responseCode {
+                print("HTTP 상태 코드: \(statusCode)")
+                return APIError.httpError(statusCode: statusCode)
+            }
+            return APIError.networkError
+        }
+        .eraseToAnyPublisher()
     }
 }
