@@ -62,7 +62,9 @@ class HomeViewController: BaseViewController {
     weak var delegate: HomeViewControllerDelegate?
     private var dataSource: UICollectionViewDiffableDataSource<Int, CardItem>?
     private var weatherCards: [CardItem] = []
-    
+    private let homeViewModel = HomeViewModel()
+    private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
+    private let reloadTriggerSubject = PassthroughSubject<Void, Never>()
     // 상수 추가
     static let sectionIdentifier = 0
     
@@ -91,6 +93,11 @@ class HomeViewController: BaseViewController {
         setupCollectionView()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewDidAppearSubject.send(())
+    }
+    
     override func bindViewModel() {
         startButton.controlPublisher(for: .touchUpInside)
             .withUnretained(self)
@@ -98,7 +105,56 @@ class HomeViewController: BaseViewController {
                 owner.delegate?.didTapStartButton()
             }
             .store(in: &cancellables)
+        
+        // 날씨 뷰모델 바인딩
+        let weatherInput = HomeViewModel.Input(
+            viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
+            reloadTrigger: reloadTriggerSubject.eraseToAnyPublisher()
+        )
+        
+        let weatherOutput = homeViewModel.transform(input: weatherInput)
+        
+        // 날씨 데이터 수신
+        weatherOutput.weatherData
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, weatherData in
+                // 기존 날씨 카드 찾아 업데이트하거나 새로 추가
+                if let index = owner.weatherCards.firstIndex(where: { $0.cardType == .today }) {
+                    var newCards = owner.weatherCards
+                    newCards[index] = CardItem(
+                        date: weatherData.date,
+                        temperature: weatherData.temperature,
+                        weatherType: weatherData.weatherType,
+                        cardType: .today
+                    )
+                    owner.weatherCards = newCards
+                } else {
+                    owner.weatherCards.append(
+                        CardItem(
+                            date: weatherData.date,
+                            temperature: weatherData.temperature,
+                            weatherType: weatherData.weatherType,
+                            cardType: .today
+                        )
+                    )
+                }
+                
+                owner.updateSnapshot()
+            }
+            .store(in: &cancellables)
+        
+        // 에러 처리
+        weatherOutput.error
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, errorMessage in
+                print("날씨 데이터 로드 실패: \(errorMessage)")
+                // 에러 처리 UI (필요시 알림창 등 표시)
+            }
+            .store(in: &cancellables)
     }
+
     
     private func setupCollectionView() {
         collectionView.delegate = self
@@ -139,6 +195,17 @@ class HomeViewController: BaseViewController {
     override func configureView() {
         startButton.applyHomeButtonStyle()
     }
+    
+    private func convertToWeatherCardData(from item: CardItem) -> WeatherCardData {
+        return WeatherCardData(
+            date: item.date,
+            temperature: item.temperature,
+            weatherType: item.weatherType,
+            dustGrade: .moderate, // 기본값 설정 또는 CardItem에 해당 속성 추가 필요
+            cardType: item.cardType
+        )
+    }
+
 }
 
 extension HomeViewController: UICollectionViewDelegate {
@@ -150,7 +217,7 @@ extension HomeViewController: UICollectionViewDelegate {
             case .today:
                 guard let cell = collectionView.dequeueReusableCell(
                     withReuseIdentifier: WeatherCardCell.identifier, for: indexPath ) as? WeatherCardCell else { return UICollectionViewCell() }
-                cell.configure(with: item)
+                cell.configure(with: self.convertToWeatherCardData(from: item))
                 return cell
                 
             case .history:

@@ -24,7 +24,6 @@ final class WeatherCardCell: BaseCollectionViewCell {
 
     private let iconView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "sun")
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -84,22 +83,20 @@ final class WeatherCardCell: BaseCollectionViewCell {
     }
     
     // MARK: - Public Methods
-    func configure(with item: CardItem) {
-        dateLabel.text = item.date
-        temperatureLabel.text = "\(item.temperature)°C"
-        weatherStatusLabel.text = "미세먼지 농도 \(item.weatherType.description)"
+    func configure(with data: WeatherCardData) {
+        dateLabel.text = data.date
+        temperatureLabel.text = "\(data.temperature)°C"
+        weatherStatusLabel.text = "미세먼지 농도 \(data.dustGrade.description)"
+        weatherStatusLabel.textColor = data.dustGrade.color
         
         // 날씨 타입에 따라 아이콘 이미지 설정
-        switch item.weatherType {
+        switch data.weatherType {
         case .sunny:
             iconView.image = UIImage(named: "sun") ?? UIImage(systemName: "sun.max.fill")
-            weatherStatusLabel.textColor = item.weatherType.color
         case .rainy:
             iconView.image = UIImage(named: "cloud.rain") ?? UIImage(systemName: "cloud.rain.fill")
-            weatherStatusLabel.textColor = item.weatherType.color
         case .clear:
             iconView.image = UIImage(named: "sun") ?? UIImage(systemName: "sun.max.fill")
-            weatherStatusLabel.textColor = item.weatherType.color
         }
     }
 }
