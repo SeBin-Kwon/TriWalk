@@ -11,7 +11,7 @@ import SnapKit
 final class TicketCardCell: BaseCollectionViewCell {
     
     // MARK: - UI Components
-    private let ticketView = TicketView()
+    let ticketView = TicketView()
     
     // MARK: - Lifecycle
     override func configureHierarchy() {

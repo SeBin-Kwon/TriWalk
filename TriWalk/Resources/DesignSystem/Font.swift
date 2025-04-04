@@ -35,5 +35,5 @@ enum Font {
     
     static let button = font(size: 16, weight: .medium)
     static let caption = font(size: 13, weight: .regular)
-    static let overline = font(size: 12, weight: .medium)
+    static let overline = font(size: 12, weight: .regular)
 }

@@ -12,7 +12,7 @@ final class TicketView: BaseView {
     
     private let ticketImage = {
         let imageView = UIImageView()
-        imageView.image = UIImage(resource: .ticket)
+        imageView.image = UIImage(resource: .ticket1)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -25,14 +25,14 @@ final class TicketView: BaseView {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.text = "2025.03.26"
-        label.applyBodyMediumStyle()
+        label.font = Font.overline
         return label
     }()
     
-    private let weekdayLabel: UILabel = {
+    private let tripTypeLabel: UILabel = {
         let label = UILabel()
-        label.text = "WED"
-        label.applyBodyMediumStyle()
+        label.text = "Round Trip"
+        label.font = Font.overline
         label.textAlignment = .right
         return label
     }()
@@ -52,7 +52,7 @@ final class TicketView: BaseView {
     private let startTimeLabel: UILabel = {
         let label = UILabel()
         label.text = "04:26 PM"
-        label.applyBodySmallStyle(color: .textSecondary)
+        label.font = Font.font(size: 13, weight: .bold)
         return label
     }()
     
@@ -74,18 +74,18 @@ final class TicketView: BaseView {
     private let endTimeLabel: UILabel = {
         let label = UILabel()
         label.text = "05:38 PM"
-        label.applyBodySmallStyle(color: .textSecondary)
+        label.font = Font.font(size: 13, weight: .bold)
         label.textAlignment = .right
         return label
     }()
     
     private let divider1: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGray5
+        view.backgroundColor = .systemGray5
         return view
     }()
     
-    private let statsContainerView: UIView = {
+    let statsContainerView: UIView = {
         let view = UIView()
         return view
     }()
@@ -93,7 +93,7 @@ final class TicketView: BaseView {
     private let stepsLabel: UILabel = {
         let label = UILabel()
         label.text = "걸음수"
-        label.applyBodySmallStyle(color: .textSecondary)
+        label.applyOverlineStyle()
         label.textAlignment = .center
         return label
     }()
@@ -101,7 +101,7 @@ final class TicketView: BaseView {
     private let stepsValueLabel: UILabel = {
         let label = UILabel()
         label.text = "426"
-        label.applyHeading2Style()
+        label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label
     }()
@@ -109,7 +109,7 @@ final class TicketView: BaseView {
     private let distanceLabel: UILabel = {
         let label = UILabel()
         label.text = "거리"
-        label.applyBodySmallStyle(color: .textSecondary)
+        label.applyOverlineStyle()
         label.textAlignment = .center
         return label
     }()
@@ -117,7 +117,7 @@ final class TicketView: BaseView {
     private let distanceValueLabel: UILabel = {
         let label = UILabel()
         label.text = "1.3 km"
-        label.applyHeading2Style()
+        label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label
     }()
@@ -125,7 +125,7 @@ final class TicketView: BaseView {
     private let caloriesLabel: UILabel = {
         let label = UILabel()
         label.text = "칼로리"
-        label.applyBodySmallStyle(color: .textSecondary)
+        label.applyOverlineStyle()
         label.textAlignment = .center
         return label
     }()
@@ -133,18 +133,18 @@ final class TicketView: BaseView {
     private let caloriesValueLabel: UILabel = {
         let label = UILabel()
         label.text = "122 kcal"
-        label.applyHeading2Style()
+        label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label
     }()
     
     private let divider2: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGray5
+        view.backgroundColor = .systemGray5
         return view
     }()
     
-    private let durationContainerView: UIView = {
+    let durationContainerView: UIView = {
         let view = UIView()
         return view
     }()
@@ -152,7 +152,7 @@ final class TicketView: BaseView {
     private let durationLabel: UILabel = {
         let label = UILabel()
         label.text = "소요 시간"
-        label.applyBodySmallStyle(color: .textSecondary)
+        label.applyOverlineStyle()
         label.textAlignment = .center
         return label
     }()
@@ -160,14 +160,14 @@ final class TicketView: BaseView {
     private let durationValueLabel: UILabel = {
         let label = UILabel()
         label.text = "01:12:48"
-        label.applyHeading2Style()
+        label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label
     }()
     
     private let divider3: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGray5
+        view.backgroundColor = .systemGray5
         return view
     }()
     
@@ -180,7 +180,7 @@ final class TicketView: BaseView {
     
     func configure(with data: WalkCompletedData) {
         dateLabel.text = data.date
-        weekdayLabel.text = data.weekday
+        tripTypeLabel.text = data.weekday
         startLocationLabel.text = data.startLocation
         startTimeLabel.text = data.startTime
         endLocationLabel.text = data.endLocation
@@ -206,7 +206,7 @@ final class TicketView: BaseView {
             logoImageView
         )
         
-        dateContainerView.addSubviews(dateLabel, weekdayLabel)
+        dateContainerView.addSubviews(dateLabel, tripTypeLabel)
         
         locationContainerView.addSubviews(
             startLocationLabel,
@@ -228,16 +228,13 @@ final class TicketView: BaseView {
     override func configureLayout() {
         
         ticketImage.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.centerX.equalToSuperview()
-            make.width.equalToSuperview()
-            make.height.equalTo(550)
+            make.edges.equalToSuperview()
         }
         
         // 날짜 컨테이너
         dateContainerView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(Spacing.xxl)
-            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
+            make.top.equalToSuperview().offset(Spacing.l)
+            make.horizontalEdges.equalToSuperview().inset(42)
             make.height.equalTo(24)
         }
         
@@ -245,14 +242,14 @@ final class TicketView: BaseView {
             make.leading.centerY.equalToSuperview()
         }
         
-        weekdayLabel.snp.makeConstraints { make in
+        tripTypeLabel.snp.makeConstraints { make in
             make.trailing.centerY.equalToSuperview()
         }
         
         // 위치 컨테이너
         locationContainerView.snp.makeConstraints { make in
-            make.top.equalTo(dateContainerView.snp.bottom).offset(Spacing.s)
-            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
+            make.bottom.equalTo(divider1.snp.top).offset(-Spacing.m)
+            make.horizontalEdges.equalToSuperview().inset(42)
             make.height.equalTo(60)
         }
         
@@ -284,16 +281,16 @@ final class TicketView: BaseView {
         
         // 첫 번째 구분선
         divider1.snp.makeConstraints { make in
-            make.top.equalTo(locationContainerView.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
-            make.height.equalTo(1)
+            make.bottom.equalTo(statsContainerView.snp.top).offset(-Spacing.l)
+            make.horizontalEdges.equalToSuperview().inset(Spacing.xl)
+            make.height.equalTo(0.5)
         }
         
         // 통계 컨테이너
         statsContainerView.snp.makeConstraints { make in
-            make.top.equalTo(divider1.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
-            make.height.equalTo(70)
+            make.bottom.equalTo(divider2.snp.top).offset(-Spacing.l)
+            make.horizontalEdges.equalToSuperview().inset(Spacing.l)
+            make.height.equalToSuperview().multipliedBy(0.1)
         }
         
         // 걸음수
@@ -334,16 +331,16 @@ final class TicketView: BaseView {
         
         // 두 번째 구분선
         divider2.snp.makeConstraints { make in
-            make.top.equalTo(statsContainerView.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
-            make.height.equalTo(1)
+            make.bottom.equalTo(durationContainerView.snp.top).offset(-Spacing.l)
+            make.leading.trailing.equalToSuperview().inset(Spacing.xl)
+            make.height.equalTo(0.5)
         }
         
         // 소요 시간 컨테이너
         durationContainerView.snp.makeConstraints { make in
-            make.top.equalTo(divider2.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
-            make.height.equalTo(70)
+            make.bottom.equalTo(divider3.snp.top).multipliedBy(0.95)
+            make.horizontalEdges.equalToSuperview().inset(Spacing.l)
+            make.height.equalToSuperview().multipliedBy(0.1)
         }
         
         durationLabel.snp.makeConstraints { make in
@@ -358,19 +355,26 @@ final class TicketView: BaseView {
         
         // 세 번째 구분선
         divider3.snp.makeConstraints { make in
-            make.top.equalTo(durationContainerView.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.xxl)
-            make.height.equalTo(1)
+//            make.top.equalTo(durationContainerView.snp.bottom).offset(Spacing.m)
+            make.bottom.equalTo(logoImageView.snp.top).multipliedBy(0.89)
+            make.horizontalEdges.equalToSuperview().inset(Spacing.xxl)
+            make.height.equalTo(0.5)
         }
         
         // 로고
         logoImageView.snp.makeConstraints { make in
-            make.top.equalTo(divider3.snp.bottom).offset(Spacing.m)
             make.centerX.equalToSuperview()
             make.width.equalTo(120)
             make.height.equalTo(40)
-//            make.bottom.equalToSuperview().offset(-Spacing.xxl)
+            make.bottom.equalToSuperview().offset(-Spacing.xxl)
         }
+    }
+    
+    override func configureView() {
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOffset = CGSize(width: 0, height: 2)
+        layer.shadowOpacity = 0.06
+        layer.shadowRadius = 10
     }
     
 }

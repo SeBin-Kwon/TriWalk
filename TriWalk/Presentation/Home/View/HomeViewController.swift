@@ -62,7 +62,7 @@ class HomeViewController: BaseViewController {
     weak var delegate: HomeViewControllerDelegate?
     private var dataSource: UICollectionViewDiffableDataSource<Int, CardItem>?
     private var weatherCards: [CardItem] = []
-
+    
     // 상수 추가
     static let sectionIdentifier = 0
     
@@ -102,7 +102,8 @@ class HomeViewController: BaseViewController {
     
     private func setupCollectionView() {
         collectionView.delegate = self
-        collectionView.register(HomeCardCell.self, forCellWithReuseIdentifier: HomeCardCell.identifier)
+        collectionView.register(WeatherCardCell.self, forCellWithReuseIdentifier: WeatherCardCell.identifier)
+        collectionView.register(TicketCardCell.self, forCellWithReuseIdentifier: TicketCardCell.identifier)
         configureDataSource()
     }
     
@@ -126,7 +127,7 @@ class HomeViewController: BaseViewController {
         
         collectionView.snp.makeConstraints { make in
             make.center.equalTo(view.safeAreaLayoutGuide)
-            make.width.equalTo(310)
+            make.horizontalEdges.equalToSuperview()
             make.height.equalTo(480)
         }
         
@@ -145,15 +146,34 @@ extension HomeViewController: UICollectionViewDelegate {
         dataSource = UICollectionViewDiffableDataSource<Int, CardItem>(
             collectionView: collectionView
         ) { collectionView, indexPath, item in
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: HomeCardCell.identifier,
-                for: indexPath
-            ) as? HomeCardCell else {
-                return UICollectionViewCell()
+            switch item.cardType {
+            case .today:
+                guard let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: WeatherCardCell.identifier, for: indexPath ) as? WeatherCardCell else { return UICollectionViewCell() }
+                cell.configure(with: item)
+                return cell
+                
+            case .history:
+                guard let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: TicketCardCell.identifier, for: indexPath) as? TicketCardCell else { return UICollectionViewCell() }
+                
+                // 산책 데이터로 변환하여 TicketView에 전달
+                let walkData = WalkCompletedData(
+                    date: item.date,
+                    weekday: "WED", // 실제 구현 시에는 날짜에서 요일 추출
+                    startLocation: "BJK",
+                    startTime: "04:26 PM",
+                    endLocation: "OPS",
+                    endTime: "05:38 PM",
+                    steps: 426,
+                    distance: 1.3,
+                    calories: 122,
+                    duration: "01:12:48"
+                )
+                
+                cell.configure(with: walkData)
+                return cell
             }
-            
-            cell.configure(with: item)
-            return cell
         }
         
         // 초기 데이터 생성 및 적용
@@ -167,8 +187,8 @@ extension HomeViewController: UICollectionViewDelegate {
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-            print("HomeCellTapped")
-        }
+        print("HomeCellTapped")
+    }
     
     private func updateSnapshot(animated: Bool = true) {
         guard let dataSource = dataSource else { return }
@@ -199,8 +219,8 @@ extension HomeViewController: UICollectionViewDelegate {
                                               heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.85),
-                                               heightDimension: .absolute(420))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.8),
+                                               heightDimension: .absolute(450))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         
         let section = NSCollectionLayoutSection(group: group)

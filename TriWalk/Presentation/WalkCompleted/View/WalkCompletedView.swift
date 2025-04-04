@@ -54,20 +54,16 @@ final class WalkCompletedView: BaseView {
         }
         
         ticketView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(Spacing.l)
+            make.top.equalTo(titleLabel.snp.bottom).offset(Spacing.xl)
             make.centerX.equalToSuperview()
-            make.width.equalToSuperview()
-            make.height.equalTo(550)
+            make.width.equalToSuperview().multipliedBy(0.9)
+            make.height.equalTo(500)
         }
         
         // 홈으로 버튼
         homeButton.snp.makeConstraints { make in
             make.bottom.horizontalEdges.equalTo(safeAreaLayoutGuide).inset(Spacing.screenMargin)
         }
-    }
-    
-    override func configureView() {
-        // 추가적인 뷰 설정이 필요하면 여기에 구현
     }
     
     // MARK: - Public Methods
