@@ -236,7 +236,7 @@ final class WalkTrackingSheetView: BaseView {
         
         // 메트릭 스택뷰
         metricsStackView.snp.makeConstraints { make in
-            make.top.equalToSuperview().inset(20)
+            make.top.equalToSuperview().inset(40)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(70).priority(.high)
         }
@@ -286,7 +286,7 @@ final class WalkTrackingSheetView: BaseView {
         
         // 시간 컨테이너
         timeContainerView.snp.makeConstraints { make in
-            make.top.equalTo(metricsStackView.snp.bottom)
+            make.top.equalTo(metricsStackView.snp.bottom).offset(4)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(80)
         }
@@ -302,33 +302,33 @@ final class WalkTrackingSheetView: BaseView {
         }
         
         // 갤러리 컨테이너
-        galleryContainerView.snp.makeConstraints { make in
-            make.top.equalTo(timeContainerView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(130)
-        }
-        
-        galleryTitleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.leading.equalToSuperview().offset(16)
-        }
-        
-        addPhotoButton.snp.makeConstraints { make in
-            make.centerY.equalTo(galleryTitleLabel)
-            make.trailing.equalToSuperview().offset(-16)
-            make.width.height.equalTo(28)
-        }
-        
-        galleryCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(galleryTitleLabel.snp.bottom).offset(8)
-            make.leading.equalToSuperview().offset(16)
-            make.trailing.equalToSuperview().offset(-16)
-            make.bottom.lessThanOrEqualToSuperview().offset(-12)
-        }
+//        galleryContainerView.snp.makeConstraints { make in
+//            make.top.equalTo(timeContainerView.snp.bottom)
+//            make.leading.trailing.equalToSuperview()
+//            make.height.equalTo(130)
+//        }
+//        
+//        galleryTitleLabel.snp.makeConstraints { make in
+//            make.top.equalToSuperview().offset(12)
+//            make.leading.equalToSuperview().offset(16)
+//        }
+//        
+//        addPhotoButton.snp.makeConstraints { make in
+//            make.centerY.equalTo(galleryTitleLabel)
+//            make.trailing.equalToSuperview().offset(-16)
+//            make.width.height.equalTo(28)
+//        }
+//        
+//        galleryCollectionView.snp.makeConstraints { make in
+//            make.top.equalTo(galleryTitleLabel.snp.bottom).offset(8)
+//            make.leading.equalToSuperview().offset(16)
+//            make.trailing.equalToSuperview().offset(-16)
+//            make.bottom.lessThanOrEqualToSuperview().offset(-12)
+//        }
         
         // 버튼들
         pauseButton.snp.makeConstraints { make in
-            make.top.equalTo(galleryContainerView.snp.bottom).offset(16).priority(.medium)
+//            make.top.equalTo(galleryContainerView.snp.bottom).offset(16).priority(.medium)
             make.leading.equalToSuperview().offset(16)
             make.bottom.equalToSuperview().offset(-30).priority(.high)
             make.width.equalTo((UIScreen.main.bounds.width - (16 * 3)) / 2)
