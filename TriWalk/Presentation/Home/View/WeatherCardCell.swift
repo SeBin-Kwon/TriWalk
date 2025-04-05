@@ -45,7 +45,7 @@ final class WeatherCardCell: BaseCollectionViewCell {
 
     private let weatherStatusLabel = {
         let label = UILabel()
-        label.font = Font.bodyMedium
+        label.font = Font.font(size: 16, weight: .semibold)
         label.textColor = Color.textSecondary
         return label
     }()
@@ -86,17 +86,30 @@ final class WeatherCardCell: BaseCollectionViewCell {
     func configure(with data: WeatherCardData) {
         dateLabel.text = data.date
         temperatureLabel.text = "\(data.temperature)°C"
-        weatherStatusLabel.text = "미세먼지 농도 \(data.dustGrade.description)"
-        weatherStatusLabel.textColor = data.dustGrade.color
+        
+        let dustStatusText = NSMutableAttributedString(string: "미세먼지 등급 ", attributes: [
+            NSAttributedString.Key.foregroundColor: UIColor.contentPrimary,
+            NSAttributedString.Key.font: Font.bodyMedium
+        ])
+        
+        let gradeText = data.dustGrade.description
+        let gradeColor = data.dustGrade.color
+        
+        let gradeAttributedString = NSAttributedString(string: gradeText, attributes: [
+            NSAttributedString.Key.foregroundColor: gradeColor,
+            NSAttributedString.Key.font: Font.font(size: 16, weight: .bold)
+        ])
+            
+        dustStatusText.append(gradeAttributedString)
+        weatherStatusLabel.attributedText = dustStatusText
         
         // 날씨 타입에 따라 아이콘 이미지 설정
-        switch data.weatherType {
-        case .sunny:
-            iconView.image = UIImage(named: "sun") ?? UIImage(systemName: "sun.max.fill")
-        case .rainy:
-            iconView.image = UIImage(named: "cloud.rain") ?? UIImage(systemName: "cloud.rain.fill")
-        case .clear:
-            iconView.image = UIImage(named: "sun") ?? UIImage(systemName: "sun.max.fill")
+        iconView.image = UIImage(systemName: data.weatherType.systemImageName)
+        iconView.tintColor = data.weatherType.color
+        
+        // 커스텀 이미지가 있다면 대체
+        if let customImage = UIImage(named: data.weatherType.rawValue) {
+            iconView.image = customImage
         }
     }
 }

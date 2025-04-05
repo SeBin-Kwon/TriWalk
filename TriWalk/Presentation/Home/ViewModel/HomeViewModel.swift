@@ -126,33 +126,51 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         dateFormatter.locale = Locale(identifier: "ko_KR")
         let currentDate = dateFormatter.string(from: Date())
         
+        let weatherInfo = weatherResponse.weather.first ?? Weather(id: 800, main: "Clear", description: "맑음", icon: "01d")
         // 날씨 상태 결정
-        let weatherType = determineWeatherType(weatherResponse.weather.first?.main ?? "")
+        let weatherType = determineWeatherType(from: weatherInfo)
         
         // 미세먼지 등급 (첫 번째 item만 사용)
         let dustItem = airKoreaResponse.response.body.items.first
-        let pm10Grade = dustItem?.pm10Grade ?? "-1" // 기본값: 보통
-        let dustGrade = Int(pm10Grade) ?? -1
+        
+        let pm10GradeValue = Int(dustItem?.pm10Grade ?? "-1") ?? -1
+        let dustGrade = DustGrade(rawValue: pm10GradeValue) ?? .unknown
         
         // 날씨 카드 데이터 생성
         let weatherCardData = WeatherCardData(
             date: currentDate,
             temperature: Int(weatherResponse.main.temp.rounded()),
             weatherType: weatherType,
-            dustGrade: DustGrade(rawValue: dustGrade) ?? .moderate,
+            dustGrade: dustGrade,
             cardType: .today
         )
         
         weatherDataSubject.send(weatherCardData)
     }
     
-    private func determineWeatherType(_ weatherMain: String) -> WeatherType {
-        switch weatherMain.lowercased() {
-        case "clear": return .sunny
-        case "clouds": return .clear
-        case "rain", "drizzle", "thunderstorm": return .rainy
-        default: return .clear
-        }
+    private func determineWeatherType(from weather: Weather) -> WeatherType {
+        let id = weather.id
+            
+            switch id {
+            case 200...232:
+                return .thunderstorm // 뇌우 (200-232)
+            case 300...321:
+                return .rainy        // 이슬비 (300-321)
+            case 500...531:
+                return .rainy        // 비 (500-531)
+            case 600...622:
+                return .snow         // 눈 (600-622)
+            case 701...781:
+                return .mist         // 안개, 먼지 등 (701-781)
+            case 800:
+                return .sunny        // 맑음 (800)
+            case 801:
+                return .partlyCloudy // 약간 구름 (801)
+            case 802...804:
+                return .cloudy       // 구름 많음 (802-804)
+            default:
+                return .unknown
+            }
     }
 }
 

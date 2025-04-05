@@ -107,7 +107,7 @@ enum DustGrade: Int {
         case .good: return "좋음"
         case .moderate: return "보통"
         case .bad: return "나쁨"
-        case .veryBad: return "매우나쁨"
+        case .veryBad: return "매우 나쁨"
         case .unknown: return "알 수 없음"
         }
     }

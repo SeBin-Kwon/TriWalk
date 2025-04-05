@@ -14,39 +14,12 @@ enum CardType {
     case today
 }
 
-enum WeatherType {
-    case sunny
-    case rainy
-    case clear
-    
-    var description: String {
-        switch self {
-        case .sunny:
-            return "좋음"
-        case .rainy:
-            return "나쁨"
-        case .clear:
-            return "보통"
-        }
-    }
-    
-    var color: UIColor {
-        switch self {
-        case .sunny:
-            return .systemGreen
-        case .rainy:
-            return .systemRed
-        case .clear:
-            return .systemBlue
-        }
-    }
-}
-
 struct CardItem: Hashable {
     let id = UUID()
     let date: String
     let temperature: Int
     let weatherType: WeatherType
+    let dustGrade: DustGrade
     let cardType: CardType
     
     func hash(into hasher: inout Hasher) {
@@ -126,6 +99,7 @@ class HomeViewController: BaseViewController {
                         date: weatherData.date,
                         temperature: weatherData.temperature,
                         weatherType: weatherData.weatherType,
+                        dustGrade: weatherData.dustGrade,
                         cardType: .today
                     )
                     owner.weatherCards = newCards
@@ -135,6 +109,7 @@ class HomeViewController: BaseViewController {
                             date: weatherData.date,
                             temperature: weatherData.temperature,
                             weatherType: weatherData.weatherType,
+                            dustGrade: weatherData.dustGrade,
                             cardType: .today
                         )
                     )
@@ -201,7 +176,7 @@ class HomeViewController: BaseViewController {
             date: item.date,
             temperature: item.temperature,
             weatherType: item.weatherType,
-            dustGrade: .moderate, // 기본값 설정 또는 CardItem에 해당 속성 추가 필요
+            dustGrade: item.dustGrade,
             cardType: item.cardType
         )
     }
@@ -242,13 +217,6 @@ extension HomeViewController: UICollectionViewDelegate {
                 return cell
             }
         }
-        
-        // 초기 데이터 생성 및 적용
-        weatherCards = [
-            CardItem(date: "3.25 TUE", temperature: 26, weatherType: .sunny, cardType: .history),
-            CardItem(date: "3.25 TUE", temperature: 26, weatherType: .rainy, cardType: .history),
-            CardItem(date: "3.26 WED", temperature: 26, weatherType: .clear, cardType: .today)
-        ]
         
         updateSnapshot(animated: false)
     }
