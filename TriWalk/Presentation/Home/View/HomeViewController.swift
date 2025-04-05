@@ -41,7 +41,8 @@ class HomeViewController: BaseViewController {
     private let homeViewModel = HomeViewModel()
     private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
     private let reloadTriggerSubject = PassthroughSubject<Void, Never>()
-    
+    private var historyCards: [CardItem] = [] // 산책 기록 카드만 따로 관리
+    private var weatherCard: CardItem? // 날씨 카드를 별도로 관리
     static let sectionIdentifier = 0
     
     let titleLabel = {
@@ -72,6 +73,21 @@ class HomeViewController: BaseViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         viewDidAppearSubject.send(())
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // 뷰가 다시 나타날 때마다 날씨 카드가 마지막에 오도록 데이터 재정렬
+        reorganizeCards()
+        updateSnapshot(animated: false)
+    }
+    
+    private func reorganizeCards() {
+            // 배열 재구성 - 히스토리 카드 먼저, 날씨 카드는 마지막에
+        cardItems = historyCards
+        if let weather = weatherCard {
+            cardItems.append(weather)
+        }
     }
     
     override func bindViewModel() {
@@ -220,20 +236,6 @@ extension HomeViewController: UICollectionViewDelegate {
                 guard let cell = collectionView.dequeueReusableCell(
                     withReuseIdentifier: TicketCardCell.identifier, for: indexPath) as? TicketCardCell, let walkRecord = item.walkRecord else { return UICollectionViewCell() }
                 
-                // 산책 데이터로 변환하여 TicketView에 전달
-//                let walkData = WalkCompletedData(
-//                    date: item.date,
-//                    weekday: "WED", // 실제 구현 시에는 날짜에서 요일 추출
-//                    startLocation: "BJK",
-//                    startTime: "04:26 PM",
-//                    endLocation: "OPS",
-//                    endTime: "05:38 PM",
-//                    steps: 426,
-//                    distance: 1.3,
-//                    calories: 122,
-//                    duration: "01:12:48"
-//                )
-                
                 let walkData = self.convertToWalkCompletedData(from: walkRecord)
                 cell.configure(with: walkData)
                 return cell
@@ -258,23 +260,24 @@ extension HomeViewController: UICollectionViewDelegate {
         var snapshot = NSDiffableDataSourceSnapshot<Int, CardItem>()
         snapshot.appendSections([HomeViewController.sectionIdentifier])
         snapshot.appendItems(cardItems, toSection: HomeViewController.sectionIdentifier)
-        
+//        dataSource.apply(snapshot, animatingDifferences: animated)
         dataSource.apply(snapshot, animatingDifferences: animated) { [weak self] in
-            self?.scrollToLastItem()
+            self?.scrollToLastItem(animated: false)
         }
     }
     
     // 마지막 아이템으로 스크롤
-    private func scrollToLastItem() {
+    private func scrollToLastItem(animated: Bool = false) {
         guard !cardItems.isEmpty else { return }
-        
-        let lastIndex = cardItems.count - 1
-        let indexPath = IndexPath(item: lastIndex, section: HomeViewController.sectionIdentifier)
-        
-        DispatchQueue.main.async {
-            self.collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+            
+            let lastIndex = cardItems.count - 1
+            let indexPath = IndexPath(item: lastIndex, section: HomeViewController.sectionIdentifier)
+            
+            DispatchQueue.main.async { [weak self] in
+                // 스냅 효과를 위해 스크롤 방식 변경
+                self?.collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+            }
         }
-    }
     
     static func createLayout() -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
@@ -289,6 +292,23 @@ extension HomeViewController: UICollectionViewDelegate {
         section.orthogonalScrollingBehavior = .groupPagingCentered
         section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16)
         section.interGroupSpacing = 12
+        
+        section.visibleItemsInvalidationHandler = { (items, offset, environment) in
+            items.forEach { item in
+                // 아이템 중앙에 가까울수록 크기와 불투명도 조정
+                let distanceFromCenter = abs((item.frame.midX - offset.x) - environment.container.contentSize.width / 2.0)
+                let minScale: CGFloat = 0.9
+                let maxScale: CGFloat = 1.0
+                let scale = max(maxScale - (distanceFromCenter / environment.container.contentSize.width) * 0.5, minScale)
+                item.transform = CGAffineTransform(scaleX: scale, y: scale)
+                
+                // 선택적: 중앙에서 멀어질수록 투명해지는 효과
+                let minAlpha: CGFloat = 0.7
+                let maxAlpha: CGFloat = 1.0
+                let alpha = max(maxAlpha - (distanceFromCenter / environment.container.contentSize.width) * 0.7, minAlpha)
+                item.alpha = alpha
+            }
+        }
         
         return section
     }
