@@ -63,6 +63,13 @@ final class LocationManager: NSObject {
     
     /// 위치 서비스 권한 요청
     func requestAuthorization() {
+        
+        if locationManager.authorizationStatus == .authorizedWhenInUse ||
+               locationManager.authorizationStatus == .authorizedAlways {
+                // 이미 권한이 있으므로 위치 요청 시작
+                requestLocation()
+                return
+            }
         locationManager.requestWhenInUseAuthorization()
     }
     
@@ -201,7 +208,7 @@ extension LocationManager: CLLocationManagerDelegate {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
             // 권한이 있으면 아무 작업도 수행하지 않음 (호출자가 적절한 작업 수행)
-            break
+            requestLocation()
         case .denied, .restricted:
             let error = NSError(domain: "com.app.location", code: 3, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 거부되었습니다."])
             locationSubject.send(completion: .failure(error))

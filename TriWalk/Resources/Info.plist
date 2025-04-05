@@ -14,19 +14,11 @@
         </dict>
     </dict>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>TriWalk가 산책 경로를 추적하기 위해 위치 권한이 필요합니다.</string>
-
+    <string>산책 경로를 추적하고 날씨 및 미세먼지 정보를 제공하기 위해 위치 정보가 필요합니다.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>TriWalk가 산책 경로를 추적하기 위해 위치 권한이 필요합니다.</string>
-
-    <key>NSCameraUsageDescription</key>
-    <string>TriWalk가 산책 중 사진을 찍기 위해 카메라 접근 권한이 필요합니다.</string>
-
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>TriWalk가 산책 중 촬영한 사진을 저장하기 위해 사진 라이브러리 접근 권한이 필요합니다.</string>
-
+    <string>산책 경로를 추적하고 날씨 및 미세먼지 정보를 제공하기 위해 위치 정보가 필요합니다.</string>
     <key>NSMotionUsageDescription</key>
-    <string>TriWalk가 걸음 수를 측정하기 위해 모션 센서 접근 권한이 필요합니다.</string>
+    <string>산책 중 걸음 수 및 소모된 칼로리를 측정하기 위해 모션 센서 접근 권한이 필요합니다.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
