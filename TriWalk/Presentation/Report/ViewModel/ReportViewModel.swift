@@ -14,9 +14,13 @@ import UIKit
 // 통계 데이터 구조체
 struct WalkStats {
     let maxSteps: Int
+    let maxStepsDate: String
     let maxDistance: Double
+    let maxDistanceDate: String
     let maxCalories: Int
+    let maxCaloriesDate: String
     let maxDuration: String
+    let maxDurationDate: String
 }
 
 final class ReportViewModel: BaseViewModel, ViewModelType {
@@ -138,9 +142,13 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
             // 기본 값 전송
             let defaultStats = WalkStats(
                 maxSteps: 0,
+                maxStepsDate: "--",
                 maxDistance: 0.0,
+                maxDistanceDate: "--",
                 maxCalories: 0,
-                maxDuration: "00:00:00"
+                maxCaloriesDate: "--",
+                maxDuration: "00:00:00",
+                maxDurationDate: "--"
             )
             walkStatsSubject.send(defaultStats)
             return
@@ -149,25 +157,33 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
         // 최대 걸음 수
         let maxStepsRecord = records.max { $0.steps < $1.steps } ?? records.first!
         let maxSteps = maxStepsRecord.steps
+        let maxStepsDate = FormatManager.shared.formattedDate(maxStepsRecord.date)
         
         // 최대 거리
         let maxDistanceRecord = records.max { $0.distance < $1.distance } ?? records.first!
         let maxDistance = maxDistanceRecord.distance
+        let maxDistanceDate = FormatManager.shared.formattedDate(maxDistanceRecord.date)
         
         // 최대 칼로리
         let maxCaloriesRecord = records.max { $0.calories < $1.calories } ?? records.first!
         let maxCalories = Int(maxCaloriesRecord.calories)
+        let maxCaloriesDate = FormatManager.shared.formattedDate(maxCaloriesRecord.date)
         
         // 최대 시간
         let maxDurationRecord = records.max { $0.duration < $1.duration } ?? records.first!
         let maxDuration = formatDuration(maxDurationRecord.duration)
+        let maxDurationDate = FormatManager.shared.formattedDate(maxDurationRecord.date)
         
         // 통계 데이터 전송
         let stats = WalkStats(
             maxSteps: maxSteps,
+            maxStepsDate: maxStepsDate,
             maxDistance: maxDistance,
+            maxDistanceDate: maxDistanceDate,
             maxCalories: maxCalories,
-            maxDuration: maxDuration
+            maxCaloriesDate: maxCaloriesDate,
+            maxDuration: maxDuration,
+            maxDurationDate: maxDurationDate
         )
         
         walkStatsSubject.send(stats)

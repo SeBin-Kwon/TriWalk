@@ -90,7 +90,11 @@ final class ReportViewController: BaseViewController {
                     steps: stats.maxSteps,
                     distance: stats.maxDistance,
                     calories: stats.maxCalories,
-                    time: stats.maxDuration
+                    time: stats.maxDuration,
+                    stepsDate: stats.maxStepsDate,
+                    distanceDate: stats.maxDistanceDate,
+                    caloriesDate: stats.maxCaloriesDate,
+                    timeDate: stats.maxDurationDate
                 )
             }
             .store(in: &cancellables)

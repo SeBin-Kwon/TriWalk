@@ -68,22 +68,35 @@ final class StatusCardView: BaseView {
     }
     
     // MARK: - Public Methods
-    func updateStats(steps: Int, distance: Double, calories: Int, time: String) {
-            // 데이터가 없는 경우 "- -" 표시
-            if steps == 0 && distance == 0.0 && calories == 0 && time == "00:00:00" {
-                stepsCardView.setValue("--")
-                distanceCardView.setValue("--")
-                caloriesCardView.setValue("--")
-                timeCardView.setValue("--")
-                return
-            }
+    // StatusCardView.swift의 updateStats 메소드 수정
+    func updateStats(steps: Int, distance: Double, calories: Int, time: String,
+                     stepsDate: String, distanceDate: String, caloriesDate: String, timeDate: String) {
+        // 데이터가 없는 경우 "- -" 표시
+        if steps == 0 && distance == 0.0 && calories == 0 && time == "00:00:00" {
+            stepsCardView.setValue("--")
+            distanceCardView.setValue("--")
+            caloriesCardView.setValue("--")
+            timeCardView.setValue("--")
             
-            // 개별 데이터 업데이트
-            stepsCardView.setValue(steps > 0 ? "\(steps)" : "--")
-            distanceCardView.setValue(distance > 0 ? String(format: "%.1f", distance) : "--")
-            caloriesCardView.setValue(calories > 0 ? "\(calories)" : "--")
-            timeCardView.setValue(time != "00:00:00" ? time : "--")
+            stepsCardView.setDate("--")
+            distanceCardView.setDate("--")
+            caloriesCardView.setDate("--")
+            timeCardView.setDate("--")
+            return
         }
+        
+        // 개별 데이터 업데이트
+        stepsCardView.setValue(steps > 0 ? "\(steps)" : "--")
+        distanceCardView.setValue(distance > 0 ? String(format: "%.1f", distance) : "--")
+        caloriesCardView.setValue(calories > 0 ? "\(calories)" : "--")
+        timeCardView.setValue(time != "00:00:00" ? time : "--")
+        
+        // 날짜 정보 업데이트
+        stepsCardView.setDate(stepsDate)
+        distanceCardView.setDate(distanceDate)
+        caloriesCardView.setDate(caloriesDate)
+        timeCardView.setDate(timeDate)
+    }
 }
 
 // MARK: - 개별 카드 뷰

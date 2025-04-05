@@ -117,9 +117,20 @@ final class ReportView: BaseView {
         showEmptyStateIfNeeded(walkCount: walkCount)
     }
     
-    func updateStats(steps: Int, distance: Double, calories: Int, time: String) {
-            statsCardView.updateStats(steps: steps, distance: distance, calories: calories, time: time)
-        }
+    func updateStats(steps: Int, distance: Double, calories: Int, time: String,
+                     stepsDate: String = "", distanceDate: String = "",
+                     caloriesDate: String = "", timeDate: String = "") {
+        statsCardView.updateStats(
+            steps: steps,
+            distance: distance,
+            calories: calories,
+            time: time,
+            stepsDate: stepsDate,
+            distanceDate: distanceDate,
+            caloriesDate: caloriesDate,
+            timeDate: timeDate
+        )
+    }
     
     func showLoading(_ show: Bool) {
         if show {
