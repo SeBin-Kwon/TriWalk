@@ -85,7 +85,7 @@ final class WeatherCardCell: BaseCollectionViewCell {
     // MARK: - Public Methods
     func configure(with data: WeatherCardData) {
         dateLabel.text = data.date
-        temperatureLabel.text = "\(data.temperature)°C"
+        temperatureLabel.text = "\(data.temperature)°C, \(data.weatherType.description)"
         
         let dustStatusText = NSMutableAttributedString(string: "미세먼지 등급 ", attributes: [
             NSAttributedString.Key.foregroundColor: UIColor.contentPrimary,

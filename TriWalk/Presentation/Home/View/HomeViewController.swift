@@ -10,17 +10,20 @@ import Combine
 import SnapKit
 
 enum CardType {
-    case history
-    case today
+    case weather
+    case walkRecord
 }
 
 struct CardItem: Hashable {
     let id = UUID()
-    let date: String
-    let temperature: Int
-    let weatherType: WeatherType
-    let dustGrade: DustGrade
+    // 공통 필드
     let cardType: CardType
+    
+    // 날씨 카드용 필드
+    let weatherData: WeatherCardData?
+    
+    // 산책 기록 카드용 필드
+    let walkRecord: WalkRecord?
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -34,11 +37,11 @@ struct CardItem: Hashable {
 class HomeViewController: BaseViewController {
     weak var delegate: HomeViewControllerDelegate?
     private var dataSource: UICollectionViewDiffableDataSource<Int, CardItem>?
-    private var weatherCards: [CardItem] = []
+    private var cardItems: [CardItem] = []
     private let homeViewModel = HomeViewModel()
     private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
     private let reloadTriggerSubject = PassthroughSubject<Void, Never>()
-    // 상수 추가
+    
     static let sectionIdentifier = 0
     
     let titleLabel = {
@@ -80,37 +83,33 @@ class HomeViewController: BaseViewController {
             .store(in: &cancellables)
         
         // 날씨 뷰모델 바인딩
-        let weatherInput = HomeViewModel.Input(
+        let input = HomeViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
             reloadTrigger: reloadTriggerSubject.eraseToAnyPublisher()
         )
         
-        let weatherOutput = homeViewModel.transform(input: weatherInput)
+        let output = homeViewModel.transform(input: input)
         
         // 날씨 데이터 수신
-        weatherOutput.weatherData
+        output.weatherData
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, weatherData in
                 // 기존 날씨 카드 찾아 업데이트하거나 새로 추가
-                if let index = owner.weatherCards.firstIndex(where: { $0.cardType == .today }) {
-                    var newCards = owner.weatherCards
-                    newCards[index] = CardItem(
-                        date: weatherData.date,
-                        temperature: weatherData.temperature,
-                        weatherType: weatherData.weatherType,
-                        dustGrade: weatherData.dustGrade,
-                        cardType: .today
+                if let index = owner.cardItems.firstIndex(where: { $0.cardType == .weather }) {
+                    var newItems = owner.cardItems
+                    newItems[index] = CardItem(
+                        cardType: .weather,
+                        weatherData: weatherData,
+                        walkRecord: nil
                     )
-                    owner.weatherCards = newCards
+                    owner.cardItems = newItems
                 } else {
-                    owner.weatherCards.append(
+                    owner.cardItems.append(
                         CardItem(
-                            date: weatherData.date,
-                            temperature: weatherData.temperature,
-                            weatherType: weatherData.weatherType,
-                            dustGrade: weatherData.dustGrade,
-                            cardType: .today
+                            cardType: .weather,
+                            weatherData: weatherData,
+                            walkRecord: nil
                         )
                     )
                 }
@@ -119,8 +118,30 @@ class HomeViewController: BaseViewController {
             }
             .store(in: &cancellables)
         
+        output.walkRecords
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, walkRecords in
+                print("산책 기록 수신: \(walkRecords.count)개")
+                
+                // 기존 산책 기록 카드 제거
+                owner.cardItems.removeAll { $0.cardType == .walkRecord }
+                
+                // 새로운 산책 기록 카드 추가
+                for record in walkRecords {
+                    owner.cardItems.append(CardItem(
+                        cardType: .walkRecord,
+                        weatherData: nil,
+                        walkRecord: record
+                    ))
+                }
+                
+                owner.updateSnapshot()
+            }
+            .store(in: &cancellables)
+        
         // 에러 처리
-        weatherOutput.error
+        output.error
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, errorMessage in
@@ -171,15 +192,13 @@ class HomeViewController: BaseViewController {
         startButton.applyHomeButtonStyle()
     }
     
-    private func convertToWeatherCardData(from item: CardItem) -> WeatherCardData {
-        return WeatherCardData(
-            date: item.date,
-            temperature: item.temperature,
-            weatherType: item.weatherType,
-            dustGrade: item.dustGrade,
-            cardType: item.cardType
-        )
-    }
+    private func convertToWeatherCardData(from item: CardItem) -> WeatherCardData? {
+            return item.weatherData
+        }
+    
+    private func convertToWalkCompletedData(from walkRecord: WalkRecord) -> WalkCompletedData {
+            return FormatManager.shared.formatWalkRecordToCompletedData(walkRecord)
+        }
 
 }
 
@@ -189,30 +208,33 @@ extension HomeViewController: UICollectionViewDelegate {
             collectionView: collectionView
         ) { collectionView, indexPath, item in
             switch item.cardType {
-            case .today:
+            case .weather:
                 guard let cell = collectionView.dequeueReusableCell(
                     withReuseIdentifier: WeatherCardCell.identifier, for: indexPath ) as? WeatherCardCell else { return UICollectionViewCell() }
-                cell.configure(with: self.convertToWeatherCardData(from: item))
+                if let weatherData = item.weatherData {
+                    cell.configure(with: weatherData)
+                }
                 return cell
                 
-            case .history:
+            case .walkRecord:
                 guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: TicketCardCell.identifier, for: indexPath) as? TicketCardCell else { return UICollectionViewCell() }
+                    withReuseIdentifier: TicketCardCell.identifier, for: indexPath) as? TicketCardCell, let walkRecord = item.walkRecord else { return UICollectionViewCell() }
                 
                 // 산책 데이터로 변환하여 TicketView에 전달
-                let walkData = WalkCompletedData(
-                    date: item.date,
-                    weekday: "WED", // 실제 구현 시에는 날짜에서 요일 추출
-                    startLocation: "BJK",
-                    startTime: "04:26 PM",
-                    endLocation: "OPS",
-                    endTime: "05:38 PM",
-                    steps: 426,
-                    distance: 1.3,
-                    calories: 122,
-                    duration: "01:12:48"
-                )
+//                let walkData = WalkCompletedData(
+//                    date: item.date,
+//                    weekday: "WED", // 실제 구현 시에는 날짜에서 요일 추출
+//                    startLocation: "BJK",
+//                    startTime: "04:26 PM",
+//                    endLocation: "OPS",
+//                    endTime: "05:38 PM",
+//                    steps: 426,
+//                    distance: 1.3,
+//                    calories: 122,
+//                    duration: "01:12:48"
+//                )
                 
+                let walkData = self.convertToWalkCompletedData(from: walkRecord)
                 cell.configure(with: walkData)
                 return cell
             }
@@ -222,7 +244,12 @@ extension HomeViewController: UICollectionViewDelegate {
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("HomeCellTapped")
+        guard let item = dataSource?.itemIdentifier(for: indexPath) else { return }
+        if item.cardType == .walkRecord, let walkRecord = item.walkRecord {
+            print("산책 기록 선택: \(walkRecord.id)")
+            // 예: let detailVC = WalkDetailViewController(walkRecord: walkRecord)
+            // navigationController?.pushViewController(detailVC, animated: true)
+        }
     }
     
     private func updateSnapshot(animated: Bool = true) {
@@ -230,7 +257,7 @@ extension HomeViewController: UICollectionViewDelegate {
         
         var snapshot = NSDiffableDataSourceSnapshot<Int, CardItem>()
         snapshot.appendSections([HomeViewController.sectionIdentifier])
-        snapshot.appendItems(weatherCards, toSection: HomeViewController.sectionIdentifier)
+        snapshot.appendItems(cardItems, toSection: HomeViewController.sectionIdentifier)
         
         dataSource.apply(snapshot, animatingDifferences: animated) { [weak self] in
             self?.scrollToLastItem()
@@ -239,13 +266,13 @@ extension HomeViewController: UICollectionViewDelegate {
     
     // 마지막 아이템으로 스크롤
     private func scrollToLastItem() {
-        guard !weatherCards.isEmpty else { return }
+        guard !cardItems.isEmpty else { return }
         
-        let lastIndex = weatherCards.count - 1
+        let lastIndex = cardItems.count - 1
         let indexPath = IndexPath(item: lastIndex, section: HomeViewController.sectionIdentifier)
         
         DispatchQueue.main.async {
-            self.collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: false)
+            self.collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         }
     }
     

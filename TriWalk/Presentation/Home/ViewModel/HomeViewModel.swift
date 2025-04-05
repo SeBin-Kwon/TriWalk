@@ -20,24 +20,29 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         let weatherData: AnyPublisher<WeatherCardData, Never>
         let isLoading: AnyPublisher<Bool, Never>
         let error: AnyPublisher<String, Never>
+        let walkRecords: AnyPublisher<[WalkRecord], Never>
     }
     
     // MARK: - Private Properties
     private let weatherService: WeatherServiceProtocol
     private let airKoreaService: AirKoreaServiceProtocol
     private let locationManager: LocationManager
+    private let walkRepository: WalkRepositoryProtocol
     
     private let weatherDataSubject = PassthroughSubject<WeatherCardData, Never>()
     private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     private let errorSubject = PassthroughSubject<String, Never>()
+    private let walkRecordsSubject = PassthroughSubject<[WalkRecord], Never>()
     
     // MARK: - Initialization
     init(weatherService: WeatherServiceProtocol = WeatherService(),
          airKoreaService: AirKoreaServiceProtocol = AirKoreaService(),
-         locationManager: LocationManager = .shared) {
+         locationManager: LocationManager = .shared,
+         walkRepository: WalkRepositoryProtocol = WalkRepository()) {
         self.weatherService = weatherService
         self.airKoreaService = airKoreaService
         self.locationManager = locationManager
+        self.walkRepository = walkRepository
         super.init()
     }
     
@@ -59,6 +64,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
                         // 권한이 거부된 경우 에러 메시지 전송
                         owner.errorSubject.send("위치 정보 접근이 거부되었습니다. 날씨 정보를 불러올 수 없습니다.")
                     }
+                    owner.loadWalkRecords()
                 }
                 .store(in: &cancellables)
         
@@ -76,8 +82,22 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         return Output(
             weatherData: weatherDataSubject.eraseToAnyPublisher(),
             isLoading: isLoadingSubject.eraseToAnyPublisher(),
-            error: errorSubject.eraseToAnyPublisher()
+            error: errorSubject.eraseToAnyPublisher(),
+            walkRecords: walkRecordsSubject.eraseToAnyPublisher()
         )
+    }
+    
+    private func loadWalkRecords() {
+        guard let allWalks = walkRepository.getAllWalks() else {
+            print("산책 기록을 불러올 수 없습니다.")
+            walkRecordsSubject.send([])
+            return
+        }
+        
+        // 최근 산책 기록 10개만 가져오기
+        let recentWalks = Array(allWalks.prefix(10)).reversed()
+        print("산책 기록 로드 완료: \(recentWalks.count)개의 기록을 찾았습니다.")
+        walkRecordsSubject.send(Array(recentWalks))
     }
     
     // MARK: - Private Methods
@@ -142,7 +162,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
             temperature: Int(weatherResponse.main.temp.rounded()),
             weatherType: weatherType,
             dustGrade: dustGrade,
-            cardType: .today
+            cardType: .weather
         )
         
         weatherDataSubject.send(weatherCardData)
