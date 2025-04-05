@@ -49,10 +49,17 @@ final class WalkSetupViewController: BaseViewController {
         mapView.delegate = self
         setupLongPressGesture()
         bindViewModel()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+        // 즉시 현재 위치 요청
+        if let location = LocationManager.shared.currentLocation {
+            addAnnotation(coordinate: location.coordinate, title: "출발지")
+            
+            // 지도 중심 설정
+            let region = MKCoordinateRegion(
+                center: location.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            )
+            mapView.setRegion(region, animated: false)
+        }
         viewDidAppearSubject.send(())
     }
 
@@ -105,6 +112,7 @@ final class WalkSetupViewController: BaseViewController {
 
         // 사용자 위치 업데이트
         output.userLocation
+            .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, location in
                 // 출발지 마커 추가

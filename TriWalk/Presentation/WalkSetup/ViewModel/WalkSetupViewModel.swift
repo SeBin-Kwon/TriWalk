@@ -102,7 +102,22 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         input.viewDidAppear
             .withUnretained(self)
             .sink { owner, _ in
-                owner.requestCurrentLocation()
+                if let location = LocationManager.shared.currentLocation {
+                    // 위치 정보 바로 전달
+                    owner.userLocationSubject.send(location)
+                    
+                    // 주소 즉시 요청
+                    LocationManager.shared.lookupAddress(for: location.coordinate) { address in
+                        if let address = address {
+                            DispatchQueue.main.async {
+                                owner.userAddressSubject.send(address)
+                            }
+                        }
+                    }
+                } else {
+                    // 현재 위치가 없으면 위치 요청 시작
+                    owner.requestCurrentLocation()
+                }
             }
             .store(in: &cancellables)
         

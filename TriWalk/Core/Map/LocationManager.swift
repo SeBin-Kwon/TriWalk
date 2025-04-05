@@ -57,6 +57,11 @@ final class LocationManager: NSObject {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = 5.0
         authorizationSubject.send(locationManager.authorizationStatus)
+        
+        if locationManager.authorizationStatus == .authorizedWhenInUse ||
+           locationManager.authorizationStatus == .authorizedAlways {
+            self.startUpdatingLocation()
+        }
     }
     
     // MARK: - Public Methods
