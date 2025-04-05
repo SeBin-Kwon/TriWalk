@@ -271,12 +271,11 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
-            let newTime = self.accumulatedTime + 1.0
-            self.timeSubject.send(newTime)
-            self.accumulatedTime = newTime
-            
-            // 시간에 따른 칼로리 계산 (업데이트)
-            self.calculateCalories()
+            if !self.isPausedSubject.value {
+                let newTime = self.accumulatedTime + 1.0
+                self.timeSubject.send(newTime)
+                self.accumulatedTime = newTime
+            }
         }
     }
     
@@ -291,18 +290,20 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
                     return
                 }
                 
-                // 이전 단계에서 축적된 걸음 수 + 현재 걸음 수
-                let totalSteps = self.previousSteps + (data.numberOfSteps.intValue)
-                self.stepsCountSubject.send(totalSteps)
-                
-                // 거리도 업데이트 (만보계의 거리 정보 활용)
-                if let distanceValue = data.distance?.doubleValue {
-                    // 미터 -> 킬로미터로 변환하고 이전 거리에 더함
-                    let distanceInKm = (distanceValue / 1000.0) + self.previousDistance
-                    self.distanceSubject.send(distanceInKm)
+                if !self.isPausedSubject.value {
+                    // 이전 단계에서 축적된 걸음 수 + 현재 걸음 수
+                    let totalSteps = self.previousSteps + (data.numberOfSteps.intValue)
+                    self.stepsCountSubject.send(totalSteps)
                     
-                    // 칼로리 계산도 업데이트
-                    self.calculateCalories()
+                    // 거리도 업데이트 (만보계의 거리 정보 활용)
+                    if let distanceValue = data.distance?.doubleValue {
+                        // 미터 -> 킬로미터로 변환하고 이전 거리에 더함
+                        let distanceInKm = (distanceValue / 1000.0) + self.previousDistance
+                        self.distanceSubject.send(distanceInKm)
+                        
+                        // 칼로리 계산도 업데이트
+                        self.calculateCalories()
+                    }
                 }
             }
         } else {
@@ -318,12 +319,20 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private func calculateCalories() {
         // MET(Metabolic Equivalent of Task) 값 사용
         // 걷기의 MET 값은 대략 3.5 ~ 4.0 정도
-        let walkingMET = 3.8
+        let distanceCalories = distanceSubject.value * 60.0 * (userWeight / 70.0)
+            
+        // 걸음 수 기반 칼로리 (약 100걸음당 5kcal 정도)
+        let stepsCalories = Double(stepsCountSubject.value) * 0.05 * (userWeight / 70.0)
         
-        // 칼로리 = MET * 몸무게(kg) * 시간(시간)
-        let timeInHours = timeSubject.value / 3600.0
-        let caloriesBurned = walkingMET * userWeight * timeInHours
+        // 두 계산 방식의 평균치를 사용하거나, 더 높은 값을 사용할 수 있음
+        // 여기서는 더 높은 값을 사용 (더 정확하다고 가정)
+        let caloriesBurned = max(distanceCalories, stepsCalories)
         
-        caloriesSubject.send(caloriesBurned)
+        // 너무 작은 값(노이즈)은 무시
+        if caloriesBurned < 1.0 && (distanceSubject.value < 0.01 || stepsCountSubject.value < 10) {
+            caloriesSubject.send(0.0)
+        } else {
+            caloriesSubject.send(caloriesBurned)
+        }
     }
 }
