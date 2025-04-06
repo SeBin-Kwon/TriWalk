@@ -35,6 +35,7 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
         let isLoading: AnyPublisher<Bool, Never>
         let walkCount: AnyPublisher<Int, Never>
         let walkStats: AnyPublisher<WalkStats, Never> // 통계 데이터 추가
+        let hasData: AnyPublisher<Bool, Never>
     }
     
     // MARK: - Private Properties
@@ -43,6 +44,7 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
     private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     private let walkCountSubject = CurrentValueSubject<Int, Never>(0)
     private let walkStatsSubject = PassthroughSubject<WalkStats, Never>() // 통계 데이터 Subject
+    private let hasDataSubject = CurrentValueSubject<Bool, Never>(true)
     
     // MARK: - Initialization
     init(walkRepository: WalkRepositoryProtocol = WalkRepository()) {
@@ -64,7 +66,8 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
             routeItems: routeItemsSubject.eraseToAnyPublisher(),
             isLoading: isLoadingSubject.eraseToAnyPublisher(),
             walkCount: walkCountSubject.eraseToAnyPublisher(),
-            walkStats: walkStatsSubject.eraseToAnyPublisher() // 통계 출력 추가
+            walkStats: walkStatsSubject.eraseToAnyPublisher(),
+            hasData: hasDataSubject.eraseToAnyPublisher()
         )
     }
     
@@ -73,6 +76,7 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
     /// 산책 기록 로드
     private func loadWalkRecords() {
         isLoadingSubject.send(true)
+//        hasDataSubject.send(true)
         
         // 최근 1주 이내의 산책 기록만 가져오기
         let today = Date()
@@ -82,8 +86,12 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
             isLoadingSubject.send(false)
             routeItemsSubject.send([])
             walkCountSubject.send(0)
+            hasDataSubject.send(false)
             return
         }
+        
+        let hasData = !walkRecords.isEmpty
+        hasDataSubject.send(hasData)
         
         // 산책 횟수 업데이트
         walkCountSubject.send(walkRecords.count)

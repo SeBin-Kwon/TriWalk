@@ -69,6 +69,9 @@ final class ReportViewController: BaseViewController {
             .withUnretained(self)
             .sink { owner, isLoading in
                 owner.reportView.showLoading(isLoading)
+                if isLoading {
+                    owner.reportView.emptyStateView.isHidden = true
+                }
             }
             .store(in: &cancellables)
         
@@ -96,6 +99,20 @@ final class ReportViewController: BaseViewController {
                     caloriesDate: stats.maxCaloriesDate,
                     timeDate: stats.maxDurationDate
                 )
+            }
+            .store(in: &cancellables)
+        
+        Publishers.CombineLatest(output.isLoading, output.hasData)
+            .receive(on: RunLoop.main)
+            .withUnretained(self)
+            .sink { owner, combined in
+                let (isLoading, hasData) = combined
+                print("isLoading: \(isLoading), hasData: \(hasData)")
+                // 로딩이 끝난 후에만 EmptyView 표시 여부 결정
+                if !isLoading {
+                    print("Setting empty state visibility: \(!hasData)")
+                    owner.reportView.emptyStateView.isHidden = hasData
+                }
             }
             .store(in: &cancellables)
     }

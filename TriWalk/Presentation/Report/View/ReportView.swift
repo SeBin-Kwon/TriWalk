@@ -95,7 +95,8 @@ final class ReportView: BaseView {
         }
         
         loadingIndicator.snp.makeConstraints { make in
-            make.center.equalTo(mapView)
+            make.center.equalToSuperview()
+            make.size.equalTo(44)
         }
         
         emptyStateView.snp.makeConstraints { make in
@@ -114,7 +115,7 @@ final class ReportView: BaseView {
 //        attributedText.addAttribute(.foregroundColor, value: UIColor.textRed, range: range)
 //        
 //        subtitleLabel.attributedText = attributedText
-        showEmptyStateIfNeeded(walkCount: walkCount)
+//        showEmptyStateIfNeeded(walkCount: walkCount)
     }
     
     func updateStats(steps: Int, distance: Double, calories: Int, time: String,
@@ -135,24 +136,26 @@ final class ReportView: BaseView {
     func showLoading(_ show: Bool) {
         if show {
             loadingIndicator.startAnimating()
+            emptyStateView.isHidden = true
+            
         } else {
             loadingIndicator.stopAnimating()
         }
     }
     
-    func showEmptyStateIfNeeded(walkCount: Int) {
-        if walkCount == 0 {
-            emptyStateView.isHidden = false
-            statsCardView.isHidden = true
-            
-            emptyStateView.update(
-                    icon: .location,
-                    title: "산책 기록이 없어요",
-                    message: "새로운 산책을 시작해보세요!"
-                )
-        } else {
-            emptyStateView.isHidden = true
-            statsCardView.isHidden = false
-        }
-    }
+//    func showEmptyStateIfNeeded(walkCount: Int) {
+//        if walkCount == 0 {
+//            emptyStateView.isHidden = false
+//            statsCardView.isHidden = true
+//            
+//            emptyStateView.update(
+//                    icon: .location,
+//                    title: "산책 기록이 없어요",
+//                    message: "새로운 산책을 시작해보세요!"
+//                )
+//        } else {
+//            emptyStateView.isHidden = true
+//            statsCardView.isHidden = false
+//        }
+//    }
 }
