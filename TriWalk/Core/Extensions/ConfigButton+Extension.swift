@@ -18,7 +18,7 @@ extension ConfigButton {
     
     func applySetupPointButtonStyle() {
         setBackgroundColor(.contentPrimary)
-        setTextColor(.background)
+        setTextColor(.white)
         setFont(size: 14, weight: .bold)
         self.snp.makeConstraints { make in
             make.height.equalTo(60)

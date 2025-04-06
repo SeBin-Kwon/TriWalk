@@ -23,7 +23,7 @@ final class WalkSetupViewController: BaseViewController {
     let titleLabel = {
         let label = UILabel()
         label.text = "어디로 떠날까요?"
-        label.applyHeading1Style()
+        label.applyHeading1Style(color: .darkContent)
         return label
     }()
     

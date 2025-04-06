@@ -59,13 +59,14 @@ final class WalkSetupView: BaseView {
     let addressLabel = {
         let label = UILabel()
         label.text = "위치 확인 중..."
-        label.applyCaptionStyle(color: Color.contentPrimary)
+        label.applyCaptionStyle(color: .darkContent)
         label.textAlignment = .center
         return label
     }()
     
     let tripTypeButton = {
         let button = ConfigButton.text(title: "왕복")
+        button.setTextColor(.darkContent)
         return button
     }()
 

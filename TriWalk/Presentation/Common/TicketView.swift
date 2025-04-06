@@ -25,6 +25,7 @@ final class TicketView: BaseView {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.text = "2025.03.26"
+        label.textColor = .contentPrimary
         label.font = Font.overline
         return label
     }()
@@ -33,6 +34,7 @@ final class TicketView: BaseView {
         let label = UILabel()
         label.text = "Round Trip"
         label.font = Font.overline
+        label.textColor = .contentPrimary
         label.textAlignment = .right
         return label
     }()
@@ -52,6 +54,7 @@ final class TicketView: BaseView {
     private let startTimeLabel: UILabel = {
         let label = UILabel()
         label.text = "04:26 PM"
+        label.textColor = .contentPrimary
         label.font = Font.font(size: 13, weight: .bold)
         return label
     }()
@@ -74,6 +77,7 @@ final class TicketView: BaseView {
     private let endTimeLabel: UILabel = {
         let label = UILabel()
         label.text = "05:38 PM"
+        label.textColor = .contentPrimary
         label.font = Font.font(size: 13, weight: .bold)
         label.textAlignment = .right
         return label
@@ -101,6 +105,7 @@ final class TicketView: BaseView {
     private let stepsValueLabel: UILabel = {
         let label = UILabel()
         label.text = "426"
+        label.textColor = .contentPrimary
         label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label
@@ -117,6 +122,7 @@ final class TicketView: BaseView {
     private let distanceValueLabel: UILabel = {
         let label = UILabel()
         label.text = "1.3 km"
+        label.textColor = .contentPrimary
         label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label
@@ -133,6 +139,7 @@ final class TicketView: BaseView {
     private let caloriesValueLabel: UILabel = {
         let label = UILabel()
         label.text = "122 kcal"
+        label.textColor = .contentPrimary
         label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label
@@ -160,6 +167,7 @@ final class TicketView: BaseView {
     private let durationValueLabel: UILabel = {
         let label = UILabel()
         label.text = "01:12:48"
+        label.textColor = .contentPrimary
         label.font = Font.font(size: 20, weight: .bold)
         label.textAlignment = .center
         return label

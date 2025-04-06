@@ -20,7 +20,7 @@ final class WalkCompletedView: BaseView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "산책 여행 완료!"
-        label.applyHeading1Style()
+        label.applyHeading1Style(color: .darkContent)
         label.textAlignment = .center
         return label
     }()
@@ -30,7 +30,7 @@ final class WalkCompletedView: BaseView {
     let homeButton: ConfigButton = {
         let button = ConfigButton(title: "홈으로")
         button.applyHomeButtonStyle()
-        button.setTextColor(.background)
+        button.setTextColor(.white)
         button.setBackgroundColor(.contentPrimary)
         return button
     }()

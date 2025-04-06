@@ -30,7 +30,7 @@ final class WalkTrackingSheetView: BaseView {
     private let stepsContainerView = UIView()
     private let stepsLabel: UILabel = {
         let label = UILabel()
-        label.applyHeading3Style()
+        label.applyHeading3Style(color: .darkContent)
         label.textAlignment = .center
         label.text = "0"
         return label
@@ -48,7 +48,7 @@ final class WalkTrackingSheetView: BaseView {
     private let distanceContainerView = UIView()
     private let distanceLabel: UILabel = {
         let label = UILabel()
-        label.applyHeading3Style()
+        label.applyHeading3Style(color: .darkContent)
         label.textAlignment = .center
         label.text = "0.0"
         return label
@@ -56,7 +56,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let distanceUnitLabel: UILabel = {
         let label = UILabel()
-        label.applyBodyMediumStyle()
+        label.applyBodyMediumStyle(color: .darkContent)
         label.textAlignment = .center
         label.text = "km"
         return label
@@ -74,7 +74,7 @@ final class WalkTrackingSheetView: BaseView {
     private let caloriesContainerView = UIView()
     private let caloriesLabel: UILabel = {
         let label = UILabel()
-        label.applyHeading3Style()
+        label.applyHeading3Style(color: .darkContent)
         label.textAlignment = .center
         label.text = "0"
         return label
@@ -82,7 +82,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let caloriesUnitLabel: UILabel = {
         let label = UILabel()
-        label.applyBodyMediumStyle()
+        label.applyBodyMediumStyle(color: .darkContent)
         label.textAlignment = .center
         label.text = "kcal"
         return label
@@ -100,7 +100,7 @@ final class WalkTrackingSheetView: BaseView {
     private let timeContainerView = UIView()
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.applyHeading2Style()
+        label.applyHeading2Style(color: .darkContent)
         label.textAlignment = .center
         label.text = "00:00:00"
         return label
@@ -344,7 +344,7 @@ final class WalkTrackingSheetView: BaseView {
     }
     
     override func configureView() {
-        backgroundColor = .background
+        backgroundColor = .white
         layer.cornerRadius = 30
         layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         clipsToBounds = true
@@ -401,6 +401,13 @@ final class WalkTrackingSheetView: BaseView {
     /// 일시정지/재개 버튼 상태 업데이트
     func updatePauseButton(isPaused: Bool) {
         pauseButton.setTitle(isPaused ? "계속하기" : "일시정지", for: .normal)
+        if isPaused {
+            // 일시정지 상태: 초록색 계통으로 변경 (계속하기)
+            pauseButton.setBackgroundColor(.systemGray)
+        } else {
+            // 진행 중 상태: 기본 색상 (일시정지)
+            pauseButton.setBackgroundColor(.contentPrimary)
+        }
     }
     
     /// 사진 추가

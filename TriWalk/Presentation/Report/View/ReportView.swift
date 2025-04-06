@@ -14,7 +14,7 @@ final class ReportView: BaseView {
     let titleLabel = {
         let label = UILabel()
         label.text = "산책 여행 리포트"
-        label.applyHeading2Style()
+        label.applyHeading2Style(color: .darkContent)
         return label
     }()
     
@@ -28,7 +28,7 @@ final class ReportView: BaseView {
     let subtitleLabel = {
         let label = UILabel()
         label.text = "이번 주 총 0번 산책"
-        label.applyHeading2Style()
+        label.applyHeading2Style(color: .darkContent)
         return label
     }()
     

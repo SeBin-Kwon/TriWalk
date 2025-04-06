@@ -18,10 +18,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="lBH-m1-fuR">
-                                <rect key="frame" x="108" y="375.66666666666669" width="177" height="101"/>
+                                <rect key="frame" x="136.66666666666666" y="386" width="119.99999999999997" height="80"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="177" id="Kih-hh-MCY"/>
-                                    <constraint firstAttribute="height" constant="101" id="nbh-Vu-Lfq"/>
+                                    <constraint firstAttribute="width" constant="120" id="Kih-hh-MCY"/>
+                                    <constraint firstAttribute="height" constant="80" id="nbh-Vu-Lfq"/>
                                 </constraints>
                             </imageView>
                         </subviews>
@@ -39,7 +39,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="logo" width="159.66667175292969" height="131.33332824707031"/>
+        <image name="logo" width="349" height="185.33332824707031"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

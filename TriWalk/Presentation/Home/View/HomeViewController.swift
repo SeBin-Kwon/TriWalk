@@ -48,7 +48,7 @@ class HomeViewController: BaseViewController {
     let titleLabel = {
         let label = UILabel()
         label.text = "오늘은 산책 여행 하기\n딱 좋은 날씨!"
-        label.applyHeading1Style()
+        label.applyHeading1Style(color: .darkContent)
         return label
     }()
     
