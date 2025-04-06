@@ -231,6 +231,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         walkRecord.distance = distanceSubject.value
         walkRecord.calories = caloriesSubject.value
         walkRecord.duration = timeSubject.value
+        walkRecord.setRandomTicketColor()
         
         // 경로 좌표 상태 확인
         print("저장할 경로 좌표 수: \(routeCoordinates.count)")

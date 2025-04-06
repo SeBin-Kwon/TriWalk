@@ -56,6 +56,8 @@ class WalkRecord: Object {
     @Persisted var routeData = Data()  // 경로 좌표를 Data로 변환하여 저장
     @Persisted var photos = List<WalkPhoto>()
     
+    @Persisted var ticketColorNumber = 1
+    
     // 좌표 배열을 Data로 변환하는 함수
 
     func saveCoordinates(_ coordinates: [CLLocationCoordinate2D]) {
@@ -112,5 +114,15 @@ class WalkRecord: Object {
     // 이동 방식 가져오기 메서드 추가
     func getTripType() -> TripType {
         return TripType(rawValue: tripType) ?? .roundTrip
+    }
+    
+    func setRandomTicketColor() {
+        // 1~3 사이의 랜덤 숫자 생성
+        ticketColorNumber = Int.random(in: 1...3)
+    }
+        
+    // 티켓 색상 타입 가져오기
+    var ticketColorType: TicketColorType? {
+        return TicketColorType(rawValue: ticketColorNumber)
     }
 }

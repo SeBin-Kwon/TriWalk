@@ -76,7 +76,7 @@ final class WalkCompletedView: BaseView {
 // 완료 데이터 구조체
 struct WalkCompletedData {
     let date: String
-    let weekday: String
+    let tripType: String
     let startLocation: String
     let startTime: String
     let endLocation: String
@@ -85,4 +85,5 @@ struct WalkCompletedData {
     let distance: Double
     let calories: Int
     let duration: String
+    let ticketColorNumber: Int?
 }

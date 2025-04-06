@@ -53,7 +53,7 @@ final class FormatManager: FormatManagerProtocol {
         let dateString = formattedDate(walkRecord.date)
         
         // 요일 포맷
-        let weekdayString = formattedWeekday(walkRecord.date)
+//        let weekdayString = formattedWeekday(walkRecord.date)
         
         // 시간 포맷
         let startTimeString = formattedTime(walkRecord.startTime)
@@ -69,7 +69,7 @@ final class FormatManager: FormatManagerProtocol {
         // 데이터 구성
         return WalkCompletedData(
             date: dateString,
-            weekday: weekdayString,
+            tripType: walkRecord.tripType,
             startLocation: startLocationAbbr,
             startTime: startTimeString,
             endLocation: endLocationAbbr,
@@ -77,7 +77,8 @@ final class FormatManager: FormatManagerProtocol {
             steps: walkRecord.steps,
             distance: walkRecord.distance,
             calories: Int(walkRecord.calories),
-            duration: durationString
+            duration: durationString,
+            ticketColorNumber: walkRecord.ticketColorNumber
         )
     }
 }

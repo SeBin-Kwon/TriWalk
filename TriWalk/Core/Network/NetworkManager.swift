@@ -23,6 +23,11 @@ final class NetworkManager {
             encoding: URLEncoding(destination: .queryString)
         )
         .validate()
+        .responseData { response in
+            if let data = response.data, let string = String(data: data, encoding: .utf8) {
+                print("Raw 응답 데이터: \(string)")
+            }
+        }
         .publishDecodable(type: T.self)
         .value()
         .mapError { error in

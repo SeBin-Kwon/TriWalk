@@ -12,7 +12,7 @@ final class TicketView: BaseView {
     
     private let ticketImage = {
         let imageView = UIImageView()
-        imageView.image = UIImage(resource: .ticket1)
+//        imageView.image = UIImage(resource: .ticket1)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -180,7 +180,7 @@ final class TicketView: BaseView {
     
     func configure(with data: WalkCompletedData) {
         dateLabel.text = data.date
-        tripTypeLabel.text = data.weekday
+        tripTypeLabel.text = data.tripType
         startLocationLabel.text = data.startLocation
         startTimeLabel.text = data.startTime
         endLocationLabel.text = data.endLocation
@@ -189,7 +189,18 @@ final class TicketView: BaseView {
         distanceValueLabel.text = String(format: "%.1f km", data.distance)
         caloriesValueLabel.text = "\(data.calories) kcal"
         durationValueLabel.text = data.duration
+        
+        if let ticketNumber = data.ticketColorNumber, let ticketType = TicketColorType(rawValue: ticketNumber) {
+            setTicketImage(type: ticketType)
+        } else {
+            // 기본 티켓 (1번)
+            setTicketImage(type: .ticket1)
+        }
     }
+    
+    func setTicketImage(type: TicketColorType) {
+        ticketImage.image = UIImage(named: type.imageName)
+        }
     
     override func configureHierarchy() {
         
