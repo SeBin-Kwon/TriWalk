@@ -76,8 +76,8 @@ final class WeatherCardCell: BaseCollectionViewCell {
         }
         
         iconView.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
-            make.trailing.equalToSuperview().inset(24)
+            make.centerY.equalToSuperview().offset(20)
+            make.centerX.equalToSuperview()
             make.size.equalTo(200)
         }
     }
