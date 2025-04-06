@@ -64,6 +64,17 @@ class HomeViewController: BaseViewController {
     
     let startButton = ConfigButton(title: "산책 여행 떠나기")
     
+    private let arrowImageView: UIImageView = {
+        let imageView = UIImageView()
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
+        let image = UIImage(systemName: "chevron.down.2", withConfiguration: config)
+        imageView.image = image
+        imageView.tintColor = .textSecondary
+        imageView.contentMode = .scaleAspectFit
+        imageView.alpha = 0.7
+        return imageView
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 //        setupNavigationBar()
@@ -185,7 +196,7 @@ class HomeViewController: BaseViewController {
     }
     
     override func configureHierarchy() {
-        view.addSubviews(titleLabel, startButton, collectionView)
+        view.addSubviews(titleLabel, startButton, collectionView, arrowImageView)
     }
     
     override func configureLayout() {
@@ -200,7 +211,16 @@ class HomeViewController: BaseViewController {
         }
         
         startButton.snp.makeConstraints { make in
-            make.bottom.horizontalEdges.equalTo(view.safeAreaLayoutGuide).inset(Spacing.screenMargin)
+            make.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
+            make.bottom.equalTo(arrowImageView.snp.top).offset(-Spacing.s)
+        }
+        
+        arrowImageView.snp.makeConstraints { make in
+            make.top.equalTo(startButton.snp.bottom)
+            make.centerX.equalToSuperview()
+            make.width.equalTo(35)
+            make.height.equalTo(25)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }
     
