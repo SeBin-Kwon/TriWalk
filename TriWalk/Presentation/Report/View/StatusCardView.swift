@@ -116,7 +116,7 @@ class MetricCardView: BaseView {
         titleLabel.text = title
         valueLabel.text = value
         unitLabel.text = unit
-        dateLabel.text = "2025.02.13"
+        dateLabel.text = "----.--.--"
         
         configureHierarchy()
         configureLayout()

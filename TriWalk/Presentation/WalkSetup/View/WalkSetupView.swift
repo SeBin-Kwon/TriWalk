@@ -13,7 +13,7 @@ final class WalkSetupView: BaseView {
     // MARK: - UI Components
     let dateLabel = {
         let label = UILabel()
-        label.text = "2025.04.21"
+//        label.text = "2025.04.21"
         label.applyBodySmallStyle(color: Color.textSecondary)
         label.textAlignment = .center
         return label
@@ -124,5 +124,11 @@ final class WalkSetupView: BaseView {
             make.size.equalTo(24)
             make.centerX.equalToSuperview()
         }
+    }
+    
+    override func configureView() {
+        let today = Date()
+        let formattedDate = FormatManager.shared.formattedDate(today)
+        dateLabel.text = formattedDate
     }
 }
