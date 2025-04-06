@@ -15,5 +15,7 @@ enum Color {
     static let textSecondary = UIColor(named: "TextSecondary")!
     static let textRed = UIColor(named: "TextRed")!
     static let textBlue = UIColor(named: "TextBlue")!
+    
+    static let darkContent = UIColor(named: "DarkContent")!
 }
 

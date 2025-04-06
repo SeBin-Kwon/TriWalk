@@ -111,7 +111,8 @@ extension DestinationSearchViewController: UITableViewDelegate, UITableViewDataS
             // "어디든지" 옵션
             config.text = "어디든지"
             config.secondaryText = "목적지 없이 산책하기"
-            config.image = UIImage(systemName: "map")
+            config.image = UIImage(systemName: "map")?
+                .withTintColor(Color.darkContent, renderingMode: .alwaysOriginal)
         } else {
             // 검색 결과
             let mapItem = searchResults[indexPath.row]
@@ -124,7 +125,8 @@ extension DestinationSearchViewController: UITableViewDelegate, UITableViewDataS
             ].compactMap { $0 }.joined(separator: ", ")
             
             config.secondaryText = address
-            config.image = UIImage(systemName: "mappin.and.ellipse")
+            config.image = UIImage(systemName: "mappin.and.ellipse")?
+                .withTintColor(Color.darkContent, renderingMode: .alwaysOriginal)
         }
         
         cell.contentConfiguration = config

@@ -20,14 +20,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         appearance.backgroundColor = Color.background
         appearance.shadowColor = .clear
         appearance.titleTextAttributes = [
-            .foregroundColor: Color.contentPrimary,
+            .foregroundColor: Color.darkContent,
             .font: Font.heading3
         ]
         
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
-        UINavigationBar.appearance().tintColor = Color.contentPrimary
+        UINavigationBar.appearance().tintColor = Color.darkContent
     }
     
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {

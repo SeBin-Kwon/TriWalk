@@ -189,6 +189,7 @@
 				DEVELOPMENT_TEAM = HFR7W36699;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TriWalk/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TriWalk;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -221,6 +222,7 @@
 				DEVELOPMENT_TEAM = HFR7W36699;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TriWalk/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TriWalk;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

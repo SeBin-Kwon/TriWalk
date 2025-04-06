@@ -23,7 +23,7 @@ class EmptyStateView: BaseView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .bold)
-        label.textColor = .contentPrimary
+        label.textColor = .darkContent
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
