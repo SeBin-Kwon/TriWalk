@@ -34,6 +34,15 @@ final class ReportView: BaseView {
     
     let statsCardView = StatusCardView()
     
+    let licenseLabel = {
+        let label = UILabel()
+        label.text = "Acknowledgements\nSome graphic assets in this app are designed by upklyak - Freepik.com"
+        label.textColor = .textSecondary.withAlphaComponent(0.7)
+        label.font = Font.font(size: 10, weight: .regular)
+        label.numberOfLines = 0
+        return label
+    }()
+    
     // 로딩 인디케이터
     let loadingIndicator = {
         let indicator = UIActivityIndicatorView(style: .large)
@@ -65,7 +74,8 @@ final class ReportView: BaseView {
             subtitleLabel,
             statsCardView,
             loadingIndicator,
-            emptyStateView
+            emptyStateView,
+            licenseLabel
         )
         
     }
@@ -102,6 +112,10 @@ final class ReportView: BaseView {
         emptyStateView.snp.makeConstraints { make in
             make.top.equalTo(mapView)
             make.horizontalEdges.bottom.equalTo(safeAreaLayoutGuide)
+        }
+        
+        licenseLabel.snp.makeConstraints { make in
+            make.bottom.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
         }
     }
     
