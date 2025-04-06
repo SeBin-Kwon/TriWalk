@@ -382,7 +382,10 @@ final class WalkTrackingSheetView: BaseView {
     
     /// 거리 업데이트
     func updateDistance(_ distance: Double) {
-        distanceLabel.text = String(format: "%.1f", distance)
+//        distanceLabel.text = String(format: "%.1f", distance)
+        let (formattedValue, unit) = FormatManager.shared.formattedDistance(distance)
+        distanceLabel.text = formattedValue
+        distanceUnitLabel.text = unit
     }
     
     /// 칼로리 업데이트

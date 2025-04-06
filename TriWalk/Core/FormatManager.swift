@@ -47,6 +47,17 @@ final class FormatManager: FormatManagerProtocol {
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
     
+    func formattedDistance(_ distanceInKm: Double) -> (value: String, unit: String) {
+        if distanceInKm < 0.1 {
+            // 100m 미만일 경우 미터 단위로 표시
+            let meters = Int(distanceInKm * 1000)
+            return (String(meters), "m")
+        } else {
+            // 100m 이상일 경우 소수점 한 자리까지 km로 표시
+            return (String(format: "%.1f", distanceInKm), "km")
+        }
+    }
+    
     // 워크 레코드에서 필요한 모든 정보 포맷팅하여 WalkCompletedData 객체 생성
     func formatWalkRecordToCompletedData(_ walkRecord: WalkRecord) -> WalkCompletedData {
         // 날짜 포맷

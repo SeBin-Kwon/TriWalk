@@ -186,9 +186,11 @@ final class TicketView: BaseView {
         endLocationLabel.text = data.endLocation
         endTimeLabel.text = data.endTime
         stepsValueLabel.text = "\(data.steps)"
-        distanceValueLabel.text = String(format: "%.1f km", data.distance)
         caloriesValueLabel.text = "\(data.calories) kcal"
         durationValueLabel.text = data.duration
+        
+        let (distanceValue, distanceUnit) = FormatManager.shared.formattedDistance(data.distance)
+        distanceValueLabel.text = "\(distanceValue) \(distanceUnit)"
         
         if let ticketNumber = data.ticketColorNumber, let ticketType = TicketColorType(rawValue: ticketNumber) {
             setTicketImage(type: ticketType)
