@@ -58,7 +58,21 @@ class WalkRecord: Object {
     
     @Persisted var ticketColorNumber = 1
     
-    // 좌표 배열을 Data로 변환하는 함수
+    // 날씨 정보 필드
+    @Persisted var temperature = 0
+    @Persisted var weatherTypeRaw = "unknown"
+    @Persisted var dustGradeRaw = -1
+    
+    // 변환 프로퍼티
+    var weatherType: WeatherType {
+        get { return WeatherType(rawValue: weatherTypeRaw) ?? .unknown }
+        set { weatherTypeRaw = newValue.rawValue }
+    }
+
+    var dustGrade: DustGrade {
+        get { return DustGrade(rawValue: dustGradeRaw) ?? .unknown }
+        set { dustGradeRaw = newValue.rawValue }
+    }
 
     func saveCoordinates(_ coordinates: [CLLocationCoordinate2D]) {
         if coordinates.isEmpty {
