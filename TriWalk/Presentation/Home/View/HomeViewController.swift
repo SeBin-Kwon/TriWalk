@@ -269,8 +269,8 @@ extension HomeViewController: UICollectionViewDelegate {
         guard let item = dataSource?.itemIdentifier(for: indexPath) else { return }
         if item.cardType == .walkRecord, let walkRecord = item.walkRecord {
             print("산책 기록 선택: \(walkRecord.id)")
-            // 예: let detailVC = WalkDetailViewController(walkRecord: walkRecord)
-            // navigationController?.pushViewController(detailVC, animated: true)
+            let detailVC = WalkDetailViewController(walkId: walkRecord.id)
+            navigate(.push(detailVC))
         }
     }
     
