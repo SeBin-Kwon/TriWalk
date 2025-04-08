@@ -14,7 +14,7 @@ final class CalendarDateCell: BaseCollectionViewCell {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = Font.font(size: 16, weight: .medium)
+        label.font = Font.font(size: 14, weight: .medium)
         label.textColor = Color.darkContent
         return label
     }()
@@ -58,12 +58,14 @@ final class CalendarDateCell: BaseCollectionViewCell {
         
         if hasWalkRecord {
             // 산책 기록이 있는 날
-            backgroundCircleView.backgroundColor = Color.triWalkPrimary.withAlphaComponent(0.4)
+            backgroundCircleView.backgroundColor = Color.triWalkPrimary.withAlphaComponent(0.6)
             dateLabel.textColor = Color.darkContent
+            dateLabel.font = Font.font(size: 14, weight: .medium)
         } else {
             // 산책 기록이 없는 날
             backgroundCircleView.backgroundColor = .clear
             dateLabel.textColor = Color.darkContent
+            dateLabel.font = Font.font(size: 14, weight: .medium)
         }
         
         if isSelected {

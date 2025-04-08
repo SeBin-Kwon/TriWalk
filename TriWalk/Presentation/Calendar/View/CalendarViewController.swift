@@ -80,13 +80,13 @@ final class CalendarViewController: BaseViewController {
     
     override func configureLayout() {
         calendarView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(Spacing.m)
+            make.top.equalTo(view.safeAreaLayoutGuide)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(350) // 캘린더 뷰 높이 조정
+            make.height.equalTo(320) // 캘린더 뷰 높이 조정
         }
         
         filterButtons.snp.makeConstraints { make in
-            make.top.equalTo(calendarView.snp.bottom).offset(Spacing.m)
+            make.top.equalTo(calendarView.snp.bottom).offset(Spacing.s)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
             make.height.equalTo(32)
         }

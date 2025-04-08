@@ -26,7 +26,7 @@ final class CalendarView: BaseView {
     let monthLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = Font.heading3
+        label.font = Font.font(size: 18, weight: .bold)
         label.textColor = Color.darkContent
         return label
     }()
@@ -34,14 +34,14 @@ final class CalendarView: BaseView {
     let prevButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        button.tintColor = Color.textSecondary
+        button.tintColor = Color.darkContent
         return button
     }()
     
     let nextButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "chevron.right"), for: .normal)
-        button.tintColor = Color.textSecondary
+        button.tintColor = Color.darkContent
         return button
     }()
     
@@ -70,13 +70,15 @@ final class CalendarView: BaseView {
         prevButton.snp.makeConstraints { make in
             make.centerY.equalTo(monthLabel)
             make.trailing.equalTo(monthLabel.snp.leading).offset(-20)
-            make.size.equalTo(25)
+            make.height.equalTo(15)
+            make.width.equalTo(13)
         }
         
         nextButton.snp.makeConstraints { make in
             make.centerY.equalTo(monthLabel)
             make.leading.equalTo(monthLabel.snp.trailing).offset(20)
-            make.size.equalTo(25)
+            make.height.equalTo(15)
+            make.width.equalTo(13)
         }
         
         collectionView.snp.makeConstraints { make in
