@@ -76,7 +76,7 @@ class HomeViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        setupNavigationBar()
+        setupNavigationBar()
         setupCollectionView()
     }
     
@@ -87,6 +87,7 @@ class HomeViewController: BaseViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        titleLabel.text = ""
         // 뷰가 다시 나타날 때마다 날씨 카드가 마지막에 오도록 데이터 재정렬
         reorganizeCards()
         updateSnapshot(animated: false)
@@ -121,7 +122,7 @@ class HomeViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, weatherData in
-                owner.titleLabel.text = weatherData.message
+                owner.animateWeatherMessage(weatherData.message)
                 // 기존 날씨 카드 찾아 업데이트하거나 새로 추가
                 if let index = owner.cardItems.firstIndex(where: { $0.cardType == .weather }) {
                     var newItems = owner.cardItems
@@ -177,6 +178,24 @@ class HomeViewController: BaseViewController {
             }
             .store(in: &cancellables)
     }
+    
+    private func animateWeatherMessage(_ message: String) {
+        // 애니메이션 전 초기 상태 설정
+        titleLabel.alpha = 0
+        titleLabel.transform = CGAffineTransform(translationX: 0, y: 20)
+        
+        // 텍스트 설정
+        titleLabel.text = message
+        
+        // 애니메이션 실행
+        UIView.animate(withDuration: 0.7, delay: 0.1,
+                      usingSpringWithDamping: 0.7,
+                      initialSpringVelocity: 0.5,
+                      options: [], animations: {
+            self.titleLabel.alpha = 1
+            self.titleLabel.transform = .identity
+        }, completion: nil)
+    }
 
     
     private func setupCollectionView() {
@@ -193,6 +212,8 @@ class HomeViewController: BaseViewController {
     
     @objc private func calendarButtonTap() {
         print("calendar")
+        let vc = CalendarViewController()
+        navigate(.push(vc))
     }
     
     override func configureHierarchy() {

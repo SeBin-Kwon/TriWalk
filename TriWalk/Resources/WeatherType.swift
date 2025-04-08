@@ -117,7 +117,7 @@ struct WeatherMessage {
             
             // 흐림
         case (.cloudy, _):
-            return "구름 잔뜩! 조용한 길 산책하기 좋아요."
+            return "구름 잔뜩! 조용한 길\n산책하기 좋아요."
             
             // 비
         case (.rainy, _):
@@ -151,7 +151,7 @@ struct WeatherMessage {
             return ["구름과 햇살이 어울리던 날", "구름이 조금 있던 날"].randomElement() ?? "구름과 햇살이 어울리던 날"
             
         case .cloudy:
-            return ["회색 하늘 아래 조용한 시간", "차분했던 하루"].randomElement() ?? "차분했던 하루"
+            return ["회색 하늘이었던 날", "차분했던 하루"].randomElement() ?? "회색 하늘이었던 날"
             
         case .rainy:
             return ["비와 함께 걷던 날", "빗소리 들으며 걸었던 날"].randomElement() ?? "비와 함께 걷던 날"
