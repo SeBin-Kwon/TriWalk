@@ -16,9 +16,12 @@ final class CalendarViewController: BaseViewController {
     private let viewDidAppearSubject = PassthroughSubject<Void, Never>()
     private let dateSelectionSubject = PassthroughSubject<Date?, Never>()
     private let monthChangedSubject = PassthroughSubject<Date, Never>()
+    private let sortOrderSubject = PassthroughSubject<SortOrder, Never>()
     
     // MARK: - UI Components
-    private let filterButtons = UISegmentedControl(items: ["최신순", "오래된 순"])
+//    private let filterButtons = UISegmentedControl(items: ["최신순", "오래된 순"])
+    private let sortButtonGroup = SortButtonGroup()
+    private let sortButtonContainer = UIView()
     
     private let calendarView = CalendarView()
     
@@ -59,8 +62,8 @@ final class CalendarViewController: BaseViewController {
         calendarView.delegate = self
         
         // 필터 버튼 기본값 설정
-        filterButtons.selectedSegmentIndex = 0
-        filterButtons.addTarget(self, action: #selector(filterValueChanged), for: .valueChanged)
+//        filterButtons.selectedSegmentIndex = 0
+//        filterButtons.addTarget(self, action: #selector(filterValueChanged), for: .valueChanged)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -75,24 +78,24 @@ final class CalendarViewController: BaseViewController {
     }
     
     override func configureHierarchy() {
-        view.addSubviews(calendarView, filterButtons, tableView, emptyStateView)
+        view.addSubviews(calendarView, sortButtonContainer, tableView, emptyStateView)
     }
     
     override func configureLayout() {
         calendarView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(320) // 캘린더 뷰 높이 조정
+            make.height.equalTo(280) // 캘린더 뷰 높이 조정
         }
         
-        filterButtons.snp.makeConstraints { make in
-            make.top.equalTo(calendarView.snp.bottom).offset(Spacing.s)
+        sortButtonContainer.snp.makeConstraints { make in
+            make.top.equalTo(calendarView.snp.bottom).offset(Spacing.m)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(32)
+            make.height.equalTo(40)
         }
         
         tableView.snp.makeConstraints { make in
-            make.top.equalTo(filterButtons.snp.bottom).offset(Spacing.m)
+            make.top.equalTo(sortButtonContainer.snp.bottom).offset(Spacing.l)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
@@ -103,15 +106,22 @@ final class CalendarViewController: BaseViewController {
         }
     }
     
+    override func configureView() {
+        sortButtonGroup.addToView(sortButtonContainer)
+        sortButtonGroup.selectedPublisher
+            .sink { [weak self] sortOrder in
+                self?.sortOrderSubject.send(sortOrder)
+            }
+            .store(in: &cancellables)
+    }
+    
     override func bindViewModel() {
         // Input 구성
         let input = CalendarViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
             dateSelection: dateSelectionSubject.eraseToAnyPublisher(),
             monthChanged: monthChangedSubject.eraseToAnyPublisher(),
-            sortOrderChanged: filterButtons.publisher(for: \.selectedSegmentIndex)
-                .map { $0 == 0 ? SortOrder.descending : SortOrder.ascending }
-                .eraseToAnyPublisher()
+            sortOrderChanged: sortOrderSubject.eraseToAnyPublisher()
         )
         
         // ViewModel 변환
@@ -143,11 +153,6 @@ final class CalendarViewController: BaseViewController {
                 }
             }
             .store(in: &cancellables)
-    }
-    
-    // MARK: - Actions
-    @objc private func filterValueChanged(_ sender: UISegmentedControl) {
-        // 필터 변경은 ViewModel에서 처리
     }
 }
 
