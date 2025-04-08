@@ -164,7 +164,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
             dustGrade: dustGrade,
             cardType: .weather
         )
-        
+        WeatherManager.shared.updateWeatherData(weatherCardData)
         weatherDataSubject.send(weatherCardData)
     }
     

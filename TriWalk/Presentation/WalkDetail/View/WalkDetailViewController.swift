@@ -85,11 +85,10 @@ final class WalkDetailViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, weatherData in
-                let weatherIcon = UIImage(systemName: weatherData.weatherIconName)
                 owner.walkDetailView.configureWeather(
                     temperature: "\(weatherData.temperature)°C",
-                    dustStatus: "미세먼지 농도 \(weatherData.dustStatus)",
-                    weatherIcon: weatherIcon
+                    dustGrade: weatherData.dustGrade,
+                    weatherType: weatherData.weatherType
                 )
             }
             .store(in: &cancellables)

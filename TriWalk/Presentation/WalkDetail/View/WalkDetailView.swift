@@ -24,7 +24,6 @@ final class WalkDetailView: BaseView {
     
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.text = "2025.04.05"
         label.font = Font.bodyMedium
         label.textColor = Color.textSecondary
         return label
@@ -32,8 +31,9 @@ final class WalkDetailView: BaseView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "화창했던 날"
-        label.font = Font.heading1
+        label.text = "비와 함께 걷던 날"
+        label.numberOfLines = 0
+        label.font = Font.heading2
         label.textColor = Color.darkContent
         return label
     }()
@@ -42,7 +42,6 @@ final class WalkDetailView: BaseView {
     
     private let temperatureLabel: UILabel = {
         let label = UILabel()
-        label.text = "26°C"
         label.font = Font.heading2
         label.textColor = Color.darkContent
         return label
@@ -50,7 +49,6 @@ final class WalkDetailView: BaseView {
     
     private let weatherStatusLabel: UILabel = {
         let label = UILabel()
-        label.text = "미세먼지 농도 낮음"
         label.font = Font.bodySmall
         label.textColor = Color.textBlue
         return label
@@ -111,7 +109,6 @@ final class WalkDetailView: BaseView {
     
     private let endTimeLabel: UILabel = {
         let label = UILabel()
-        label.text = "05:38 PM"
         label.font = Font.font(size: 14, weight: .bold)
         label.textColor = Color.darkContent
         label.textAlignment = .right
@@ -260,7 +257,8 @@ final class WalkDetailView: BaseView {
         
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(dateLabel.snp.bottom).offset(Spacing.xxs)
-            make.leading.trailing.bottom.equalToSuperview()
+            make.leading.bottom.equalToSuperview()
+            make.trailing.equalTo(weatherIconView.snp.leading).offset(-Spacing.m)
         }
         
         // 날씨 영역
@@ -279,16 +277,16 @@ final class WalkDetailView: BaseView {
         }
         
         weatherIconView.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
+            make.top.equalTo(dateLabel)
             make.trailing.equalToSuperview()
-            make.width.height.equalTo(60)
+            make.width.height.equalTo(150)
         }
         
         // 지도 영역
         mapContainer.snp.makeConstraints { make in
-            make.top.equalTo(weatherView.snp.bottom).offset(Spacing.m)
-            make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(240)
+            make.top.equalTo(weatherIconView.snp.bottom).offset(Spacing.m)
+            make.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
+            make.height.equalTo(280)
         }
         
         mapView.snp.makeConstraints { make in
@@ -297,7 +295,7 @@ final class WalkDetailView: BaseView {
         
         // 위치 정보 영역
         locationContainer.snp.makeConstraints { make in
-            make.top.equalTo(mapContainer.snp.bottom).offset(Spacing.m)
+            make.top.equalTo(mapContainer.snp.bottom).offset(Spacing.l)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
         }
         
@@ -334,7 +332,7 @@ final class WalkDetailView: BaseView {
         
         // 통계 영역
         statsContainer.snp.makeConstraints { make in
-            make.top.equalTo(locationContainer.snp.bottom).offset(Spacing.m)
+            make.top.equalTo(locationContainer.snp.bottom).offset(Spacing.screenMargin)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
             make.bottom.equalToSuperview().offset(-Spacing.screenMargin)
         }
@@ -448,11 +446,31 @@ final class WalkDetailView: BaseView {
     }
     
     /// 날씨 정보 설정
-    func configureWeather(temperature: String, dustStatus: String, weatherIcon: UIImage?) {
+    func configureWeather(temperature: String, dustGrade: DustGrade, weatherType: WeatherType) {
         temperatureLabel.text = temperature
-        weatherStatusLabel.text = dustStatus
-        if let icon = weatherIcon {
-            weatherIconView.image = icon
+        
+        // 날씨 아이콘 설정
+        weatherIconView.image = UIImage(systemName: weatherType.systemImageName)
+        weatherIconView.tintColor = weatherType.color
+        if let customImage = UIImage(named: weatherType.rawValue) {
+            weatherIconView.image = customImage
         }
+        
+        // 미세먼지 상태 텍스트 설정 - WeatherCardCell과 동일한 형식으로 표시
+        let dustStatusText = NSMutableAttributedString(string: "미세먼지 등급 ", attributes: [
+            NSAttributedString.Key.foregroundColor: UIColor.contentPrimary,
+            NSAttributedString.Key.font: Font.bodyMedium
+        ])
+        
+        let gradeText = dustGrade.description
+        let gradeColor = dustGrade.color
+        
+        let gradeAttributedString = NSAttributedString(string: gradeText, attributes: [
+            NSAttributedString.Key.foregroundColor: gradeColor,
+            NSAttributedString.Key.font: Font.font(size: 16, weight: .bold)
+        ])
+            
+        dustStatusText.append(gradeAttributedString)
+        weatherStatusLabel.attributedText = dustStatusText
     }
 }

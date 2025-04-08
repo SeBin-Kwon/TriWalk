@@ -233,6 +233,13 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         walkRecord.duration = timeSubject.value
         walkRecord.setRandomTicketColor()
         
+        // 날씨 정보 추가 (새로 추가된 부분)
+        if let weatherData = WeatherManager.shared.currentWeatherData {
+            walkRecord.temperature = weatherData.temperature
+            walkRecord.weatherType = weatherData.weatherType
+            walkRecord.dustGrade = weatherData.dustGrade
+        }
+        
         // 경로 좌표 상태 확인
         print("저장할 경로 좌표 수: \(routeCoordinates.count)")
         print("previousRouteCoordinates 수: \(previousRouteCoordinates.count)")

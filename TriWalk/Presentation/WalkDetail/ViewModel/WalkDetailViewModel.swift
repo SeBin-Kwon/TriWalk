@@ -12,8 +12,8 @@ import UIKit
 // 날씨 데이터 모델
 struct WeatherDisplayData {
     let temperature: Int
-    let weatherIconName: String
-    let dustStatus: String
+    let weatherType: WeatherType
+    let dustGrade: DustGrade
 }
 
 final class WalkDetailViewModel: BaseViewModel, ViewModelType {
@@ -34,7 +34,7 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
     private let walkId: String
     private let walkRecordSubject = PassthroughSubject<WalkRecord, Never>()
     private let weatherDataSubject = CurrentValueSubject<WeatherDisplayData, Never>(
-        WeatherDisplayData(temperature: 0, weatherIconName: "sun.max.fill", dustStatus: "정보 없음")
+        WeatherDisplayData(temperature: 0, weatherType: .unknown, dustGrade: .unknown)
     )
     private let errorSubject = PassthroughSubject<String, Never>()
     
@@ -80,6 +80,14 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
     
     // MARK: - Private Methods
     
+    private func createWeatherDisplayData(from walkRecord: WalkRecord) -> WeatherDisplayData {
+        return WeatherDisplayData(
+            temperature: walkRecord.temperature,
+            weatherType: walkRecord.weatherType,
+            dustGrade: walkRecord.dustGrade
+        )
+    }
+    
     /// 산책 기록 로드
     private func loadWalkRecord() {
         guard let walkRecord = walkRepository.getWalk(id: walkId) else {
@@ -91,18 +99,19 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
         walkRecordSubject.send(walkRecord)
         
         // 샘플 날씨 데이터 설정 (실제로는 API 호출 또는 저장된 데이터를 사용)
-        setupSampleWeatherData()
+        let weatherData = createWeatherDisplayData(from: walkRecord)
+        weatherDataSubject.send(weatherData)
     }
     
     /// 샘플 날씨 데이터 설정 (실제 구현 시에는 API 또는 저장된 데이터 사용)
-    private func setupSampleWeatherData() {
-        // 샘플 날씨 데이터
-        let weatherData = WeatherDisplayData(
-            temperature: 26,
-            weatherIconName: "sun.max.fill",
-            dustStatus: "낮음"
-        )
-        
-        weatherDataSubject.send(weatherData)
-    }
+//    private func setupSampleWeatherData() {
+//        // 샘플 날씨 데이터
+//        let weatherData = WeatherDisplayData(
+//            temperature: 26,
+//            weatherIconName: "sun.max.fill",
+//            dustStatus: "낮음"
+//        )
+//        
+//        weatherDataSubject.send(weatherData)
+//    }
 }
