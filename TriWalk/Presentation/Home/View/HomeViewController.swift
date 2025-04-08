@@ -47,7 +47,6 @@ class HomeViewController: BaseViewController {
     
     let titleLabel = {
         let label = UILabel()
-        label.text = "오늘은 산책 여행 하기\n딱 좋은 날씨!"
         label.applyHeading1Style(color: .darkContent)
         return label
     }()
@@ -122,6 +121,7 @@ class HomeViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, weatherData in
+                owner.titleLabel.text = weatherData.message
                 // 기존 날씨 카드 찾아 업데이트하거나 새로 추가
                 if let index = owner.cardItems.firstIndex(where: { $0.cardType == .weather }) {
                     var newItems = owner.cardItems

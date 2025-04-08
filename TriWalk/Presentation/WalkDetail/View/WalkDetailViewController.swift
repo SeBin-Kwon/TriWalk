@@ -88,7 +88,8 @@ final class WalkDetailViewController: BaseViewController {
                 owner.walkDetailView.configureWeather(
                     temperature: "\(weatherData.temperature)°C",
                     dustGrade: weatherData.dustGrade,
-                    weatherType: weatherData.weatherType
+                    weatherType: weatherData.weatherType,
+                    title: weatherData.title
                 )
             }
             .store(in: &cancellables)
@@ -123,15 +124,6 @@ final class WalkDetailViewController: BaseViewController {
     /// 지도에 산책 경로 표시
     private func displayRoute(walkRecord: WalkRecord, coordinates: [CLLocationCoordinate2D]) {
         guard coordinates.count >= 2 else { return }
-        
-        // 단일 경로 생성
-        let routeItem = RouteVisualizationManager.RouteItem(
-            walkRecord: walkRecord,
-            routeCoordinates: coordinates,
-            color: Color.primary,
-            lineWidth: 5.0,
-            identifier: walkRecord.id
-        )
         
         // 경로 시각화
         RouteVisualizationManager.visualizeCurrentRoute(

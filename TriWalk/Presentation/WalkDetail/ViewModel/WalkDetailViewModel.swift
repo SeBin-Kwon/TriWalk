@@ -14,6 +14,7 @@ struct WeatherDisplayData {
     let temperature: Int
     let weatherType: WeatherType
     let dustGrade: DustGrade
+    let title: String
 }
 
 final class WalkDetailViewModel: BaseViewModel, ViewModelType {
@@ -34,7 +35,7 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
     private let walkId: String
     private let walkRecordSubject = PassthroughSubject<WalkRecord, Never>()
     private let weatherDataSubject = CurrentValueSubject<WeatherDisplayData, Never>(
-        WeatherDisplayData(temperature: 0, weatherType: .unknown, dustGrade: .unknown)
+        WeatherDisplayData(temperature: 0, weatherType: .unknown, dustGrade: .unknown, title: "날씨 정보가 없어요.")
     )
     private let errorSubject = PassthroughSubject<String, Never>()
     
@@ -81,10 +82,12 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
     // MARK: - Private Methods
     
     private func createWeatherDisplayData(from walkRecord: WalkRecord) -> WeatherDisplayData {
+        let title = WeatherMessage.detailTitle(for: walkRecord.weatherType)
         return WeatherDisplayData(
             temperature: walkRecord.temperature,
             weatherType: walkRecord.weatherType,
-            dustGrade: walkRecord.dustGrade
+            dustGrade: walkRecord.dustGrade,
+            title: title
         )
     }
     
@@ -98,7 +101,6 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
         // 산책 기록 데이터 전송
         walkRecordSubject.send(walkRecord)
         
-        // 샘플 날씨 데이터 설정 (실제로는 API 호출 또는 저장된 데이터를 사용)
         let weatherData = createWeatherDisplayData(from: walkRecord)
         weatherDataSubject.send(weatherData)
     }

@@ -446,7 +446,9 @@ final class WalkDetailView: BaseView {
     }
     
     /// 날씨 정보 설정
-    func configureWeather(temperature: String, dustGrade: DustGrade, weatherType: WeatherType) {
+    func configureWeather(temperature: String, dustGrade: DustGrade, weatherType: WeatherType, title: String) {
+        
+        titleLabel.text = title
         temperatureLabel.text = temperature
         
         // 날씨 아이콘 설정

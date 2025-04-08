@@ -149,6 +149,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         let weatherInfo = weatherResponse.weather.first ?? Weather(id: 800, main: "Clear", description: "맑음", icon: "01d")
         // 날씨 상태 결정
         let weatherType = determineWeatherType(from: weatherInfo)
+        let temperature = Int(weatherResponse.main.temp.rounded())
         
         // 미세먼지 등급 (첫 번째 item만 사용)
         let dustItem = airKoreaResponse.response.body.items.first
@@ -156,13 +157,19 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         let pm10GradeValue = Int(dustItem?.pm10Grade ?? "-1") ?? -1
         let dustGrade = DustGrade(rawValue: pm10GradeValue) ?? .unknown
         
+        var weatherMessage = WeatherMessage.homeMessage(for: weatherType, temperature: temperature)
+        if dustGrade == .bad || dustGrade == .veryBad {
+            weatherMessage = "미세먼지가 심해요!\n 오늘은 잠시 쉬어갈까요?"
+        }
+        
         // 날씨 카드 데이터 생성
         let weatherCardData = WeatherCardData(
             date: currentDate,
             temperature: Int(weatherResponse.main.temp.rounded()),
             weatherType: weatherType,
             dustGrade: dustGrade,
-            cardType: .weather
+            cardType: .weather,
+            message: weatherMessage
         )
         WeatherManager.shared.updateWeatherData(weatherCardData)
         weatherDataSubject.send(weatherCardData)
@@ -201,4 +208,5 @@ struct WeatherCardData {
     let weatherType: WeatherType
     let dustGrade: DustGrade
     let cardType: CardType
+    let message: String
 }
