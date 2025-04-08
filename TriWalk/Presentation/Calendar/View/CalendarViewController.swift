@@ -19,7 +19,6 @@ final class CalendarViewController: BaseViewController {
     private let sortOrderSubject = PassthroughSubject<SortOrder, Never>()
     
     // MARK: - UI Components
-//    private let filterButtons = UISegmentedControl(items: ["최신순", "오래된 순"])
     private let sortButtonGroup = SortButtonGroup()
     private let sortButtonContainer = UIView()
     
@@ -57,13 +56,8 @@ final class CalendarViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
-        
         // 캘린더 뷰 델리게이트 설정
         calendarView.delegate = self
-        
-        // 필터 버튼 기본값 설정
-//        filterButtons.selectedSegmentIndex = 0
-//        filterButtons.addTarget(self, action: #selector(filterValueChanged), for: .valueChanged)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -187,7 +181,7 @@ extension CalendarViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 100
+        return 180
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
