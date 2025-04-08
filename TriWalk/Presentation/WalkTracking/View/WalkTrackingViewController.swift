@@ -40,6 +40,7 @@ final class WalkTrackingViewController: BaseViewController {
         if startAddress == nil && destinationAddress == nil {
             setWalkInfo(startAddress: "알 수 없음", destinationAddress: "어디든지", tripType: .roundTrip)
         }
+        navigationController?.setNavigationBarHidden(true, animated: false)
     }
     
     override func viewDidAppear(_ animated: Bool) {
