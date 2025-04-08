@@ -8,7 +8,7 @@
 import UIKit
 
 enum Color {
-    static let primary = UIColor(named: "TriWalkPrimary")!
+    static let triWalkPrimary = UIColor(named: "TriWalkPrimary")!
     static let background = UIColor(named: "Background")!
     
     static let contentPrimary = UIColor(named: "ContentPrimary")!

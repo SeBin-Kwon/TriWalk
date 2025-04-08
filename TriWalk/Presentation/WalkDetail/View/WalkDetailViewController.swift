@@ -129,7 +129,7 @@ final class WalkDetailViewController: BaseViewController {
         RouteVisualizationManager.visualizeCurrentRoute(
             on: walkDetailView.mapView,
             coordinates: coordinates,
-            color: Color.primary,
+            color: Color.triWalkPrimary,
             lineWidth: 5.0
         )
         
@@ -177,7 +177,7 @@ extension WalkDetailViewController: MKMapViewDelegate {
             return renderer
         } else if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = Color.primary
+            renderer.strokeColor = Color.triWalkPrimary
             renderer.lineWidth = 5.0
             renderer.alpha = 0.8
             renderer.lineCap = .round

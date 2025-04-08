@@ -212,7 +212,7 @@ class HomeViewController: BaseViewController {
     
     @objc private func calendarButtonTap() {
         print("calendar")
-        let vc = CalendarViewController()
+        let vc = CalendarViewController(viewModel: CalendarViewModel())
         navigate(.push(vc))
     }
     
