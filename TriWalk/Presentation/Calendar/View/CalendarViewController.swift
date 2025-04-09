@@ -79,7 +79,7 @@ final class CalendarViewController: BaseViewController {
         calendarView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(280) // 캘린더 뷰 높이 조정
+            make.height.equalTo(300) // 캘린더 뷰 높이 조정
         }
         
         sortButtonContainer.snp.makeConstraints { make in

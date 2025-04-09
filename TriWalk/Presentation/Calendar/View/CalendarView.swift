@@ -154,11 +154,11 @@ final class CalendarView: BaseView {
     private func updateMonthLabel() {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy MMMM"
-        formatter.locale = Locale(identifier: "ko_KR") // 영어 표기 (June 2023)
+        formatter.locale = Locale(identifier: "ko_KR") // 한국어 표기
         monthLabel.text = formatter.string(from: currentMonth)
     }
     
-    // 한 달의 모든 날짜 생성
+    // 한 달의 날짜만 생성 (다른 월의 날짜 제외)
     private func generateDatesForMonth(date: Date) -> [Date] {
         var dates = [Date]()
         let calendar = Calendar.current
@@ -168,46 +168,17 @@ final class CalendarView: BaseView {
             from: calendar.dateComponents([.year, .month], from: date)
         ) ?? date
         
-        // 첫날의 요일 (0: 일요일, 1: 월요일, ..., 6: 토요일)
-        let weekdayOfFirstDay = calendar.component(.weekday, from: firstDayOfMonth) - 1
-        
         // 해당 월의 일수
         let daysInMonth = calendar.range(of: .day, in: .month, for: firstDayOfMonth)?.count ?? 30
         
-        // 전 달의 날짜로 첫 주 채우기
-        for i in 0..<weekdayOfFirstDay {
-            if let prevDate = calendar.date(byAdding: .day, value: -(weekdayOfFirstDay - i), to: firstDayOfMonth) {
-                dates.append(prevDate)
-            }
-        }
-        
-        // 이번 달 날짜 추가
+        // 이번 달 날짜만 추가
         for i in 0..<daysInMonth {
             if let date = calendar.date(byAdding: .day, value: i, to: firstDayOfMonth) {
                 dates.append(date)
             }
         }
         
-        // 마지막 주 남은 부분 다음 달로 채우기
-        let remainingDays = 7 - (dates.count % 7)
-        if remainingDays < 7 {
-            for i in 0..<remainingDays {
-                if let nextDate = calendar.date(byAdding: .day, value: daysInMonth + i, to: firstDayOfMonth) {
-                    dates.append(nextDate)
-                }
-            }
-        }
-        
         return dates
-    }
-    
-    // 날짜가 현재 월에 포함되는지 확인
-    private func isDateInCurrentMonth(_ date: Date) -> Bool {
-        let calendar = Calendar.current
-        let dateMonth = calendar.component(.month, from: date)
-        let currentMonth = calendar.component(.month, from: self.currentMonth)
-        
-        return dateMonth == currentMonth
     }
     
     // 날짜에 산책 기록이 있는지 확인
@@ -227,11 +198,22 @@ final class CalendarView: BaseView {
 // MARK: - UICollectionViewDataSource, UICollectionViewDelegate
 extension CalendarView: UICollectionViewDataSource, UICollectionViewDelegate {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 1
+        return 2 // 요일 헤더 섹션과 날짜 섹션
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 7 + dates.count // 요일 헤더 + 날짜 수
+        if section == 0 {
+            return 7 // 요일 헤더
+        } else {
+            // 날짜 셀 수 계산
+            let calendar = Calendar.current
+            let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
+            let firstWeekday = calendar.component(.weekday, from: firstOfMonth) // 1은 일요일, 2는 월요일, ...
+            
+            // 날짜 수 + 첫 주의 빈 셀 수
+            let emptyDays = firstWeekday - 1  // 일요일이 시작인 경우
+            return emptyDays + dates.count
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -242,60 +224,68 @@ extension CalendarView: UICollectionViewDataSource, UICollectionViewDelegate {
             return UICollectionViewCell()
         }
         
-        // 요일 헤더 (첫 번째 행)
-        if indexPath.item < 7 {
-            let weekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
+        // 요일 헤더 (첫 번째 섹션)
+        if indexPath.section == 0 {
+            let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
             cell.configureHeader(with: weekdays[indexPath.item])
             return cell
         }
         
-        // 날짜 셀
-        let dateIndex = indexPath.item - 7
-        if dateIndex < dates.count {
-            let date = dates[dateIndex]
-            let day = Calendar.current.component(.day, from: date)
-            let inCurrentMonth = isDateInCurrentMonth(date)
-            let hasRecord = hasWalkRecord(for: date)
-            let isSelected = isDateSelected(date)
-            
-            cell.configure(with: day, isSelected: isSelected, hasWalkRecord: hasRecord)
-            
-            // 현재 월에 포함되지 않는 날짜는 흐리게 표시
-            if !inCurrentMonth {
-                cell.alpha = 0.3
-            } else {
-                cell.alpha = 1.0
-            }
+        // 날짜 셀 (두 번째 섹션)
+        let calendar = Calendar.current
+        let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
+        let firstWeekday = calendar.component(.weekday, from: firstOfMonth) // 1은 일요일, 2는 월요일, ...
+        
+        let emptyDays = firstWeekday - 1
+        let dateIndex = indexPath.item - emptyDays
+        
+        // 빈 셀 처리
+        if dateIndex < 0 || dateIndex >= dates.count {
+            cell.configureEmpty()
+            return cell
         }
+        
+        // 날짜 셀 처리
+        let date = dates[dateIndex]
+        let day = calendar.component(.day, from: date)
+        let hasRecord = hasWalkRecord(for: date)
+        let isSelected = isDateSelected(date)
+        
+        cell.configure(with: day, isSelected: isSelected, hasWalkRecord: hasRecord)
         
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // 요일 헤더는 선택 불가
-        if indexPath.item < 7 {
+        if indexPath.section == 0 {
             return
         }
         
-        let dateIndex = indexPath.item - 7
-        if dateIndex < dates.count {
-            let date = dates[dateIndex]
-            
-            // 현재 월에 포함되지 않는 날짜는 선택 불가
-            if !isDateInCurrentMonth(date) {
-                return
-            }
-            
-            // 이미 선택된 날짜를 다시 탭하면 선택 해제
-            if isDateSelected(date) {
-                selectedDate = nil
-            } else {
-                selectedDate = date
-            }
-            
-            collectionView.reloadData()
-            delegate?.calendarView(self, didSelectDate: selectedDate)
+        // 날짜 셀 선택 처리
+        let calendar = Calendar.current
+        let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
+        let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
+        
+        let emptyDays = firstWeekday - 1
+        let dateIndex = indexPath.item - emptyDays
+        
+        // 빈 셀 선택 무시
+        if dateIndex < 0 || dateIndex >= dates.count {
+            return
         }
+        
+        let date = dates[dateIndex]
+        
+        // 이미 선택된 날짜를 다시 탭하면 선택 해제
+        if isDateSelected(date) {
+            selectedDate = nil
+        } else {
+            selectedDate = date
+        }
+        
+        collectionView.reloadData()
+        delegate?.calendarView(self, didSelectDate: selectedDate)
     }
 }
 
@@ -303,11 +293,11 @@ extension CalendarView: UICollectionViewDataSource, UICollectionViewDelegate {
 extension CalendarView: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = collectionView.frame.width / 7
-        let height: CGFloat = indexPath.item < 7 ? 25 : width - 5 // 요일 헤더는 더 작게
+        let height: CGFloat = indexPath.section == 0 ? 25 : width - 5 // 요일 헤더는 더 작게
         return CGSize(width: width, height: height)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        return UIEdgeInsets(top: 0, left: 0, bottom: section == 0 ? 8 : 0, right: 0)
     }
 }

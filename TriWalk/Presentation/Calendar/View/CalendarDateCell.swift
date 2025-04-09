@@ -32,6 +32,8 @@ final class CalendarDateCell: BaseCollectionViewCell {
         dateLabel.text = nil
         backgroundCircleView.backgroundColor = .clear
         backgroundCircleView.layer.borderWidth = 0
+        dateLabel.textColor = Color.darkContent
+        dateLabel.font = Font.font(size: 14, weight: .medium)
     }
     
     // MARK: - Setup
@@ -58,7 +60,7 @@ final class CalendarDateCell: BaseCollectionViewCell {
         
         if hasWalkRecord {
             // 산책 기록이 있는 날
-            backgroundCircleView.backgroundColor = Color.triWalkPrimary
+            backgroundCircleView.backgroundColor = Color.triWalkPrimary.withAlphaComponent(0.6)
             dateLabel.textColor = Color.darkContent
             dateLabel.font = Font.font(size: 14, weight: .medium)
         } else {
@@ -70,13 +72,11 @@ final class CalendarDateCell: BaseCollectionViewCell {
         
         if isSelected {
             // 선택된 날짜
-            backgroundCircleView.layer.borderWidth = 1
-            backgroundCircleView.layer.borderColor = Color.darkContent.cgColor
+            backgroundCircleView.layer.borderWidth = 3
+            backgroundCircleView.layer.borderColor = Color.triWalkPrimary.cgColor
         } else {
             backgroundCircleView.layer.borderWidth = 0
         }
-        
-        
     }
     
     // 헤더 셀 (요일명) 설정
@@ -85,5 +85,12 @@ final class CalendarDateCell: BaseCollectionViewCell {
         dateLabel.textColor = Color.textSecondary
         dateLabel.font = Font.font(size: 14, weight: .regular)
         backgroundCircleView.backgroundColor = .clear
+    }
+    
+    // 빈 셀 설정
+    func configureEmpty() {
+        dateLabel.text = ""
+        backgroundCircleView.backgroundColor = .clear
+        backgroundCircleView.layer.borderWidth = 0
     }
 }
