@@ -34,6 +34,13 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
     private let errorSubject = PassthroughSubject<String, Never>()
     private let walkRecordsSubject = PassthroughSubject<[WalkRecord], Never>()
     
+    private var lastWeatherLoadTime: Date?
+    private var lastWalkRecordsLoadTime: Date?
+    
+    // 데이터 새로고침 간격 (초 단위)
+    private let weatherRefreshInterval: TimeInterval = 900
+    private let walkRecordsRefreshInterval: TimeInterval = 300
+    
     // MARK: - Initialization
     init(weatherService: WeatherServiceProtocol = WeatherService(),
          airKoreaService: AirKoreaServiceProtocol = AirKoreaService(),
@@ -49,22 +56,28 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
     // MARK: - Transform Method
     func transform(input: Input) -> Output {
         // 화면이 나타날 때 또는 새로고침 할 때 날씨 데이터 로드
-        input.viewDidAppear
+        Publishers.Merge(input.viewDidAppear, input.reloadTrigger)
                 .withUnretained(self)
                 .sink { owner, _ in
-                    // 위치 권한 확인 후 API 호출하도록 수정
-                    if LocationManager.shared.authorizationStatus == .authorizedWhenInUse ||
-                       LocationManager.shared.authorizationStatus == .authorizedAlways {
+                    // 위치 권한 확인
+                    let hasLocationPermission = LocationManager.shared.authorizationStatus == .authorizedWhenInUse ||
+                                              LocationManager.shared.authorizationStatus == .authorizedAlways
+                    
+                    // 날씨 데이터 로드 조건 확인
+                    let shouldLoadWeather = owner.shouldRefreshWeatherData()
+                    
+                    if hasLocationPermission && shouldLoadWeather {
                         owner.loadWeatherData()
                     } else if LocationManager.shared.authorizationStatus == .notDetermined {
-                        // 권한이 아직 결정되지 않았으면 요청만 하고 API 호출은 하지 않음
-                        // 권한 변경 이벤트를 받아서 처리하도록 함
                         LocationManager.shared.requestAuthorization()
-                    } else {
-                        // 권한이 거부된 경우 에러 메시지 전송
+                    } else if !hasLocationPermission {
                         owner.errorSubject.send("위치 정보 접근이 거부되었습니다. 날씨 정보를 불러올 수 없습니다.")
                     }
-                    owner.loadWalkRecords()
+                    
+                    // 산책 기록 로드 조건 확인
+                    if owner.shouldRefreshWalkRecords() {
+                        owner.loadWalkRecords()
+                    }
                 }
                 .store(in: &cancellables)
         
@@ -87,6 +100,25 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         )
     }
     
+    // 날씨 데이터 새로고침 필요 여부 확인
+    private func shouldRefreshWeatherData() -> Bool {
+        guard let lastLoadTime = lastWeatherLoadTime else {
+            return true // 처음 로드하는 경우
+        }
+        let timeElapsed = Date().timeIntervalSince(lastLoadTime)
+        return timeElapsed > walkRecordsRefreshInterval
+    }
+    
+    // 산책 기록 새로고침 필요 여부 확인
+    private func shouldRefreshWalkRecords() -> Bool {
+        guard let lastLoadTime = lastWalkRecordsLoadTime else {
+            return true // A처음 로드하는 경우
+        }
+        
+        let timeElapsed = Date().timeIntervalSince(lastLoadTime)
+        return timeElapsed > walkRecordsRefreshInterval
+    }
+
     private func loadWalkRecords() {
         guard let allWalks = walkRepository.getAllWalks() else {
             print("산책 기록을 불러올 수 없습니다.")
@@ -97,6 +129,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         // 최근 산책 기록 5개만 가져오기
         let recentWalks = Array(allWalks.prefix(5)).reversed()
         print("산책 기록 로드 완료: \(recentWalks.count)개의 기록을 찾았습니다.")
+        lastWalkRecordsLoadTime = Date()
         walkRecordsSubject.send(Array(recentWalks))
     }
     
@@ -133,6 +166,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
                     }
                 },
                 receiveValue: { [weak self] weatherResponse, airKoreaResponse in
+                    self?.lastWeatherLoadTime = Date()
                     self?.processApiResponse(weatherResponse, airKoreaResponse)
                 }
             )
