@@ -69,13 +69,20 @@ final class LocationManager: NSObject {
     /// 위치 서비스 권한 요청
     func requestAuthorization() {
         
-        if locationManager.authorizationStatus == .authorizedWhenInUse ||
-               locationManager.authorizationStatus == .authorizedAlways {
-                // 이미 권한이 있으므로 위치 요청 시작
-                requestLocation()
-                return
-            }
-        locationManager.requestWhenInUseAuthorization()
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse:
+            locationManager.requestAlwaysAuthorization()
+        case .authorizedAlways:
+            requestLocation()
+        case .denied, .restricted:
+            // 거부 상태 처리
+            let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
+            locationSubject.send(completion: .failure(error))
+        default:
+            break
+        }
     }
     
     /// 단일 위치 업데이트 요청
@@ -99,6 +106,8 @@ final class LocationManager: NSObject {
     func startUpdatingLocation() {
         if locationManager.authorizationStatus == .authorizedWhenInUse ||
             locationManager.authorizationStatus == .authorizedAlways {
+            locationManager.allowsBackgroundLocationUpdates = true
+            locationManager.pausesLocationUpdatesAutomatically = false
             locationManager.startUpdatingLocation()
         } else {
             let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
@@ -109,6 +118,18 @@ final class LocationManager: NSObject {
     /// 위치 업데이트 중지
     func stopUpdatingLocation() {
         locationManager.stopUpdatingLocation()
+        locationManager.allowsBackgroundLocationUpdates = false
+    }
+    
+    func enableBackgroundLocationUpdates(_ enable: Bool) {
+        locationManager.allowsBackgroundLocationUpdates = enable
+        locationManager.pausesLocationUpdatesAutomatically = !enable
+        
+        if enable {
+            print("백그라운드 위치 업데이트 활성화됨")
+        } else {
+            print("백그라운드 위치 업데이트 비활성화됨")
+        }
     }
     
     /// 좌표로부터 주소 찾기

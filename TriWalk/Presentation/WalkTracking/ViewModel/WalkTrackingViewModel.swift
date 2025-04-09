@@ -60,6 +60,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     override init() {
         super.init()
         setupLocationTracking()
+        setupBackgroundNotifications()
     }
     
     deinit {
@@ -100,6 +101,33 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             isPaused: isPausedSubject.eraseToAnyPublisher(),
             walkRecord: walkRecordSubject.eraseToAnyPublisher()
         )
+    }
+    
+    private func setupBackgroundNotifications() {
+        // 앱이 백그라운드로 진입할 때
+        NotificationCenterManager.didEnterBackground.publisher()
+            .withUnretained(self)
+            .sink { owner, _ in
+                if owner.startDate != nil && !owner.isPausedSubject.value {
+                    print("앱이 백그라운드로 진입: 위치 추적 계속 유지")
+                    // 위치 업데이트 계속 유지하기 위한 설정
+                    LocationManager.shared.enableBackgroundLocationUpdates(true)
+                }
+            }
+            .store(in: &cancellables)
+        
+        // 앱이 포그라운드로 복귀할 때
+        NotificationCenterManager.willEnterForeground.publisher()
+            .withUnretained(self)
+            .sink { owner, _ in
+                print("앱이 포그라운드로 복귀")
+                // 현재 추적 중인 경우에만 처리
+                if owner.startDate != nil && !owner.isPausedSubject.value {
+                    print("산책 중 상태로 포그라운드 복귀")
+                    LocationManager.shared.enableBackgroundLocationUpdates(false)
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Private Methods

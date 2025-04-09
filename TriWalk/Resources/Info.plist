@@ -21,6 +21,12 @@
     <string>산책 경로를 추적하고 날씨 및 미세먼지 정보를 제공하기 위해 위치 정보가 필요합니다.</string>
     <key>NSMotionUsageDescription</key>
     <string>산책 중 걸음 수 및 소모된 칼로리를 측정하기 위해 모션 센서 접근 권한이 필요합니다.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>산책 중 앱이 백그라운드에 있어도 위치 정보를 계속 수집하기 위해 필요합니다.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+    </array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
