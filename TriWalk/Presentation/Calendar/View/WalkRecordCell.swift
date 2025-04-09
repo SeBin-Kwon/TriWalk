@@ -22,9 +22,13 @@ class WalkRecordCell: UITableViewCell {
         return imageView
     }()
     
+    private let containerView = UIView()
+    private let startGroup = UIView()
+    private let endGroup = UIView()
+
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodySmall
+        label.font = Font.caption
         label.textColor = Color.textSecondary
         return label
     }()
@@ -66,7 +70,7 @@ class WalkRecordCell: UITableViewCell {
     
     private let timeLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodySmall
+        label.font = Font.caption
         label.textColor = Color.textSecondary
         label.text = "소요 시간"
         return label
@@ -74,7 +78,7 @@ class WalkRecordCell: UITableViewCell {
     
     private let durationLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodySmall
+        label.font = Font.font(size: 13, weight: .bold)
         label.textColor = Color.contentPrimary
         return label
     }()
@@ -105,62 +109,67 @@ class WalkRecordCell: UITableViewCell {
         contentView.addSubview(ticketImageView)
         
         ticketImageView.addSubviews(
-            dateLabel,
-            startLocationLabel,
-            startTimeLabel,
-            arrowImageView,
-            endLocationLabel,
-            endTimeLabel,
-            timeLabel,
-            durationLabel,
+            containerView,
             chevronImageView
         )
         
+        containerView.addSubviews(dateLabel, timeLabel, durationLabel, startGroup, endGroup, arrowImageView)
+        
+        startGroup.addSubviews(startLocationLabel, startTimeLabel)
+        endGroup.addSubviews(endLocationLabel, endTimeLabel)
+        
         ticketImageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
+            make.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
+            make.centerY.equalToSuperview()
+            make.height.equalTo(ticketImageView.snp.width).multipliedBy(0.46)
+        }
+        
+        containerView.snp.makeConstraints { make in
+            make.leading.verticalEdges.equalTo(ticketImageView)
+            make.width.equalToSuperview().multipliedBy(0.77)
         }
         
         // 날짜 라벨
         dateLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
+            make.top.leading.equalToSuperview().inset(20)
         }
         
-        // 출발지 레이블
         startLocationLabel.snp.makeConstraints { make in
-            make.top.equalTo(dateLabel.snp.bottom).offset(16)
-            make.leading.equalToSuperview().inset(16)
+            make.top.leading.equalToSuperview()
         }
-        
-        // 출발 시간 레이블
         startTimeLabel.snp.makeConstraints { make in
             make.top.equalTo(startLocationLabel.snp.bottom).offset(4)
-            make.leading.equalToSuperview().inset(16)
+            make.leading.equalToSuperview()
+        }
+        startGroup.snp.makeConstraints { make in
+            make.centerY.equalToSuperview().offset(-20)
+            make.leading.equalToSuperview().inset(20)
         }
         
         // 화살표 이미지
         arrowImageView.snp.makeConstraints { make in
-            make.centerY.equalTo(startLocationLabel)
+            make.centerY.equalToSuperview()
             make.centerX.equalToSuperview()
             make.width.equalTo(70)
             make.height.equalTo(12)
         }
         
-        // 도착지 레이블
         endLocationLabel.snp.makeConstraints { make in
-            make.top.equalTo(dateLabel.snp.bottom).offset(16)
-            make.trailing.equalToSuperview().inset(50) // 오른쪽 원형 컷아웃 여유 공간
+            make.top.trailing.equalToSuperview()
         }
-        
-        // 도착 시간 레이블
         endTimeLabel.snp.makeConstraints { make in
             make.top.equalTo(endLocationLabel.snp.bottom).offset(4)
-            make.trailing.equalToSuperview().inset(50)
+            make.trailing.equalToSuperview()
+        }
+        endGroup.snp.makeConstraints { make in
+            make.centerY.equalToSuperview().offset(-20)
+            make.trailing.equalToSuperview().inset(20)
         }
         
         // 소요 시간 타이틀
         timeLabel.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().inset(16)
-            make.leading.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview().inset(20)
+            make.leading.equalToSuperview().inset(20)
         }
         
         // 소요 시간 값
@@ -171,7 +180,7 @@ class WalkRecordCell: UITableViewCell {
         
         chevronImageView.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.trailing.equalToSuperview().inset(24)
+            make.leading.equalTo(containerView.snp.trailing).offset(28)
             make.width.height.equalTo(24)
         }
     }
@@ -180,10 +189,10 @@ class WalkRecordCell: UITableViewCell {
     func configure(with walkRecord: WalkRecord) {
         dateLabel.text = FormatManager.shared.formattedDate(walkRecord.date)
         
-        startLocationLabel.text = walkRecord.startAddress
+        startLocationLabel.text = walkRecord.startAddress.count > 3 ? String(walkRecord.startAddress.prefix(3)) : walkRecord.startAddress
         startTimeLabel.text = FormatManager.shared.formattedTime(walkRecord.startTime)
         
-        endLocationLabel.text = walkRecord.endAddress
+        endLocationLabel.text = walkRecord.endAddress.count > 3 ? String(walkRecord.endAddress.prefix(3)) : walkRecord.endAddress
         endTimeLabel.text = FormatManager.shared.formattedTime(walkRecord.endTime)
         
         durationLabel.text = FormatManager.shared.formattedDuration(seconds: walkRecord.duration)

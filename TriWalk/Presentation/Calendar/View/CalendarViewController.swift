@@ -79,17 +79,17 @@ final class CalendarViewController: BaseViewController {
         calendarView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(300) // 캘린더 뷰 높이 조정
+            make.height.equalTo(248) // 캘린더 뷰 높이 조정
         }
         
         sortButtonContainer.snp.makeConstraints { make in
-            make.top.equalTo(calendarView.snp.bottom).offset(Spacing.m)
+            make.top.equalTo(calendarView.snp.bottom).offset(Spacing.s)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
             make.height.equalTo(40)
         }
         
         tableView.snp.makeConstraints { make in
-            make.top.equalTo(sortButtonContainer.snp.bottom).offset(Spacing.l)
+            make.top.equalTo(sortButtonContainer.snp.bottom).offset(Spacing.s)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
@@ -181,7 +181,9 @@ extension CalendarViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 180
+        let width = UIScreen.main.bounds.width - 2 * Spacing.screenMargin
+        let height = width * 0.52
+        return height
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

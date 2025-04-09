@@ -88,7 +88,7 @@ final class ReportView: BaseView {
         mapView.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(Spacing.m)
             make.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(250)
+            make.height.equalTo(300)
         }
         
         subtitleLabel.snp.makeConstraints { make in

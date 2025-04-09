@@ -286,7 +286,7 @@ final class WalkDetailView: BaseView {
         mapContainer.snp.makeConstraints { make in
             make.top.equalTo(weatherIconView.snp.bottom).offset(Spacing.m)
             make.horizontalEdges.equalToSuperview().inset(Spacing.screenMargin)
-            make.height.equalTo(280)
+            make.height.equalTo(350)
         }
         
         mapView.snp.makeConstraints { make in

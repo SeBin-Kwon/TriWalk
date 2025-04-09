@@ -12,7 +12,6 @@ final class TicketView: BaseView {
     
     private let ticketImage = {
         let imageView = UIImageView()
-//        imageView.image = UIImage(resource: .ticket1)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -247,14 +246,15 @@ final class TicketView: BaseView {
     }
     
     override func configureLayout() {
-        
         ticketImage.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.verticalEdges.equalToSuperview()
+            make.centerX.equalToSuperview()
+            make.width.equalTo(ticketImage.snp.height).multipliedBy(0.68)
         }
         
         // 날짜 컨테이너
         dateContainerView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(Spacing.l)
+            make.top.equalTo(ticketImage).offset(Spacing.l)
             make.horizontalEdges.equalToSuperview().inset(42)
             make.height.equalTo(24)
         }
@@ -270,7 +270,7 @@ final class TicketView: BaseView {
         // 위치 컨테이너
         locationContainerView.snp.makeConstraints { make in
             make.bottom.equalTo(divider1.snp.top).offset(-Spacing.m)
-            make.horizontalEdges.equalToSuperview().inset(42)
+            make.horizontalEdges.equalTo(ticketImage).inset(42)
             make.height.equalTo(60)
         }
         

@@ -14,7 +14,7 @@ final class CalendarDateCell: BaseCollectionViewCell {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = Font.font(size: 14, weight: .medium)
+        label.font = Font.font(size: 13, weight: .medium)
         label.textColor = Color.darkContent
         return label
     }()
@@ -22,7 +22,7 @@ final class CalendarDateCell: BaseCollectionViewCell {
     private let backgroundCircleView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
-        view.layer.cornerRadius = 20
+        view.layer.cornerRadius = 15
         view.clipsToBounds = true
         return view
     }()
@@ -45,12 +45,12 @@ final class CalendarDateCell: BaseCollectionViewCell {
     override func configureLayout() {
         backgroundCircleView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.size.equalTo(40)
+            make.size.equalTo(30)
         }
         
         dateLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.size.equalTo(40)
+            make.size.equalTo(30)
         }
     }
     

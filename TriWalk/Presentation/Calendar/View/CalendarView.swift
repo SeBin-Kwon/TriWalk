@@ -47,7 +47,7 @@ final class CalendarView: BaseView {
     
     lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 0
+        layout.minimumLineSpacing = 3
         layout.minimumInteritemSpacing = 0
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -293,7 +293,7 @@ extension CalendarView: UICollectionViewDataSource, UICollectionViewDelegate {
 extension CalendarView: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = collectionView.frame.width / 7
-        let height: CGFloat = indexPath.section == 0 ? 25 : width - 5 // 요일 헤더는 더 작게
+        let height: CGFloat = indexPath.section == 0 ? 20 : width - 15 // 요일 헤더는 더 작게
         return CGSize(width: width, height: height)
     }
     
