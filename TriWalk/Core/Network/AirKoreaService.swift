@@ -14,15 +14,13 @@ protocol AirKoreaServiceProtocol {
 
 final class AirKoreaService: AirKoreaServiceProtocol {
     private let networkManager: NetworkManager
-    private let apiKey: String
     
-    init(networkManager: NetworkManager = .shared, apiKey: String = APIKey.airKorea) {
+    init(networkManager: NetworkManager = .shared) {
         self.networkManager = networkManager
-        self.apiKey = apiKey
     }
     
     func fetchAirQuality(stationName: String) -> AnyPublisher<AirKoreaResponse, Error> {
-        let endpoint = AirKoreaEndpoint.dustInfo(stationName: stationName, apiKey: apiKey)
+        let endpoint = AirKoreaEndpoint.dustInfo(stationName: stationName)
         return networkManager.request(endpoint)
     }
 }

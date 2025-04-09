@@ -15,15 +15,13 @@ protocol WeatherServiceProtocol {
 
 final class WeatherService: WeatherServiceProtocol {
     private let networkManager: NetworkManager
-    private let apiKey: String
     
-    init(networkManager: NetworkManager = .shared, apiKey: String = APIKey.openWeather) {
+    init(networkManager: NetworkManager = .shared) {
         self.networkManager = networkManager
-        self.apiKey = apiKey
     }
     
     func fetchWeather(latitude: Double, longitude: Double) -> AnyPublisher<WeatherResponse, Error> {
-        let endpoint = WeatherEndpoint.currentWeather(lat: latitude, lon: longitude, apiKey: apiKey)
+        let endpoint = WeatherEndpoint.currentWeather(lat: latitude, lon: longitude)
         return networkManager.request(endpoint)
     }
 }
