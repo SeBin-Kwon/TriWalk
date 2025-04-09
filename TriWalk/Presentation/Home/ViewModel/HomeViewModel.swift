@@ -49,7 +49,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
     // MARK: - Transform Method
     func transform(input: Input) -> Output {
         // 화면이 나타날 때 또는 새로고침 할 때 날씨 데이터 로드
-        Publishers.Merge(input.viewDidAppear, input.reloadTrigger)
+        input.viewDidAppear
                 .withUnretained(self)
                 .sink { owner, _ in
                     // 위치 권한 확인 후 API 호출하도록 수정
@@ -94,8 +94,8 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
             return
         }
         
-        // 최근 산책 기록 10개만 가져오기
-        let recentWalks = Array(allWalks.prefix(10)).reversed()
+        // 최근 산책 기록 5개만 가져오기
+        let recentWalks = Array(allWalks.prefix(5)).reversed()
         print("산책 기록 로드 완료: \(recentWalks.count)개의 기록을 찾았습니다.")
         walkRecordsSubject.send(Array(recentWalks))
     }
