@@ -15,7 +15,7 @@ final class DestinationSearchViewController: BaseViewController {
     private let searchTextSubject = PassthroughSubject<String, Never>()
     private let selectItemSubject = PassthroughSubject<Int, Never>()
     
-    private var searchResults: [MKMapItem] = []
+    private var searchResults: [SearchResultItem] = []
     private var isSearching = false
     
     // MARK: - UI Components
@@ -103,39 +103,37 @@ extension DestinationSearchViewController: UITableViewDelegate, UITableViewDataS
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "locationCell", for: indexPath)
-        
-        var config = cell.defaultContentConfiguration()
-        
-        if !isSearching {
-            // "어디든지" 옵션
-            config.text = "어디든지"
-            config.secondaryText = "목적지 없이 산책하기"
-            config.image = UIImage(systemName: "map")?
-                .withTintColor(Color.darkContent, renderingMode: .alwaysOriginal)
-        } else {
-            // 검색 결과
-            let mapItem = searchResults[indexPath.row]
-            config.text = mapItem.name
+            let cell = tableView.dequeueReusableCell(withIdentifier: "locationCell", for: indexPath)
             
-            let address = [
-                mapItem.placemark.thoroughfare,
-                mapItem.placemark.locality,
-                mapItem.placemark.administrativeArea
-            ].compactMap { $0 }.joined(separator: ", ")
+            var config = cell.defaultContentConfiguration()
             
-            config.secondaryText = address
-            config.image = UIImage(systemName: "mappin.and.ellipse")?
-                .withTintColor(Color.darkContent, renderingMode: .alwaysOriginal)
+            if !isSearching {
+                // "어디든지" 옵션
+                config.text = "어디든지"
+                config.secondaryText = "목적지 없이 산책하기"
+                config.image = UIImage(systemName: "map")
+            } else {
+                // 검색 결과
+                let searchItem = searchResults[indexPath.row]
+                config.text = searchItem.placeName
+                
+                // 주소 표시 - 도로명 주소가 있으면 도로명 주소, 없으면 지번 주소
+                let address = searchItem.roadAddress.isEmpty ? searchItem.address : searchItem.roadAddress
+                config.secondaryText = address
+                config.image = UIImage(systemName: "mappin.and.ellipse")
+            }
+        config.imageProperties.tintColor = .darkContent
+            cell.contentConfiguration = config
+            return cell
         }
-        
-        cell.contentConfiguration = config
-        return cell
-    }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         selectItemSubject.send(indexPath.row)
+    }
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        searchBar.resignFirstResponder()
     }
 }
 

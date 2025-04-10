@@ -114,7 +114,7 @@ enum AirKoreaEndpoint: Endpoint {
 
 enum KakaoEndpoint: Endpoint {
     case coord2address(x: Double, y: Double)
-    case searchKeyword(query: String)
+    case searchKeyword(query: String, x: Double, y: Double)
     
     var baseURL: String {
         return APIService.kakao.baseURL
@@ -144,9 +144,13 @@ enum KakaoEndpoint: Endpoint {
                 "x": x,
                 "y": y
             ]
-        case .searchKeyword(let query):
+        case .searchKeyword(let query, let x, let y):
             return [
-                "query": query
+                "query": query,
+                "x": x,
+                "y": y,
+                "radius": 2000,
+                "sort": "distance"
             ]
         }
     }

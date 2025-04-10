@@ -11,7 +11,7 @@ import CoreLocation
 
 protocol KakaoLocationServiceProtocol {
     func convertCoordinateToAddress(lat: Double, lng: Double) -> AnyPublisher<KakaoCoord2AddressResponse, Error>
-    func searchPlaces(query: String) -> AnyPublisher<KakaoSearchResponse, Error>
+    func searchPlaces(query: String, latitude: Double, longitude: Double) -> AnyPublisher<KakaoSearchResponse, Error>
     func formatAddress(from response: KakaoCoord2AddressResponse) -> String?
 }
 
@@ -30,8 +30,8 @@ final class KakaoLocationService: KakaoLocationServiceProtocol {
     }
     
     // 장소 검색
-    func searchPlaces(query: String) -> AnyPublisher<KakaoSearchResponse, Error> {
-        let endpoint = KakaoEndpoint.searchKeyword(query: query)
+    func searchPlaces(query: String, latitude: Double, longitude: Double) -> AnyPublisher<KakaoSearchResponse, Error> {
+        let endpoint = KakaoEndpoint.searchKeyword(query: query, x: longitude, y: latitude)
         return networkManager.request(endpoint)
     }
     

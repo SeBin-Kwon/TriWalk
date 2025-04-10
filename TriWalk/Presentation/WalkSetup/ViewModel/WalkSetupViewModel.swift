@@ -296,8 +296,28 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             destinationAnnotationSubject.send((coordinate: placemark.coordinate, title: "도착지"))
             
             // 도착지 버튼 제목 업데이트
-            let name = placemark.name ?? "선택한 위치"
-            destinationTitleSubject.send(name)
+            var displayName = "선택한 위치"
+            
+            // KakaoPlacemark인 경우 (카카오 검색 결과에서 선택)
+            if let kakaoPlacemark = placemark as? KakaoPlacemark {
+                displayName = kakaoPlacemark.kakaoPlaceName
+                print("카카오 장소명: \(displayName)")
+            }
+            // 일반 MKPlacemark인 경우 (지도에서 직접 선택 등)
+            else if let name = placemark.name, !name.isEmpty {
+                displayName = name
+                print("일반 장소명: \(displayName)")
+            } else if let thoroughfare = placemark.thoroughfare, !thoroughfare.isEmpty {
+                displayName = thoroughfare
+                print("도로명: \(displayName)")
+            }
+            
+            // 장소명이 너무 길면 적절히 줄임
+            if displayName.count > 10 {
+                displayName = String(displayName.prefix(10)) + "..."
+            }
+            
+            destinationTitleSubject.send(displayName)
         } else {
             // 어디든지 옵션 선택
             destinationTitleSubject.send("어디든지")
