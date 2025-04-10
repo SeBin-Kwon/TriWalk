@@ -84,6 +84,11 @@ class HomeViewController: BaseViewController {
         super.viewDidLoad()
         setupNavigationBar()
         setupCollectionView()
+        NotificationCenterManager.locationPermissionGranted.publisher()
+                .sink { [weak self] _ in
+                    self?.viewDidAppearSubject.send(())  // 권한 획득 시 데이터 새로고침
+                }
+                .store(in: &cancellables)
     }
     
     override func viewDidAppear(_ animated: Bool) {

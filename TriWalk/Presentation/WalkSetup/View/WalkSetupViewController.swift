@@ -18,6 +18,8 @@ final class WalkSetupViewController: BaseViewController {
     private let viewModel = WalkSetupViewModel()
     private var longPressGestureSubject = PassthroughSubject<CLLocationCoordinate2D, Never>()
     private var viewDidAppearSubject = PassthroughSubject<Void, Never>()
+    private var permissionStatusSubject = PassthroughSubject<Void, Never>()
+    private var willEnterForegroundObserver: NSObjectProtocol?
     
     // MARK: - UI Components
     let titleLabel = {
@@ -48,26 +50,150 @@ final class WalkSetupViewController: BaseViewController {
         super.viewDidLoad()
         mapView.delegate = self
         setupLongPressGesture()
+        setupNotificationObservers()
         bindViewModel()
-        // 즉시 현재 위치 요청
-//        if let location = LocationManager.shared.currentLocation {
-//            addAnnotation(coordinate: location.coordinate, title: "출발지")
-//            
-//            // 지도 중심 설정
-//            let region = MKCoordinateRegion(
-//                center: location.coordinate,
-//                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-//            )
-//            mapView.setRegion(region, animated: false)
-//        }
-//        viewDidAppearSubject.send(())
+        updateStartButtonState()
+        NotificationCenterManager.locationPermissionGranted.publisher()
+                .sink { [weak self] _ in
+                    // 권한이 허용되었을 때 위치 및 주소 업데이트 직접 수행
+                    self?.refreshLocationAndAddress()
+                }
+                .store(in: &cancellables)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         viewDidAppearSubject.send(())
+        checkLocationPermissionStatus()
     }
-
+    
+    deinit {
+        // 관찰자 제거
+        if let observer = willEnterForegroundObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    // 위치 및 주소 새로고침 메서드 추가
+    private func refreshLocationAndAddress() {
+        // 위치 데이터가 있는지 확인
+        if let currentLocation = LocationManager.shared.currentLocation {
+            // 출발지 마커 추가
+            removeAnnotations(withTitle: "출발지")
+            addAnnotation(coordinate: currentLocation.coordinate, title: "출발지")
+            
+            // 지도 중심 설정
+            let region = MKCoordinateRegion(
+                center: currentLocation.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            )
+            mapView.setRegion(region, animated: true)
+            
+            // 주소 직접 조회
+            LocationManager.shared.lookupAddress(for: currentLocation.coordinate) { [weak self] address in
+                guard let self = self else { return }
+                
+                DispatchQueue.main.async {
+                    if let address = address {
+                        self.setupView.addressLabel.text = address
+                    } else {
+                        self.setupView.addressLabel.text = "주소를 찾을 수 없습니다"
+                    }
+                    
+                    // 위치와 주소가 모두 있으므로 시작 버튼 활성화
+                    self.enableStartButton()
+                }
+            }
+        } else {
+            // 위치가 없는 경우 새로 요청
+            LocationManager.shared.requestLocation()
+        }
+    }
+    
+    private func setupNotificationObservers() {
+        // 앱이 백그라운드에서 포그라운드로 돌아올 때 감지
+        willEnterForegroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.checkLocationPermissionStatus()
+        }
+        
+        // 위치 권한이 변경되었을 때의 알림 구독
+        NotificationCenterManager.locationPermissionChanged.publisher()
+            .sink { [weak self] _ in
+                self?.checkLocationPermissionStatus()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func checkLocationPermissionStatus() {
+        // 현재 위치 권한 상태 확인
+        let status = LocationManager.shared.authorizationStatus
+        
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            // 권한이 허용된 경우, 현재 위치 요청 및 버튼 활성화
+            LocationManager.shared.requestLocation()
+            enableStartButton()
+            if let currentLocation = LocationManager.shared.currentLocation {
+                // 주소 조회 명시적 호출
+                LocationManager.shared.lookupAddress(for: currentLocation.coordinate) { [weak self] address in
+                    guard let self = self else { return }
+                    if let address = address {
+                        DispatchQueue.main.async {
+                            // UI 업데이트는 메인 스레드에서 수행
+                            self.setupView.addressLabel.text = address
+                        }
+                    } else {
+                        DispatchQueue.main.async {
+                            self.setupView.addressLabel.text = "주소를 찾을 수 없습니다"
+                        }
+                    }
+                }
+            }
+        case .denied, .restricted:
+            // 권한이 거부된 경우 버튼 비활성화
+            disableStartButton()
+            // 알림 표시
+            let alertService = AlertService()
+            alertService.showSettingsAlert(
+                on: self,
+                title: "위치 서비스 권한 필요",
+                message: "산책 여행을 시작하려면 위치 서비스 권한이 필요합니다. 설정에서 권한을 허용해주세요."
+            )
+        case .notDetermined:
+            // 아직 결정되지 않은 경우, 권한 요청 (버튼은 비활성화 상태 유지)
+            disableStartButton()
+            LocationManager.shared.requestAuthorization()
+        @unknown default:
+            disableStartButton()
+        }
+        
+        // 권한 상태 변경을 뷰모델에 알림
+        permissionStatusSubject.send(())
+    }
+    
+    private func updateStartButtonState() {
+        let status = LocationManager.shared.authorizationStatus
+        startButton.isEnabled = (status == .authorizedWhenInUse || status == .authorizedAlways)
+    }
+    
+    private func enableStartButton() {
+        DispatchQueue.main.async {
+            self.startButton.isEnabled = true
+            self.startButton.alpha = 1.0
+        }
+    }
+    
+    private func disableStartButton() {
+        DispatchQueue.main.async {
+            self.startButton.isEnabled = false
+            self.startButton.alpha = 0.5
+        }
+    }
+    
     private func setupLongPressGesture() {
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         longPressGesture.minimumPressDuration = 0.8
@@ -102,19 +228,20 @@ final class WalkSetupViewController: BaseViewController {
         let input = WalkSetupViewModel.Input(
             viewDidAppear: viewDidAppearSubject.eraseToAnyPublisher(),
             startButtonTapped: startButton.controlPublisher(for: .touchUpInside)
-                             .map { _ in () }
-                             .eraseToAnyPublisher(),
+                .map { _ in () }
+                .eraseToAnyPublisher(),
             endPointButtonTapped: setupView.endPointButton.controlPublisher(for: .touchUpInside)
                 .map { _ in () }
                 .eraseToAnyPublisher(),
             longPressGesture: longPressGestureSubject.eraseToAnyPublisher(),
             tripTypeButtonTapped: setupView.tripTypeButton.controlPublisher(for: .touchUpInside)
                 .map { _ in () }
-                .eraseToAnyPublisher()
+                .eraseToAnyPublisher(),
+            permissionStatusChanged: permissionStatusSubject.eraseToAnyPublisher()
         )
         
         let output = viewModel.transform(input: input)
-
+        
         // 사용자 위치 업데이트
         output.userLocation
             .receive(on: RunLoop.main)
@@ -182,19 +309,12 @@ final class WalkSetupViewController: BaseViewController {
             .withUnretained(self)
             .sink { owner, alertInfo in
                 if alertInfo.title == "위치 서비스 권한 필요" {
-                    let alert = UIAlertController(
+                    let alertService = AlertService()
+                    alertService.showSettingsAlert(
+                        on: owner,
                         title: alertInfo.title,
-                        message: alertInfo.message,
-                        preferredStyle: .alert
+                        message: alertInfo.message
                     )
-                    
-                    alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
-                        if let url = URL(string: UIApplication.openSettingsURLString) {
-                            UIApplication.shared.open(url)
-                        }
-                    })
-                    alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-                    owner.present(alert, animated: true)
                     return
                 }
                 
@@ -207,6 +327,17 @@ final class WalkSetupViewController: BaseViewController {
             .sink { owner, tripType in
                 print("tripType \(tripType)")
                 owner.setupView.tripTypeButton.setTitle(tripType.title, for: .normal)
+            }
+            .store(in: &cancellables)
+        
+        output.permissionStatus
+            .withUnretained(self)
+            .sink { owner, isGranted in
+                if isGranted {
+                    owner.enableStartButton()
+                } else {
+                    owner.disableStartButton()
+                }
             }
             .store(in: &cancellables)
     }

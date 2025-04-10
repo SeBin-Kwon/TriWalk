@@ -28,6 +28,9 @@ extension NotificationCenterHandler {
 enum NotificationCenterManager: NotificationCenterHandler {
     case didEnterBackground
     case willEnterForeground
+    case locationPermissionGranted
+    case locationPermissionChanged
+    case motionPermissionGranted
 
     var name: Notification.Name {
         switch self {
@@ -35,6 +38,12 @@ enum NotificationCenterManager: NotificationCenterHandler {
             return UIApplication.didEnterBackgroundNotification
         case .willEnterForeground:
             return UIApplication.willEnterForegroundNotification
+        case .locationPermissionGranted:
+            return Notification.Name("LocationPermissionGranted")
+        case .locationPermissionChanged:
+            return Notification.Name("LocationPermissionChanged")
+        case .motionPermissionGranted:
+            return Notification.Name("motionPermissionGranted")
         }
     }
 }

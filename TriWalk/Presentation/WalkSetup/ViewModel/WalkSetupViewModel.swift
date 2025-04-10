@@ -17,6 +17,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         let endPointButtonTapped: AnyPublisher<Void, Never>
         let longPressGesture: AnyPublisher<CLLocationCoordinate2D, Never>
         let tripTypeButtonTapped: AnyPublisher<Void, Never>
+        let permissionStatusChanged: AnyPublisher<Void, Never>
     }
     
     struct Output {
@@ -28,6 +29,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         let startWalkFlow: AnyPublisher<WalkInfo, Never>
         let showAlert: AnyPublisher<(title: String, message: String), Never>
         let tripType: AnyPublisher<TripType, Never>
+        let permissionStatus: AnyPublisher<Bool, Never>
     }
     
     struct WalkInfo {
@@ -50,6 +52,8 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     private var locationSubscription: AnyCancellable?
     private var addressSubscription: AnyCancellable?
     private var hasRequestedInitialLocation = false
+//    let permissionStatusChanged: AnyPublisher<Void, Never>
+    private let permissionStatusSubject = CurrentValueSubject<Bool, Never>(false)
     
     override init() {
         super.init()
@@ -116,6 +120,15 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
 //                owner.userAddressSubject.send(address)
 //            }
 //            .store(in: &cancellables)
+        
+        input.permissionStatusChanged
+            .withUnretained(self)
+            .sink { owner, _ in
+                let status = LocationManager.shared.authorizationStatus
+                let isGranted = (status == .authorizedWhenInUse || status == .authorizedAlways)
+                owner.permissionStatusSubject.send(isGranted)
+            }
+            .store(in: &cancellables)
 
         // 도착지 주소 구독
         LocationManager.shared.destinationAddressPublisher
@@ -140,6 +153,10 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
         LocationManager.shared.authorizationPublisher
             .withUnretained(self)
             .sink { owner, status in
+                // 권한 상태에 따라 permissionStatus 업데이트
+                let isGranted = (status == .authorizedWhenInUse || status == .authorizedAlways)
+                owner.permissionStatusSubject.send(isGranted)
+                
                 switch status {
                 case .authorizedWhenInUse, .authorizedAlways:
                     LocationManager.shared.requestLocation()
@@ -220,7 +237,8 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             showDestinationSearchSheet: showDestinationSearchSheetSubject.eraseToAnyPublisher(),
             startWalkFlow: startWalkFlowSubject.eraseToAnyPublisher(),
             showAlert: showAlertSubject.eraseToAnyPublisher(),
-            tripType: tripTypeSubject.eraseToAnyPublisher()
+            tripType: tripTypeSubject.eraseToAnyPublisher(),
+            permissionStatus: permissionStatusSubject.eraseToAnyPublisher()
         )
     }
     

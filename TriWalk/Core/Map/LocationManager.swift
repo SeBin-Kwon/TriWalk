@@ -8,6 +8,7 @@
 import UIKit
 import MapKit
 import CoreLocation
+import CoreMotion
 import Combine
 
 enum AddressLookupPurpose {
@@ -26,7 +27,7 @@ final class LocationManager: NSObject {
     private var cancellables = Set<AnyCancellable>()
     private var lastLocationUpdate: Date = Date(timeIntervalSince1970: 0)
     private let walkingUpdateInterval: TimeInterval = 1.0
-    
+    private let pedometer = CMPedometer()
     // Publishers
     private let locationSubject = PassthroughSubject<CLLocation, Error>()
     private let startAddressSubject = PassthroughSubject<String, Error>()
@@ -41,7 +42,7 @@ final class LocationManager: NSObject {
     var startAddressPublisher: AnyPublisher<String, Error> {
         return startAddressSubject.eraseToAnyPublisher()
     }
-
+    
     var destinationAddressPublisher: AnyPublisher<String, Error> {
         return destinationAddressSubject.eraseToAnyPublisher()
     }
@@ -58,14 +59,18 @@ final class LocationManager: NSObject {
         return locationManager.authorizationStatus
     }
     
+    var hasBackgroundPermission: Bool {
+        return authorizationStatus == .authorizedAlways
+    }
+    
     private var isRequestingLocation = false
     
     // MARK: - Initialization
     private init(kakaoLocationService: KakaoLocationServiceProtocol = KakaoLocationService()) {
-            self.kakaoLocationService = kakaoLocationService
-            super.init()
-            setupLocationManager()
-        }
+        self.kakaoLocationService = kakaoLocationService
+        super.init()
+        setupLocationManager()
+    }
     
     private func setupLocationManager() {
         locationManager.delegate = self
@@ -74,7 +79,7 @@ final class LocationManager: NSObject {
         authorizationSubject.send(locationManager.authorizationStatus)
         
         if locationManager.authorizationStatus == .authorizedWhenInUse ||
-           locationManager.authorizationStatus == .authorizedAlways {
+            locationManager.authorizationStatus == .authorizedAlways {
             self.startUpdatingLocation()
         }
     }
@@ -100,33 +105,55 @@ final class LocationManager: NSObject {
         }
     }
     
+    func checkMotionPermission(completion: @escaping (Bool) -> Void) {
+        if CMPedometer.isStepCountingAvailable() {
+            // 현재 날짜로 임시 쿼리 생성
+            let now = Date()
+            pedometer.queryPedometerData(from: now.addingTimeInterval(-60), to: now) { _, error in
+                // 에러가 nil이면 권한이 있다고 가정
+                let hasPermission = error == nil
+                if hasPermission {
+                    NotificationCenterManager.motionPermissionGranted.post()
+                }
+                completion(hasPermission)
+            }
+        } else {
+            completion(false)
+        }
+    }
+    
+    func checkBackgroundPermission() -> Bool {
+        return authorizationStatus == .authorizedAlways
+    }
+    
+    
     /// 단일 위치 업데이트 요청
     func requestLocation() {
-            // 이미 요청 중이면 무시
-            guard !isRequestingLocation else {
-                print("이미 위치 정보를 요청 중입니다.")
-                return
-            }
+        // 이미 요청 중이면 무시
+        guard !isRequestingLocation else {
+            print("이미 위치 정보를 요청 중입니다.")
+            return
+        }
+        
+        // 요청 시작
+        isRequestingLocation = true
+        print("위치 정보 요청 시작")
+        
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
             
-            // 요청 시작
-            isRequestingLocation = true
-            print("위치 정보 요청 시작")
-            
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                guard let self = self else { return }
-                
-                if self.locationManager.authorizationStatus == .authorizedWhenInUse ||
-                   self.locationManager.authorizationStatus == .authorizedAlways {
-                    self.locationManager.requestLocation()
-                } else {
-                    let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
-                    DispatchQueue.main.async {
-                        self.locationSubject.send(completion: .failure(error))
-                        self.isRequestingLocation = false
-                    }
+            if self.locationManager.authorizationStatus == .authorizedWhenInUse ||
+                self.locationManager.authorizationStatus == .authorizedAlways {
+                self.locationManager.requestLocation()
+            } else {
+                let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
+                DispatchQueue.main.async {
+                    self.locationSubject.send(completion: .failure(error))
+                    self.isRequestingLocation = false
                 }
             }
         }
+    }
     
     /// 지속적인 위치 업데이트 시작
     func startUpdatingLocation() {
@@ -171,6 +198,8 @@ final class LocationManager: NSObject {
                         self?.destinationAddressSubject.send(completion: .failure(error))
                     }
                     completion?(nil)
+                    // 카카오 API 실패 시 애플 Geocoder로 대체
+                    self?.lookupAddressWithGeocoder(for: coordinate, purpose: purpose, completion: completion)
                 }
             }, receiveValue: { [weak self] response in
                 guard let self = self else { return }
@@ -192,45 +221,89 @@ final class LocationManager: NSObject {
                         self.destinationAddressSubject.send(completion: .failure(noAddressError))
                     }
                     completion?(nil)
+                    self.lookupAddressWithGeocoder(for: coordinate, purpose: purpose, completion: completion)
                 }
             })
             .store(in: &cancellables)
     }
     
-//    /// 주소 형식화
-//    func formattedAddress(from placemark: CLPlacemark) -> String {
-//        return [
-//            placemark.thoroughfare,  // 도로
-//            placemark.locality,      // 시/군/구
-//            placemark.administrativeArea  // 시/도
-//        ].compactMap { $0 }.joined(separator: ", ")
-//    }
+        /// 주소 형식화
+    func formattedAddress(from placemark: CLPlacemark) -> String {
+            // 시설명 우선 사용 (예: 건물 이름, 랜드마크 등)
+            if let name = placemark.name, !name.isEmpty {
+                return name
+            }
+            
+            // 도로명 주소 시도
+            if let thoroughfare = placemark.thoroughfare, !thoroughfare.isEmpty {
+                // 도로명 + 번지
+                if let subThoroughfare = placemark.subThoroughfare, !subThoroughfare.isEmpty {
+                    return "\(thoroughfare) \(subThoroughfare)"
+                }
+                return thoroughfare
+            }
+            
+            // 동/읍/면 사용
+            if let locality = placemark.locality, !locality.isEmpty {
+                if let subLocality = placemark.subLocality, !subLocality.isEmpty {
+                    return "\(locality) \(subLocality)"
+                }
+                return locality
+            }
+            
+            // 시/도 정보만이라도 표시
+            if let administrativeArea = placemark.administrativeArea, !administrativeArea.isEmpty {
+                return administrativeArea
+            }
+            
+            // 아무것도 없으면 기본 조합 시도
+            return [
+                placemark.thoroughfare,  // 도로
+                placemark.locality,      // 시/군/구
+                placemark.administrativeArea  // 시/도
+            ].compactMap { $0 }.joined(separator: ", ")
+        }
     
     // 백업용 Apple Geocoder 메서드
-//    private func lookupAddressWithGeocoder(for coordinate: CLLocationCoordinate2D, completion: ((String?) -> Void)? = nil) {
-//        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-//        let geocoder = CLGeocoder()
-//        
-//        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-//            if let error = error {
-//                print("Geocoder 오류: \(error.localizedDescription)")
-//                self?.addressSubject.send(completion: .failure(error))
-//                completion?(nil)
-//                return
-//            }
-//            
-//            if let placemark = placemarks?.first {
-//                let address = self?.formattedAddress(from: placemark) ?? "알 수 없는 주소"
-//                self?.addressSubject.send(address)
-//                completion?(address)
-//            } else {
-//                let noAddressError = NSError(domain: "com.app.location", code: 2,
-//                                            userInfo: [NSLocalizedDescriptionKey: "주소를 찾을 수 없습니다."])
-//                self?.addressSubject.send(completion: .failure(noAddressError))
-//                completion?(nil)
-//            }
-//        }
-//    }
+    private func lookupAddressWithGeocoder(for coordinate: CLLocationCoordinate2D, purpose: AddressLookupPurpose = .start, completion: ((String?) -> Void)? = nil) {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let geocoder = CLGeocoder()
+        
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            if let error = error {
+                print("Geocoder 오류: \(error.localizedDescription)")
+                switch purpose {
+                case .start:
+                    self?.startAddressSubject.send(completion: .failure(error))
+                case .destination:
+                    self?.destinationAddressSubject.send(completion: .failure(error))
+                }
+                completion?(nil)
+                return
+            }
+            
+            if let placemark = placemarks?.first {
+                let address = self?.formattedAddress(from: placemark) ?? "알 수 없는 주소"
+                switch purpose {
+                case .start:
+                    self?.startAddressSubject.send(address)
+                case .destination:
+                    self?.destinationAddressSubject.send(address)
+                }
+                completion?(address)
+            } else {
+                let noAddressError = NSError(domain: "com.app.location", code: 2,
+                                             userInfo: [NSLocalizedDescriptionKey: "주소를 찾을 수 없습니다."])
+                switch purpose {
+                case .start:
+                    self?.startAddressSubject.send(completion: .failure(noAddressError))
+                case .destination:
+                    self?.destinationAddressSubject.send(completion: .failure(noAddressError))
+                }
+                completion?(nil)
+            }
+        }
+    }
     
     /// 특정 위치로 맵 뷰의 중심과 줌 레벨 설정
     func centerMapView(_ mapView: MKMapView, at coordinate: CLLocationCoordinate2D, zoomLevel: CLLocationDistance = 1000) {
@@ -301,9 +374,21 @@ extension LocationManager: CLLocationManagerDelegate {
         let status = manager.authorizationStatus
         authorizationSubject.send(status)
         
+        // 권한 상태 확인
+        let isGranted = (status == .authorizedWhenInUse || status == .authorizedAlways)
+        // 권한 변경 알림 (항상 전송)
+        NotificationCenterManager.locationPermissionChanged.post()
+        
+        // 권한이 허용된 경우에만 허용 알림 전송
+        if isGranted {
+            NotificationCenterManager.locationPermissionGranted.post()
+            // 권한이 있으면 바로 위치 요청 시작
+            requestLocation()
+        }
+    
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
-            // 권한이 있으면 아무 작업도 수행하지 않음 (호출자가 적절한 작업 수행)
+            // 권한이 있으면 위치 요청 시작
             requestLocation()
         case .denied, .restricted:
             let error = NSError(domain: "com.app.location", code: 3, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 거부되었습니다."])
