@@ -27,12 +27,14 @@ struct KakaoCoord2AddressResponse: Codable {
         let region1DepthName: String
         let region2DepthName: String
         let region3DepthName: String
+        let mainAddressNo: String
         
         enum CodingKeys: String, CodingKey {
             case addressName = "address_name"
             case region1DepthName = "region_1depth_name"
             case region2DepthName = "region_2depth_name"
             case region3DepthName = "region_3depth_name"
+            case mainAddressNo = "main_address_no"
         }
     }
     

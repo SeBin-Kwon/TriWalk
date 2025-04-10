@@ -12,6 +12,7 @@ import CoreLocation
 protocol KakaoLocationServiceProtocol {
     func convertCoordinateToAddress(lat: Double, lng: Double) -> AnyPublisher<KakaoCoord2AddressResponse, Error>
     func searchPlaces(query: String) -> AnyPublisher<KakaoSearchResponse, Error>
+    func formatAddress(from response: KakaoCoord2AddressResponse) -> String?
 }
 
 final class KakaoLocationService: KakaoLocationServiceProtocol {
@@ -51,11 +52,17 @@ final class KakaoLocationService: KakaoLocationServiceProtocol {
                 return roadAddress.roadName
             }
             // 둘 다 없으면 전체 도로명 주소 반환
-            return roadAddress.addressName
+//            return roadAddress.addressName
         }
         
         // 지번 주소 사용 (도로명 주소가 없는 경우)
         if let address = document.address {
+            if !address.region3DepthName.isEmpty && !address.mainAddressNo.isEmpty {
+                return address.region3DepthName + " " + address.mainAddressNo
+            }
+            if !address.region3DepthName.isEmpty  {
+                return address.region3DepthName
+            }
             return address.addressName
         }
         

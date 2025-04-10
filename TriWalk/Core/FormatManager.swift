@@ -73,9 +73,9 @@ final class FormatManager: FormatManagerProtocol {
         // 소요 시간 계산
         let durationString = formattedDuration(seconds: walkRecord.duration)
         
-        // 출발지/도착지 설정 (약어 3글자로)
-        let startLocationAbbr = String(walkRecord.startAddress.prefix(3))
-        let endLocationAbbr = walkRecord.hasDestination ? String(walkRecord.endAddress.prefix(3)) : "어디든지"
+        // 출발지/도착지 설정
+        let startLocationAbbr = walkRecord.startAddress
+        let endLocationAbbr = walkRecord.hasDestination ? walkRecord.endAddress : "어디든지"
         
         // 데이터 구성
         return WalkCompletedData(

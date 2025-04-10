@@ -10,6 +10,11 @@ import MapKit
 import CoreLocation
 import Combine
 
+enum AddressLookupPurpose {
+    case start
+    case destination
+}
+
 // MARK: - LocationManager
 final class LocationManager: NSObject {
     // MARK: - Singleton
@@ -17,12 +22,15 @@ final class LocationManager: NSObject {
     
     // MARK: - Properties
     private let locationManager = CLLocationManager()
+    private let kakaoLocationService: KakaoLocationServiceProtocol
+    private var cancellables = Set<AnyCancellable>()
     private var lastLocationUpdate: Date = Date(timeIntervalSince1970: 0)
     private let walkingUpdateInterval: TimeInterval = 1.0
     
     // Publishers
     private let locationSubject = PassthroughSubject<CLLocation, Error>()
-    private let addressSubject = PassthroughSubject<String, Error>()
+    private let startAddressSubject = PassthroughSubject<String, Error>()
+    private let destinationAddressSubject = PassthroughSubject<String, Error>()
     private let authorizationSubject = CurrentValueSubject<CLAuthorizationStatus, Never>(.notDetermined)
     
     // MARK: - Public properties
@@ -30,8 +38,12 @@ final class LocationManager: NSObject {
         return locationSubject.eraseToAnyPublisher()
     }
     
-    var addressPublisher: AnyPublisher<String, Error> {
-        return addressSubject.eraseToAnyPublisher()
+    var startAddressPublisher: AnyPublisher<String, Error> {
+        return startAddressSubject.eraseToAnyPublisher()
+    }
+
+    var destinationAddressPublisher: AnyPublisher<String, Error> {
+        return destinationAddressSubject.eraseToAnyPublisher()
     }
     
     var authorizationPublisher: AnyPublisher<CLAuthorizationStatus, Never> {
@@ -46,11 +58,14 @@ final class LocationManager: NSObject {
         return locationManager.authorizationStatus
     }
     
+    private var isRequestingLocation = false
+    
     // MARK: - Initialization
-    private override init() {
-        super.init()
-        setupLocationManager()
-    }
+    private init(kakaoLocationService: KakaoLocationServiceProtocol = KakaoLocationService()) {
+            self.kakaoLocationService = kakaoLocationService
+            super.init()
+            setupLocationManager()
+        }
     
     private func setupLocationManager() {
         locationManager.delegate = self
@@ -87,20 +102,31 @@ final class LocationManager: NSObject {
     
     /// 단일 위치 업데이트 요청
     func requestLocation() {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
+            // 이미 요청 중이면 무시
+            guard !isRequestingLocation else {
+                print("이미 위치 정보를 요청 중입니다.")
+                return
+            }
             
-            if self.locationManager.authorizationStatus == .authorizedWhenInUse ||
-                self.locationManager.authorizationStatus == .authorizedAlways {
-                self.locationManager.requestLocation()
-            } else {
-                let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
-                DispatchQueue.main.async {
-                    self.locationSubject.send(completion: .failure(error))
+            // 요청 시작
+            isRequestingLocation = true
+            print("위치 정보 요청 시작")
+            
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                guard let self = self else { return }
+                
+                if self.locationManager.authorizationStatus == .authorizedWhenInUse ||
+                   self.locationManager.authorizationStatus == .authorizedAlways {
+                    self.locationManager.requestLocation()
+                } else {
+                    let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
+                    DispatchQueue.main.async {
+                        self.locationSubject.send(completion: .failure(error))
+                        self.isRequestingLocation = false
+                    }
                 }
             }
         }
-    }
     
     /// 지속적인 위치 업데이트 시작
     func startUpdatingLocation() {
@@ -133,34 +159,78 @@ final class LocationManager: NSObject {
     }
     
     /// 좌표로부터 주소 찾기
-    func lookupAddress(for coordinate: CLLocationCoordinate2D, completion: @escaping (String?) -> Void) {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        let geocoder = CLGeocoder()
-        
-        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-            if let error = error {
-                print("역지오코딩 오류: \(error.localizedDescription)")
-                completion(nil)
-                return
-            }
-            
-            if let placemark = placemarks?.first, let self = self {
-                let address = self.formattedAddress(from: placemark)
-                completion(address)
-            } else {
-                completion(nil)
-            }
-        }
+    func lookupAddress(for coordinate: CLLocationCoordinate2D, purpose: AddressLookupPurpose = .start, completion: ((String?) -> Void)? = nil) {
+        // 카카오 API 사용하여 주소 검색
+        kakaoLocationService.convertCoordinateToAddress(lat: coordinate.latitude, lng: coordinate.longitude)
+            .sink(receiveCompletion: { [weak self] result in
+                if case .failure(let error) = result {
+                    switch purpose {
+                    case .start:
+                        self?.startAddressSubject.send(completion: .failure(error))
+                    case .destination:
+                        self?.destinationAddressSubject.send(completion: .failure(error))
+                    }
+                    completion?(nil)
+                }
+            }, receiveValue: { [weak self] response in
+                guard let self = self else { return }
+                
+                if let formattedAddress = self.kakaoLocationService.formatAddress(from: response) {
+                    switch purpose {
+                    case .start:
+                        self.startAddressSubject.send(formattedAddress)
+                    case .destination:
+                        self.destinationAddressSubject.send(formattedAddress)
+                    }
+                    completion?(formattedAddress)
+                } else {
+                    let noAddressError = NSError(domain: "com.app.location", code: 2, userInfo: [NSLocalizedDescriptionKey: "주소를 찾을 수 없습니다."])
+                    switch purpose {
+                    case .start:
+                        self.startAddressSubject.send(completion: .failure(noAddressError))
+                    case .destination:
+                        self.destinationAddressSubject.send(completion: .failure(noAddressError))
+                    }
+                    completion?(nil)
+                }
+            })
+            .store(in: &cancellables)
     }
     
-    /// 주소 형식화
-    func formattedAddress(from placemark: CLPlacemark) -> String {
-        return [
-            placemark.thoroughfare,  // 도로
-            placemark.locality,      // 시/군/구
-            placemark.administrativeArea  // 시/도
-        ].compactMap { $0 }.joined(separator: ", ")
-    }
+//    /// 주소 형식화
+//    func formattedAddress(from placemark: CLPlacemark) -> String {
+//        return [
+//            placemark.thoroughfare,  // 도로
+//            placemark.locality,      // 시/군/구
+//            placemark.administrativeArea  // 시/도
+//        ].compactMap { $0 }.joined(separator: ", ")
+//    }
+    
+    // 백업용 Apple Geocoder 메서드
+//    private func lookupAddressWithGeocoder(for coordinate: CLLocationCoordinate2D, completion: ((String?) -> Void)? = nil) {
+//        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+//        let geocoder = CLGeocoder()
+//        
+//        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+//            if let error = error {
+//                print("Geocoder 오류: \(error.localizedDescription)")
+//                self?.addressSubject.send(completion: .failure(error))
+//                completion?(nil)
+//                return
+//            }
+//            
+//            if let placemark = placemarks?.first {
+//                let address = self?.formattedAddress(from: placemark) ?? "알 수 없는 주소"
+//                self?.addressSubject.send(address)
+//                completion?(address)
+//            } else {
+//                let noAddressError = NSError(domain: "com.app.location", code: 2,
+//                                            userInfo: [NSLocalizedDescriptionKey: "주소를 찾을 수 없습니다."])
+//                self?.addressSubject.send(completion: .failure(noAddressError))
+//                completion?(nil)
+//            }
+//        }
+//    }
     
     /// 특정 위치로 맵 뷰의 중심과 줌 레벨 설정
     func centerMapView(_ mapView: MKMapView, at coordinate: CLLocationCoordinate2D, zoomLevel: CLLocationDistance = 1000) {

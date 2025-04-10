@@ -20,7 +20,8 @@ final class NetworkManager {
             url,
             method: endpoint.method,
             parameters: endpoint.parameters,
-            encoding: URLEncoding(destination: .queryString)
+            encoding: URLEncoding(destination: .queryString),
+            headers: endpoint.headers
         )
         .validate()
         .responseData { response in

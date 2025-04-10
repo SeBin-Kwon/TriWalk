@@ -50,16 +50,21 @@ final class WalkSetupViewController: BaseViewController {
         setupLongPressGesture()
         bindViewModel()
         // 즉시 현재 위치 요청
-        if let location = LocationManager.shared.currentLocation {
-            addAnnotation(coordinate: location.coordinate, title: "출발지")
-            
-            // 지도 중심 설정
-            let region = MKCoordinateRegion(
-                center: location.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            )
-            mapView.setRegion(region, animated: false)
-        }
+//        if let location = LocationManager.shared.currentLocation {
+//            addAnnotation(coordinate: location.coordinate, title: "출발지")
+//            
+//            // 지도 중심 설정
+//            let region = MKCoordinateRegion(
+//                center: location.coordinate,
+//                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+//            )
+//            mapView.setRegion(region, animated: false)
+//        }
+//        viewDidAppearSubject.send(())
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         viewDidAppearSubject.send(())
     }
 
@@ -193,14 +198,7 @@ final class WalkSetupViewController: BaseViewController {
                     return
                 }
                 
-                // 나머지 모든 알림은 토스트로 표시
-                if alertInfo.title == "도착지 설정 완료" {
-                    ToastView.showLocation(in: owner, message: alertInfo.message)
-                } else if alertInfo.title.contains("오류") || alertInfo.title.contains("실패") {
-                    ToastView.showAlert(in: owner, message: alertInfo.message)
-                } else {
-                    ToastView.showInfo(in: owner, message: alertInfo.message)
-                }
+                ToastView.showInfo(in: self, message: alertInfo.message)
             }
             .store(in: &cancellables)
         
@@ -293,5 +291,6 @@ extension WalkSetupViewController: DestinationSearchViewControllerDelegate {
             )
             mapView.setRegion(region, animated: true)
         }
+        removeAnnotations(withTitle: "도착지")
     }
 }

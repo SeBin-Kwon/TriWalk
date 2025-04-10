@@ -47,35 +47,92 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     private let tripTypeSubject = CurrentValueSubject<TripType, Never>(.roundTrip)
     private var destinationAnnotation: (coordinate: CLLocationCoordinate2D, title: String)?
     
-    func transform(input: Input) -> Output {
-        cancellables.removeAll() 
-        
-        LocationManager.shared.locationPublisher
+    private var locationSubscription: AnyCancellable?
+    private var addressSubscription: AnyCancellable?
+    private var hasRequestedInitialLocation = false
+    
+    override init() {
+        super.init()
+        setupLocationSubscriptions()
+    }
+    
+    deinit {
+        print("WalkSetupViewModel 해제됨")
+    }
+    
+    private func setupLocationSubscriptions() {
+        // 위치 업데이트 구독
+        locationSubscription = LocationManager.shared.locationPublisher
             .catch { error -> Empty<CLLocation, Never> in
                 print("위치 서비스 오류: \(error.localizedDescription)")
                 self.userAddressSubject.send("위치를 찾을 수 없습니다")
                 return Empty()
             }
-            .withUnretained(self)
-            .sink { owner, location in
-                owner.userLocationSubject.send(location)
-                LocationManager.shared.lookupAddress(for: location.coordinate) { address in
-                            if let address = address {
-                                owner.userAddressSubject.send(address)
-                            }
-                        }
+            .sink { [weak self] location in
+                guard let self = self else { return }
+                self.userLocationSubject.send(location)
             }
-            .store(in: &cancellables)
         
         // 주소 업데이트 구독
-        LocationManager.shared.addressPublisher
+        addressSubscription = LocationManager.shared.startAddressPublisher
             .catch { error -> Empty<String, Never> in
-                print("주소 검색 오류: \(error.localizedDescription)")
+                print("출발지 주소 검색 오류: \(error.localizedDescription)")
+                return Empty()
+            }
+            .sink { [weak self] address in
+                guard let self = self else { return }
+                self.userAddressSubject.send(address)
+            }
+    }
+    
+    func transform(input: Input) -> Output {
+        cancellables.removeAll()
+        
+//        LocationManager.shared.locationPublisher
+//            .catch { error -> Empty<CLLocation, Never> in
+//                print("위치 서비스 오류: \(error.localizedDescription)")
+//                self.userAddressSubject.send("위치를 찾을 수 없습니다")
+//                return Empty()
+//            }
+//            .withUnretained(self)
+//            .sink { owner, location in
+//                owner.userLocationSubject.send(location)
+//                LocationManager.shared.lookupAddress(for: location.coordinate) { address in
+//                            if let address = address {
+//                                owner.userAddressSubject.send(address)
+//                            }
+//                        }
+//            }
+//            .store(in: &cancellables)
+        
+        // 주소 업데이트 구독
+//        LocationManager.shared.startAddressPublisher
+//            .catch { error -> Empty<String, Never> in
+//                print("출발지 주소 검색 오류: \(error.localizedDescription)")
+//                return Empty()
+//            }
+//            .withUnretained(self)
+//            .sink { owner, address in
+//                owner.userAddressSubject.send(address)
+//            }
+//            .store(in: &cancellables)
+
+        // 도착지 주소 구독
+        LocationManager.shared.destinationAddressPublisher
+            .catch { error -> Empty<String, Never> in
+                print("도착지 주소 검색 오류: \(error.localizedDescription)")
                 return Empty()
             }
             .withUnretained(self)
             .sink { owner, address in
-                owner.userAddressSubject.send(address)
+                // 도착지 버튼 제목 업데이트
+                owner.destinationTitleSubject.send(address)
+                
+                // 알림 표시
+                owner.showAlertSubject.send((
+                    title: "도착지 설정 완료",
+                    message: "\(address)을(를) 도착지로 설정했습니다."
+                ))
             }
             .store(in: &cancellables)
         
@@ -106,19 +163,14 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
                     // 위치 정보 바로 전달
                     owner.userLocationSubject.send(location)
                     
-                    // 주소 즉시 요청
-                    LocationManager.shared.lookupAddress(for: location.coordinate) { address in
-                        if let address = address {
-                            DispatchQueue.main.async {
-                                owner.userAddressSubject.send(address)
-                            }
-                        }
+                    if owner.userAddressSubject.value.isEmpty || owner.userAddressSubject.value == "위치 정보를 불러오는 중..." {
+                        LocationManager.shared.lookupAddress(for: location.coordinate, purpose: .start)
                     }
-                } else {
-                    // 현재 위치가 없으면 위치 요청 시작
+                } else if !owner.hasRequestedInitialLocation {
+                    // 현재 위치가 없고 아직 요청하지 않았을 때만 위치 요청
                     owner.requestCurrentLocation()
-                }
-            }
+                    owner.hasRequestedInitialLocation = true
+                }            }
             .store(in: &cancellables)
         
         input.startButtonTapped
@@ -212,7 +264,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
     
     // 현재 위치 요청
     private func requestCurrentLocation() {
-        print("현재 위치 요청 시작")
+            print("현재 위치 요청 시작")
             userAddressSubject.send("위치 정보를 불러오는 중...")
             
             if LocationManager.shared.authorizationStatus == .authorizedWhenInUse ||
@@ -226,38 +278,15 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
                     message: "현재 위치를 사용하려면 위치 서비스 권한을 허용해주세요."
                 ))
             }
-    }
-    
+        }
+
     // 길게 누르기 처리
     private func handleLongPress(at coordinate: CLLocationCoordinate2D) {
         // 도착지 설정
         destinationAnnotationSubject.send((coordinate: coordinate, title: "도착지"))
         
-        // 주소 찾기 요청
-        LocationManager.shared.lookupAddress(for: coordinate) { address in
-            if let address = address {
-                print("도착지 주소: \(address)")
-            }
-        }
-        
-        // 임시 구현: 직접 주소 찾기 호출
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        let geocoder = CLGeocoder()
-        
-        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-            guard let self = self, let placemark = placemarks?.first else { return }
-            
-            let name = placemark.name ?? "선택한 위치"
-            
-            // 도착지 버튼 제목 업데이트
-            self.destinationTitleSubject.send(String(name.prefix(3)))
-            
-            // 알림 표시
-            self.showAlertSubject.send((
-                title: "도착지 설정 완료",
-                message: "\(name)을(를) 도착지로 설정했습니다."
-            ))
-        }
+        // 주소 찾기 요청 - 도착지 목적으로 지정
+        LocationManager.shared.lookupAddress(for: coordinate, purpose: .destination)
     }
     
     // 목적지 설정
@@ -268,7 +297,7 @@ final class WalkSetupViewModel: BaseViewModel, ViewModelType {
             
             // 도착지 버튼 제목 업데이트
             let name = placemark.name ?? "선택한 위치"
-            destinationTitleSubject.send(String(name.prefix(3)))
+            destinationTitleSubject.send(name)
         } else {
             // 어디든지 옵션 선택
             destinationTitleSubject.send("어디든지")
