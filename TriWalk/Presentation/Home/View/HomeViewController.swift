@@ -144,6 +144,7 @@ class HomeViewController: BaseViewController {
         
         let output = homeViewModel.transform(input: input)
         
+        
         // 날씨 데이터 수신
         output.weatherData
             .receive(on: RunLoop.main)

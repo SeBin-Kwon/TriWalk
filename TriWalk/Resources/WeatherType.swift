@@ -107,7 +107,7 @@ struct WeatherMessage {
         case (.sunny, .cold):
             return "맑고 상쾌해요!\n따뜻하게 입고 산책 여행 어때요?"
         case (.sunny, _):
-            return "화창한 날씨, 산책 여행 떠나기 좋은 날이에요!"
+            return "화창한 날씨,\n산책 여행 떠나기 좋은 날이에요!"
             
             // 구름 조금
         case (.partlyCloudy, .hot):

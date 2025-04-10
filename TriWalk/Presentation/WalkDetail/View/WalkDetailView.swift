@@ -460,7 +460,7 @@ final class WalkDetailView: BaseView {
         
         // 미세먼지 상태 텍스트 설정 - WeatherCardCell과 동일한 형식으로 표시
         let dustStatusText = NSMutableAttributedString(string: "미세먼지 등급 ", attributes: [
-            NSAttributedString.Key.foregroundColor: UIColor.contentPrimary,
+            NSAttributedString.Key.foregroundColor: Color.darkContent,
             NSAttributedString.Key.font: Font.bodyMedium
         ])
         
