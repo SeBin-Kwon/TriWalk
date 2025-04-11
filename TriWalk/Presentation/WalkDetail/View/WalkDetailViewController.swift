@@ -39,14 +39,6 @@ final class WalkDetailViewController: BaseViewController {
     private func setupNavigationBar() {
         title = "산책 기록"
         
-        let backButton = UIBarButtonItem(
-            image: UIImage(systemName: "chevron.left"),
-            style: .plain,
-            target: self,
-            action: #selector(backButtonTapped)
-        )
-        navigationItem.leftBarButtonItem = backButton
-        
         // 삭제 액션 시트 버튼 추가
         let deleteButton = UIBarButtonItem(
             image: UIImage(systemName: "minus.circle"),
@@ -122,9 +114,6 @@ final class WalkDetailViewController: BaseViewController {
     }
     
     // MARK: - Actions
-    @objc private func backButtonTapped() {
-        navigationController?.popViewController(animated: true)
-    }
     
     @objc private func deleteButtonTapped() {
         // 공유 액션은 ViewModel에 위임
@@ -132,15 +121,9 @@ final class WalkDetailViewController: BaseViewController {
         alertService.showDeleteAlert(on: self, title: "삭제 확인", message: "산책 기록을 삭제할까요?") { [weak self] in
             self?.viewModel.deleteWalkRecord()
         }
-//        viewModel.deleteWalkRecord()
     }
     
     // MARK: - Private Methods
-//    private func showAlert(title: String, message: String) {
-//        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-//        alert.addAction(UIAlertAction(title: "확인", style: .default))
-//        present(alert, animated: true)
-//    }
     
     /// 지도에 산책 경로 표시
     private func displayRoute(walkRecord: WalkRecord, coordinates: [CLLocationCoordinate2D]) {
