@@ -146,7 +146,7 @@ final class WalkTrackingSheetView: BaseView, UICollectionViewDelegate {
     let addPhotoButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .systemGray5
-        button.tintColor = .contentPrimary
+        button.tintColor = Color.darkContent
         button.layer.cornerRadius = 8
         button.setImage(UIImage(systemName: "plus"), for: .normal)
         return button
@@ -240,7 +240,7 @@ final class WalkTrackingSheetView: BaseView, UICollectionViewDelegate {
         metricsStackView.snp.makeConstraints { make in
             make.top.equalToSuperview().inset(25)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(60).priority(.high)
+            make.height.equalTo(50).priority(.high)
         }
         
         // 걸음수 레이블들
@@ -290,7 +290,7 @@ final class WalkTrackingSheetView: BaseView, UICollectionViewDelegate {
         timeContainerView.snp.makeConstraints { make in
             make.top.equalTo(metricsStackView.snp.bottom)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(50)
+            make.height.equalTo(48)
         }
         
         timeLabel.snp.makeConstraints { make in

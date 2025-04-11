@@ -463,7 +463,8 @@ final class WalkDetailView: BaseView {
         
         // 통계 정보
         stepsValueLabel.text = "\(walkRecord.steps) 걸음"
-        distanceValueLabel.text = String(format: "%.1f km", walkRecord.distance)
+        let (distanceValue, distanceUnit) = FormatManager.shared.formattedDistance(walkRecord.distance)
+        distanceValueLabel.text = "\(distanceValue) \(distanceUnit)"
         caloriesValueLabel.text = "\(Int(walkRecord.calories)) kcal"
         
         timeValueLabel.text = FormatManager.shared.formattedDuration(seconds: walkRecord.duration)

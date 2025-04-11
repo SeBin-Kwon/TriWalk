@@ -48,7 +48,7 @@ final class WalkTrackingSheetViewController: BaseViewController {
                 
                 // detent 설정
                 sheet.detents = [
-                    .custom(identifier: minimizedId) { _ in return 60 },   // 최소 높이
+                    .custom(identifier: minimizedId) { _ in return 65 },   // 최소 높이
                     .custom(identifier: normalId) { _ in return 300 }      // 일반 높이
                 ]
                 
