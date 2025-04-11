@@ -279,10 +279,12 @@ class HomeViewController: BaseViewController {
             make.top.leading.equalTo(view.safeAreaLayoutGuide).inset(Spacing.screenMargin)
         }
         
+//        collectionView.backgroundColor = .red
+        
         collectionView.snp.makeConstraints { make in
             make.center.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(480)
+            make.height.equalTo(500)
         }
         
         startButton.snp.makeConstraints { make in
@@ -429,7 +431,7 @@ extension HomeViewController: UICollectionViewDelegate {
         
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 16, bottom: 16, trailing: 16)
         section.interGroupSpacing = 12
         
         section.visibleItemsInvalidationHandler = { (items, offset, environment) in
@@ -439,7 +441,7 @@ extension HomeViewController: UICollectionViewDelegate {
                 let minScale: CGFloat = 0.9
                 let maxScale: CGFloat = 1.0
                 let scale = max(maxScale - (distanceFromCenter / environment.container.contentSize.width) * 0.5, minScale)
-                item.transform = CGAffineTransform(scaleX: scale, y: scale)
+                item.transform = CGAffineTransform(scaleX: scale, y: scale * 0.99)
                 
                 // 선택적: 중앙에서 멀어질수록 투명해지는 효과
                 let minAlpha: CGFloat = 0.7

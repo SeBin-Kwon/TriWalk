@@ -188,9 +188,9 @@ final class TicketView: BaseView {
     func configure(with data: WalkCompletedData) {
         dateLabel.text = data.date
         tripTypeLabel.text = data.tripType
-        startLocationLabel.text = data.startLocation
+        startLocationLabel.text = String(data.startLocation.prefix(4))
         startTimeLabel.text = data.startTime
-        endLocationLabel.text = data.endLocation
+        endLocationLabel.text = String(data.endLocation.prefix(4))
         endTimeLabel.text = data.endTime
         stepsValueLabel.text = "\(data.steps)"
         caloriesValueLabel.text = "\(data.calories) kcal"
@@ -255,7 +255,7 @@ final class TicketView: BaseView {
         // 날짜 컨테이너
         dateContainerView.snp.makeConstraints { make in
             make.top.equalTo(ticketImage).offset(Spacing.l)
-            make.horizontalEdges.equalToSuperview().inset(42)
+            make.horizontalEdges.equalToSuperview().inset(Spacing.l)
             make.height.equalTo(24)
         }
         
@@ -270,7 +270,7 @@ final class TicketView: BaseView {
         // 위치 컨테이너
         locationContainerView.snp.makeConstraints { make in
             make.bottom.equalTo(divider1.snp.top).offset(-Spacing.m)
-            make.horizontalEdges.equalTo(ticketImage).inset(42)
+            make.horizontalEdges.equalTo(ticketImage).inset(Spacing.l)
             make.height.equalTo(60)
         }
         

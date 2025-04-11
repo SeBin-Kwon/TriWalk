@@ -456,9 +456,9 @@ final class WalkDetailView: BaseView {
         dateLabel.text = FormatManager.shared.formattedDate(walkRecord.date)
         
         // 위치 정보
-        startLocationLabel.text = walkRecord.startAddress
+        startLocationLabel.text = String(walkRecord.startAddress.prefix(4))
         startTimeLabel.text = FormatManager.shared.formattedTime(walkRecord.startTime)
-        endLocationLabel.text = walkRecord.endAddress
+        endLocationLabel.text = String(walkRecord.endAddress.prefix(4))
         endTimeLabel.text = FormatManager.shared.formattedTime(walkRecord.endTime)
         
         // 통계 정보

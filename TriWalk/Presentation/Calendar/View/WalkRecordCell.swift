@@ -189,10 +189,10 @@ class WalkRecordCell: UITableViewCell {
     func configure(with walkRecord: WalkRecord) {
         dateLabel.text = FormatManager.shared.formattedDate(walkRecord.date)
         
-        startLocationLabel.text = walkRecord.startAddress.count > 3 ? String(walkRecord.startAddress.prefix(3)) : walkRecord.startAddress
+        startLocationLabel.text = String(walkRecord.startAddress.prefix(4))
         startTimeLabel.text = FormatManager.shared.formattedTime(walkRecord.startTime)
         
-        endLocationLabel.text = walkRecord.endAddress.count > 3 ? String(walkRecord.endAddress.prefix(3)) : walkRecord.endAddress
+        endLocationLabel.text = String(walkRecord.endAddress.prefix(4))
         endTimeLabel.text = FormatManager.shared.formattedTime(walkRecord.endTime)
         
         durationLabel.text = FormatManager.shared.formattedDuration(seconds: walkRecord.duration)

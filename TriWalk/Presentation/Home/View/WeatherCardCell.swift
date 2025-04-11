@@ -30,8 +30,8 @@ final class WeatherCardCell: BaseCollectionViewCell {
     
     private let dateLabel = {
         let label = UILabel()
-        label.font = Font.heading3
-        label.textColor = Color.contentPrimary
+        label.font = Font.font(size: 16, weight: .bold)
+        label.textColor = Color.textSecondary
         label.textAlignment = .left
         return label
     }()
@@ -66,12 +66,12 @@ final class WeatherCardCell: BaseCollectionViewCell {
         }
         
         temperatureLabel.snp.makeConstraints { make in
-            make.top.equalTo(dateLabel.snp.bottom).offset(8)
+            make.top.equalTo(dateLabel.snp.bottom).offset(16)
             make.leading.equalToSuperview().inset(24)
         }
         
         weatherStatusLabel.snp.makeConstraints { make in
-            make.top.equalTo(temperatureLabel.snp.bottom).offset(4)
+            make.top.equalTo(temperatureLabel.snp.bottom).offset(6)
             make.leading.equalToSuperview().inset(24)
         }
         
@@ -89,7 +89,7 @@ final class WeatherCardCell: BaseCollectionViewCell {
         
         let dustStatusText = NSMutableAttributedString(string: "미세먼지 등급 ", attributes: [
             NSAttributedString.Key.foregroundColor: UIColor.contentPrimary,
-            NSAttributedString.Key.font: Font.bodyMedium
+            NSAttributedString.Key.font: Font.font(size: 15, weight: .medium)
         ])
         
         let gradeText = data.dustGrade.description
@@ -97,7 +97,7 @@ final class WeatherCardCell: BaseCollectionViewCell {
         
         let gradeAttributedString = NSAttributedString(string: gradeText, attributes: [
             NSAttributedString.Key.foregroundColor: gradeColor,
-            NSAttributedString.Key.font: Font.font(size: 16, weight: .bold)
+            NSAttributedString.Key.font: Font.font(size: 15, weight: .bold)
         ])
             
         dustStatusText.append(gradeAttributedString)
