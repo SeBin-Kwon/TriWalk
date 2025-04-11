@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import CoreLocation
+import RealmSwift
 
 final class HomeViewModel: BaseViewModel, ViewModelType {
     // MARK: - Input-Output 정의
@@ -43,6 +44,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
     private let walkRecordsRefreshInterval: TimeInterval = 300
     
     private let isDeleteSubject = PassthroughSubject<Void, Never>()
+    private var notificationCancellable: AnyCancellable?
     
     // MARK: - Initialization
     init(weatherService: WeatherServiceProtocol = WeatherService(),
@@ -54,20 +56,25 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         self.locationManager = locationManager
         self.walkRepository = walkRepository
         super.init()
-        
-        NotificationCenterManager.walkRecordDeleted.publisher()
+        setupNotification()
+    }
+    
+    private func setupNotification() {
+        notificationCancellable = NotificationCenterManager.walkRecordDeleted.publisher()
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .withUnretained(self)
             .sink { owner, _ in
                 owner.loadWalkRecords()
                 owner.isDeleteSubject.send()
             }
-            .store(in: &cancellables)
     }
     
     // MARK: - Transform Method
     func transform(input: Input) -> Output {
+        cancellables.removeAll()
         // 화면이 나타날 때 또는 새로고침 할 때 날씨 데이터 로드
         Publishers.Merge(input.viewDidAppear, input.reloadTrigger)
+                .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
                 .withUnretained(self)
                 .sink { owner, _ in
                     // 위치 권한 확인
@@ -132,14 +139,22 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
     }
 
     private func loadWalkRecords() {
+        guard let realm = try? Realm() else {
+            print("Realm 초기화 실패")
+            walkRecordsSubject.send([])
+            return
+        }
+        try? realm.refresh()
+        
         guard let allWalks = walkRepository.getAllWalks() else {
             print("산책 기록을 불러올 수 없습니다.")
             walkRecordsSubject.send([])
             return
         }
         
+        let validWalks = allWalks.filter { !$0.isInvalidated }
         // 최근 산책 기록 5개만 가져오기
-        let recentWalks = Array(allWalks.prefix(5)).reversed()
+        let recentWalks = Array(validWalks.prefix(5)).reversed()
         print("산책 기록 로드 완료: \(recentWalks.count)개의 기록을 찾았습니다.")
         lastWalkRecordsLoadTime = Date()
         walkRecordsSubject.send(Array(recentWalks))

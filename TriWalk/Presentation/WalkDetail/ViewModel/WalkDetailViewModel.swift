@@ -75,35 +75,18 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
     }
     
     // MARK: - Public Methods
-    
-    /// 산책 기록 공유
     func deleteWalkRecord() {
-        guard let walkRecord = walkRepository.getWalk(id: walkId) else {
-            errorSubject.send("삭제할 산책 기록을 찾을 수 없습니다.")
-            return
-        }
-        
-        for photo in walkRecord.photos {
-            photo.deleteImageFile()
-            print("삭제된 사진 파일: \(photo.imagePath)")
-        }
-        
         walkRepository.deleteWalk(id: walkId)
-            .sink { [weak self] completion in
-                switch completion {
-                case .finished:
-                    // 삭제 성공 시 완료 신호 전송
-                    self?.deleteCompletedSubject.send(())
-                    // 삭제 알림 전송
-                    NotificationCenterManager.walkRecordDeleted.post()
-                case .failure(let error):
-                    // 삭제 실패 시 에러 메시지 전송
-                    self?.errorSubject.send("산책 기록 삭제에 실패했습니다: \(error.localizedDescription)")
-                }
-            } receiveValue: { _ in
-                // Void 반환이라 별도 처리 불필요
-            }
-            .store(in: &cancellables)
+                .sink(receiveCompletion: { [weak self] completion in
+                    switch completion {
+                    case .finished:
+                        self?.deleteCompletedSubject.send(())
+                        NotificationCenterManager.walkRecordDeleted.post()
+                    case .failure(let error):
+                        self?.errorSubject.send("산책 기록 삭제에 실패했습니다: \(error.localizedDescription)")
+                    }
+                }, receiveValue: { _ in })
+                .store(in: &cancellables)
         }
     
     // MARK: - Private Methods

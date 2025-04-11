@@ -110,6 +110,7 @@ class WalkRepository: WalkRepositoryProtocol {
     }
     
     // 산책 기록 삭제
+    // WalkRepository.swift
     func deleteWalk(id: String) -> AnyPublisher<Void, Error> {
         return Future<Void, Error> { [weak self] promise in
             guard let self = self else {
@@ -122,16 +123,27 @@ class WalkRepository: WalkRepositoryProtocol {
                 return
             }
             
-            // 사진 파일 삭제
-            for photo in walkRecord.photos {
-                photo.deleteImageFile()
-            }
+            // 중요: 객체가 삭제되기 전에 이미지 경로들을 복사해둠
+            let imagePaths = Array(walkRecord.photos).map { $0.imagePath }
             
-            // Realm 객체 삭제
+            // 이제 객체 삭제
             self.realmRepository.delete(walkRecord) { result in
                 switch result {
                 case .success:
+                    // 객체 삭제 성공 후 파일 시스템에서 이미지 파일 삭제
+                    for path in imagePaths where !path.isEmpty {
+                        do {
+                            let fileURL = URL(fileURLWithPath: path)
+                            if FileManager.default.fileExists(atPath: fileURL.path) {
+                                try FileManager.default.removeItem(at: fileURL)
+                            }
+                        } catch {
+                            print("이미지 파일 삭제 실패: \(path), 오류: \(error)")
+                        }
+                    }
+                    
                     promise(.success(()))
+                    
                 case .failure(let error):
                     promise(.failure(error))
                 }

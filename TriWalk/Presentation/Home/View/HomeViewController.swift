@@ -189,13 +189,9 @@ class HomeViewController: BaseViewController {
                         walkRecord: record
                     )
                 }
-                
-                // ID 기반 비교 대신 실제 내용 변경 확인
-                if !owner.areHistoryCardsEqual(owner.historyCards, newHistoryCards) {
-                    owner.historyCards = newHistoryCards
-                    owner.reorganizeCards()
-                    owner.updateSnapshot()
-                }
+                owner.historyCards = newHistoryCards
+                owner.reorganizeCards()
+                owner.updateSnapshot()
             }
             .store(in: &cancellables)
         
