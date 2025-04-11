@@ -35,6 +35,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         let isPaused: AnyPublisher<Bool, Never>
         let walkRecord: AnyPublisher<WalkRecord, Never>
         let permissionStatus: AnyPublisher<PermissionStatus, Never>
+        let showFinishAlert: AnyPublisher<Void, Never>
     }
     
     // MARK: - Private Subjects
@@ -57,20 +58,28 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private var startAddress: String?
     private var destinationAddress: String?
     private var tripType: TripType = .roundTrip
-    private let walkRepository: WalkRepositoryProtocol = WalkRepository()
+    private let walkRepository: WalkRepositoryProtocol
     // 사용자 정보 (칼로리 계산에 필요)
     private let userWeight: Double = 70.0  // kg 단위, 기본값 (나중에 설정에서 변경 가능하게 만들 수 있음)
     private var savedWalkRecord: WalkRecord?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
     private var lastStartLocationLookup: Bool = false
     private let permissionsSubject = PassthroughSubject<PermissionStatus, Never>()
+    private let showFinishAlertSubject = PassthroughSubject<Void, Never>()
     
     // MARK: - Initialization
-    override init() {
+    init(walkRepository: WalkRepositoryProtocol = WalkRepository()) {
+        self.walkRepository = walkRepository
         super.init()
         setupLocationTracking()
         setupBackgroundNotifications()
     }
+    
+//    override init() {
+//        super.init()
+//        setupLocationTracking()
+//        setupBackgroundNotifications()
+//    }
     
     deinit {
         stopTracking()
@@ -95,12 +104,16 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             .store(in: &cancellables)
         
         // 종료 버튼
-        input.finishButtonTapped
-            .withUnretained(self)
-            .sink { owner, _ in
-                owner.finishTracking()
-            }
+        let finishTrigger = input.finishButtonTapped
+            .map { _ in () }
+            .eraseToAnyPublisher()
+        
+        finishTrigger
+            .subscribe(showFinishAlertSubject)
             .store(in: &cancellables)
+        
+        let walkRecord = walkRecordSubject
+            .eraseToAnyPublisher()
         
         return Output(
             stepsCount: stepsCountSubject.eraseToAnyPublisher(),
@@ -109,7 +122,8 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             time: timeSubject.eraseToAnyPublisher(),
             isPaused: isPausedSubject.eraseToAnyPublisher(),
             walkRecord: walkRecordSubject.eraseToAnyPublisher(),
-            permissionStatus: permissionsSubject.eraseToAnyPublisher()
+            permissionStatus: permissionsSubject.eraseToAnyPublisher(),
+            showFinishAlert: showFinishAlertSubject.eraseToAnyPublisher()
         )
     }
     
@@ -270,7 +284,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     }
     
     // 종료 및 저장 로직
-    private func finishTracking() {
+    func finishTracking(with photos: [CapturedPhoto]) {
         stopTracking()
         
         // 산책 종료 시간 기록
@@ -309,7 +323,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         // 데이터 저장 (주소 및 이동 방식 정보 포함)
         walkRepository.saveWalk(
             walkRecord,
-            photos: [], // 사진 기능 미룸
+            photos: photos, // 사진
             routeCoordinates: finalRouteCoordinates,
             startAddress: startAddress,
             destinationAddress: destinationAddress,

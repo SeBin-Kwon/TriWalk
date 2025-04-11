@@ -19,7 +19,7 @@ class WalkPhoto: Object {
     @Persisted(originProperty: "photos") var walk: LinkingObjects<WalkRecord>
     
     // 이미지를 파일 시스템에 저장하고 경로 반환
-    convenience init(image: UIImage, coordinate: CLLocationCoordinate2D? = nil) {
+    convenience init(image: UIImage, coordinate: CLLocationCoordinate2D? = nil, captureDate: Date = Date()) {
         self.init()
         
         // 좌표 정보 저장 (있는 경우)
@@ -27,6 +27,7 @@ class WalkPhoto: Object {
             self.latitude = coordinate.latitude
             self.longitude = coordinate.longitude
         }
+        self.captureDate = captureDate
         
         // 이미지를 파일 시스템에 저장
         self.imagePath = saveImageToFileSystem(image)
@@ -51,7 +52,9 @@ class WalkPhoto: Object {
         // 이미지를 JPEG로 변환하여 저장
         if let data = image.jpegData(compressionQuality: 0.7) {
             try? data.write(to: fileURL)
-            return fileURL.path
+            let relativePath = "WalkPhotos/\(fileName)"
+            print("이미지 저장 경로: \(fileURL.path), 상대 경로: \(relativePath)")
+            return relativePath
         }
         
         return ""
@@ -59,21 +62,27 @@ class WalkPhoto: Object {
     
     // 파일 시스템에서 이미지 로드
     func getImage() -> UIImage? {
-        guard !imagePath.isEmpty else { return nil }
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileURL = documentsDirectory.appendingPathComponent(imagePath)
         
-        let fileURL = URL(fileURLWithPath: imagePath)
-        if let data = try? Data(contentsOf: fileURL) {
-            return UIImage(data: data)
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            if let data = try? Data(contentsOf: fileURL) {
+                print("이미지 로드 성공: \(fileURL.path)")
+                return UIImage(data: data)
+            } else {
+                print("데이터 로드 실패: \(fileURL.path)")
+            }
+        } else {
+            print("파일 없음: \(fileURL.path)")
         }
-        
         return nil
     }
     
     // 파일 시스템에서 이미지 삭제
     func deleteImageFile() {
         guard !imagePath.isEmpty else { return }
-        
-        let fileURL = URL(fileURLWithPath: imagePath)
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileURL = documentsDirectory.appendingPathComponent(imagePath)
         try? FileManager.default.removeItem(at: fileURL)
     }
 }

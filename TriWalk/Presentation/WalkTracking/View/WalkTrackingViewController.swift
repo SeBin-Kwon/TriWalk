@@ -11,6 +11,14 @@ import CoreLocation
 import CoreMotion
 import Combine
 import SnapKit
+import PhotosUI
+
+struct CapturedPhoto {
+    let image: UIImage
+    let location: CLLocation
+    let captureDate: Date
+}
+
 
 final class WalkTrackingViewController: BaseViewController {
     
@@ -25,6 +33,8 @@ final class WalkTrackingViewController: BaseViewController {
     private var startAddress: String?
     private var destinationAddress: String?
     private var tripType: TripType?
+    private var capturedPhotos: [CapturedPhoto] = []
+    private var photoAnnotations: [PhotoAnnotation] = []
     
     // MARK: - UI Components
     private let mapView: MKMapView = {
@@ -67,9 +77,57 @@ final class WalkTrackingViewController: BaseViewController {
         )
     }
     
+    func showCamera() {
+        // 카메라 사용 가능 여부 먼저 체크
+        if !UIImagePickerController.isSourceTypeAvailable(.camera) {
+            // 시트 컨트롤러에서 얼럿 표시
+            if let sheetVC = walkTrackingSheetVC {
+                let alert = UIAlertController(
+                    title: "카메라 사용 불가",
+                    message: "이 기기에서는 카메라를 사용할 수 없습니다.",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                sheetVC.present(alert, animated: true)
+            }
+            return
+        }
+        
+        // 카메라 권한 확인
+        checkCameraPermission { [weak self] granted in
+            guard let self = self, granted else { return }
+            
+            DispatchQueue.main.async {
+                let imagePickerController = UIImagePickerController()
+                imagePickerController.delegate = self
+                imagePickerController.sourceType = .camera
+                imagePickerController.allowsEditing = false
+                
+                // 시트 컨트롤러가 이미지 피커를 present
+                if let sheetVC = self.walkTrackingSheetVC {
+                    sheetVC.present(imagePickerController, animated: true)
+                } else {
+                    self.present(imagePickerController, animated: true)
+                }
+            }
+        }
+    }
+    
+    private func addCapturedPhoto(image: UIImage, location: CLLocation) {
+        let photo = CapturedPhoto(image: image, location: location, captureDate: Date())
+        capturedPhotos.append(photo)
+        
+        // 지도에 마커 추가
+        addPhotoMarkerToMap(photo: photo)
+        
+        // 시트 뷰에 사진 추가
+        walkTrackingSheetVC?.addPhoto(image)
+    }
+    
     private func presentTrackingSheet() {
         // 시트 뷰 컨트롤러 생성
         let sheetVC = WalkTrackingSheetViewController()
+        sheetVC.delegate = self
         walkTrackingSheetVC = sheetVC
         
         // 바인딩 설정
@@ -145,6 +203,24 @@ final class WalkTrackingViewController: BaseViewController {
             }
             .store(in: &cancellables)
         
+        output.showFinishAlert
+                .receive(on: RunLoop.main)
+                .sink { [weak self] _ in
+                    guard let self = self else { return }
+                    print("Finish button tapped (from showFinishAlert)")
+                    let alert = UIAlertController(
+                        title: "여행 종료",
+                        message: "여행을 종료할까요?",
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+                    alert.addAction(UIAlertAction(title: "확인", style: .default) { _ in
+                        self.viewModel.finishTracking(with: self.capturedPhotos)
+                    })
+                    self.walkTrackingSheetVC?.present(alert, animated: true)
+                }
+                .store(in: &cancellables)
+        
         // 종료 상태 처리
         output.walkRecord
             .receive(on: RunLoop.main)
@@ -210,6 +286,27 @@ final class WalkTrackingViewController: BaseViewController {
             if let startCoordinate = startLocation?.coordinate {
                 showBothLocations(start: startCoordinate, destination: coordinate)
             }
+        }
+    }
+    
+    private func checkCameraPermission(completion: @escaping (Bool) -> Void) {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            // 이미 권한이 있는 경우
+            completion(true)
+        case .notDetermined:
+            // 아직 권한 요청을 하지 않은 경우, 요청
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                completion(granted)
+            }
+        case .denied, .restricted:
+            // 권한이 거부되었거나 제한된 경우
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+            }
+            completion(false)
+        @unknown default:
+            completion(false)
         }
     }
     
@@ -344,5 +441,113 @@ extension WalkTrackingViewController: MKMapViewDelegate {
         }
         return MKOverlayRenderer(overlay: overlay)
     }
+    
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            // 사용자 위치 어노테이션은 기본 스타일 유지
+        if annotation is MKUserLocation {
+                    return nil
+                }
+                
+                if let photoAnnotation = annotation as? PhotoAnnotation {
+                    let identifier = "PhotoAnnotation"
+                    var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+                    
+                    if annotationView == nil {
+                        annotationView = MKAnnotationView(annotation: photoAnnotation, reuseIdentifier: identifier)
+                        annotationView?.canShowCallout = true
+                        
+                        let thumbnailSize = CGSize(width: 30, height: 30)
+                        if let image = photoAnnotation.image,
+                           let thumbnail = resizeImage(image, targetSize: thumbnailSize) {
+                            // 둥근 테두리 적용
+                            let roundedThumbnail = thumbnail.withRoundedCorners(radius: 15, borderWidth: 1.0, borderColor: .white)
+                            annotationView?.image = roundedThumbnail
+                        } else {
+                            annotationView?.image = UIImage(systemName: "photo")?.withTintColor(.triWalkPrimary, renderingMode: .alwaysOriginal)
+                        }
+                        
+                        annotationView?.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
+                        annotationView?.centerOffset = CGPoint(x: 0, y: -15)
+                    } else {
+                        annotationView?.annotation = photoAnnotation
+                    }
+                    
+                    return annotationView
+                }
+                
+            return nil
+        }
+
+    
+    private func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage? {
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+    }
 }
 
+extension WalkTrackingViewController: WalkTrackingSheetViewControllerDelegate {
+    func didTapPauseButton(isPaused: Bool) {
+        print("Pause button tapped, isPaused: \(isPaused)")
+    }
+    
+    func didTapFinishButton() {
+        print("Finish button tapped")
+    }
+    
+    func didTapAddPhotoButton() {
+        print("Add photo button tapped")
+        showCamera()
+    }
+    
+}
+
+extension WalkTrackingViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+        
+        if let image = info[.originalImage] as? UIImage,
+               let resizedImage = resizeImage(image, targetSize: CGSize(width: 800, height: 800)),
+               let currentLocation = LocationManager.shared.currentLocation {
+                let photo = CapturedPhoto(image: resizedImage, location: currentLocation, captureDate: Date())
+                capturedPhotos.append(photo)
+                print("사진 저장됨: \(capturedPhotos.count)개")
+                
+                walkTrackingSheetVC?.addPhoto(resizedImage) // resizedImage로 전달
+                addPhotoMarkerToMap(photo: photo)
+            }
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+    }
+    
+    // 사진 마커 추가
+    private func addPhotoMarkerToMap(photo: CapturedPhoto) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            let annotation = PhotoAnnotation(
+                coordinate: photo.location.coordinate,
+                image: photo.image,
+                captureDate: photo.captureDate
+            )
+            mapView.addAnnotation(annotation)
+            photoAnnotations.append(annotation)
+        }
+    }
+}
+
+class PhotoAnnotation: NSObject, MKAnnotation {
+    let coordinate: CLLocationCoordinate2D
+    let title: String?
+    let subtitle: String?
+    let image: UIImage?
+    
+    init(coordinate: CLLocationCoordinate2D, image: UIImage?, captureDate: Date) {
+        self.coordinate = coordinate
+        self.title = "사진"
+        self.subtitle = FormatManager.shared.formattedTime(captureDate)
+        self.image = image
+    }
+}

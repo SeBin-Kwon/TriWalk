@@ -9,13 +9,15 @@ import UIKit
 import Combine
 import SnapKit
 
-final class WalkTrackingSheetView: BaseView {
+final class WalkTrackingSheetView: BaseView, UICollectionViewDelegate {
     private let formatManager: FormatManagerProtocol
+    private var photos: [UIImage] = []
     
     init(formatManager: FormatManagerProtocol = FormatManager.shared) {
         self.formatManager = formatManager
         super.init(frame: .zero)
         setupBindings()
+        configureCollectionView()
     }
     
     private let metricsStackView: UIStackView = {
@@ -123,8 +125,7 @@ final class WalkTrackingSheetView: BaseView {
     
     private let galleryTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = Font.bodyMedium
-        label.textColor = .contentPrimary
+        label.applyBodySmallStyle(color: .textSecondary)
         label.text = "갤러리"
         return label
     }()
@@ -233,12 +234,13 @@ final class WalkTrackingSheetView: BaseView {
     }
     
     override func configureLayout() {
-        
+//        metricsStackView.backgroundColor = .yellow
+//        timeContainerView.backgroundColor = .red
         // 메트릭 스택뷰
         metricsStackView.snp.makeConstraints { make in
-            make.top.equalToSuperview().inset(40)
+            make.top.equalToSuperview().inset(25)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(70).priority(.high)
+            make.height.equalTo(60).priority(.high)
         }
         
         // 걸음수 레이블들
@@ -286,14 +288,14 @@ final class WalkTrackingSheetView: BaseView {
         
         // 시간 컨테이너
         timeContainerView.snp.makeConstraints { make in
-            make.top.equalTo(metricsStackView.snp.bottom).offset(4)
+            make.top.equalTo(metricsStackView.snp.bottom)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(80)
+            make.height.equalTo(50)
         }
         
         timeLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalToSuperview().offset(15)
+            make.top.equalToSuperview().offset(4)
         }
         
         timeTitleLabel.snp.makeConstraints { make in
@@ -302,33 +304,33 @@ final class WalkTrackingSheetView: BaseView {
         }
         
         // 갤러리 컨테이너
-//        galleryContainerView.snp.makeConstraints { make in
-//            make.top.equalTo(timeContainerView.snp.bottom)
-//            make.leading.trailing.equalToSuperview()
-//            make.height.equalTo(130)
-//        }
-//        
-//        galleryTitleLabel.snp.makeConstraints { make in
-//            make.top.equalToSuperview().offset(12)
-//            make.leading.equalToSuperview().offset(16)
-//        }
-//        
-//        addPhotoButton.snp.makeConstraints { make in
-//            make.centerY.equalTo(galleryTitleLabel)
-//            make.trailing.equalToSuperview().offset(-16)
-//            make.width.height.equalTo(28)
-//        }
-//        
-//        galleryCollectionView.snp.makeConstraints { make in
-//            make.top.equalTo(galleryTitleLabel.snp.bottom).offset(8)
-//            make.leading.equalToSuperview().offset(16)
-//            make.trailing.equalToSuperview().offset(-16)
-//            make.bottom.lessThanOrEqualToSuperview().offset(-12)
-//        }
+        galleryContainerView.snp.makeConstraints { make in
+            make.top.equalTo(timeContainerView.snp.bottom)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(130)
+        }
+        
+        galleryTitleLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(16)
+        }
+        
+        addPhotoButton.snp.makeConstraints { make in
+            make.centerY.equalTo(galleryTitleLabel)
+            make.trailing.equalToSuperview().offset(-16)
+            make.width.height.equalTo(28)
+        }
+        
+        galleryCollectionView.snp.makeConstraints { make in
+            make.top.equalTo(galleryTitleLabel.snp.bottom).offset(8)
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+            make.bottom.lessThanOrEqualToSuperview().offset(-12)
+        }
         
         // 버튼들
         pauseButton.snp.makeConstraints { make in
-//            make.top.equalTo(galleryContainerView.snp.bottom).offset(16).priority(.medium)
+            make.top.equalTo(galleryContainerView.snp.bottom).offset(16).priority(.medium)
             make.leading.equalToSuperview().offset(16)
             make.bottom.equalToSuperview().offset(-30).priority(.high)
             make.width.equalTo((UIScreen.main.bounds.width - (16 * 3)) / 2)
@@ -348,6 +350,21 @@ final class WalkTrackingSheetView: BaseView {
         layer.cornerRadius = 30
         layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         clipsToBounds = true
+    }
+    
+    private func configureCollectionView() {
+        galleryCollectionView.dataSource = self
+        galleryCollectionView.delegate = self
+    }
+        
+    func addPhoto(_ image: UIImage) {
+        photos.append(image)
+        galleryCollectionView.reloadData()
+        // 새 사진이 추가되면 마지막 셀로 스크롤
+        if !photos.isEmpty {
+            let lastIndex = IndexPath(item: photos.count - 1, section: 0)
+            galleryCollectionView.scrollToItem(at: lastIndex, at: .right, animated: true)
+        }
     }
     
     private func setupBindings() {
@@ -410,11 +427,6 @@ final class WalkTrackingSheetView: BaseView {
         }
     }
     
-    /// 사진 추가
-    func addPhoto(_ image: UIImage) {
-        galleryCollectionView.reloadData()
-    }
-    
     func fadeOutContentForMinimize() {
         // 손잡이를 제외한 모든 요소 숨기기
         [metricsStackView, timeContainerView, galleryContainerView, pauseButton, finishButton].forEach {
@@ -430,6 +442,18 @@ final class WalkTrackingSheetView: BaseView {
             $0.alpha = 1
             $0.isHidden = false
         }
+    }
+}
+
+extension WalkTrackingSheetView: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return photos.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as! PhotoCell
+        cell.configure(with: photos[indexPath.item])
+        return cell
     }
 }
 

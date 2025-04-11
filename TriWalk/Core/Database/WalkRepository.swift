@@ -15,7 +15,7 @@ import UIKit
 protocol WalkRepositoryProtocol {
     // 저장
     func saveWalk(_ walkRecord: WalkRecord,
-                  photos: [UIImage],
+                  photos: [CapturedPhoto],
                   routeCoordinates: [CLLocationCoordinate2D],
                   startAddress: String?,
                   destinationAddress: String?,
@@ -40,7 +40,7 @@ class WalkRepository: WalkRepositoryProtocol {
     
     // 산책 기록 저장
     func saveWalk(_ walkRecord: WalkRecord,
-                 photos: [UIImage],
+                 photos: [CapturedPhoto],
                  routeCoordinates: [CLLocationCoordinate2D],
                  startAddress: String?,
                  destinationAddress: String?,
@@ -67,21 +67,16 @@ class WalkRepository: WalkRepositoryProtocol {
             }
             
             // 사진 객체 생성
-//            let walkPhotos = List<WalkPhoto>()
-//            for (index, image) in photos.enumerated() {
-//                // 사진 촬영 위치 (가능하면)
-//                var photoCoordinate: CLLocationCoordinate2D? = nil
-//                if routeCoordinates.count > 0 {
-//                    // 간단하게 경로의 중간 지점을 사진 촬영 위치로 가정
-//                    // 실제로는 촬영 시점의 위치를 저장해야 함
-//                    let positionIndex = min(index * routeCoordinates.count / photos.count, routeCoordinates.count - 1)
-//                    photoCoordinate = routeCoordinates[positionIndex]
-//                }
-//                
-//                let photo = WalkPhoto(image: image, coordinate: photoCoordinate)
-//                walkPhotos.append(photo)
-//            }
-//            walkRecord.photos = walkPhotos
+            let walkPhotos = List<WalkPhoto>()
+            for photo in photos {
+                let walkPhoto = WalkPhoto(
+                    image: photo.image,
+                    coordinate: photo.location.coordinate,
+                    captureDate: photo.captureDate // CapturedPhoto의 날짜 사용
+                )
+                walkPhotos.append(walkPhoto)
+            }
+            walkRecord.photos = walkPhotos
             
             walkRecord.setAddresses(start: startAddress, destination: destinationAddress)
             walkRecord.tripType = tripType
