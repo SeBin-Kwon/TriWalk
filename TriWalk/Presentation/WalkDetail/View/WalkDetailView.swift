@@ -94,7 +94,7 @@ final class WalkDetailView: BaseView {
     
     private let directionView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(resource: .dotArrow)
+        imageView.image = UIImage(resource: .dotArrowDarkmode)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
