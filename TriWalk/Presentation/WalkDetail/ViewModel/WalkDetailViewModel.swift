@@ -78,6 +78,16 @@ final class WalkDetailViewModel: BaseViewModel, ViewModelType {
     
     /// 산책 기록 공유
     func deleteWalkRecord() {
+        guard let walkRecord = walkRepository.getWalk(id: walkId) else {
+            errorSubject.send("삭제할 산책 기록을 찾을 수 없습니다.")
+            return
+        }
+        
+        for photo in walkRecord.photos {
+            photo.deleteImageFile()
+            print("삭제된 사진 파일: \(photo.imagePath)")
+        }
+        
         walkRepository.deleteWalk(id: walkId)
             .sink { [weak self] completion in
                 switch completion {

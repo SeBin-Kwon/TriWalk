@@ -11,6 +11,8 @@ import SnapKit
 
 final class WalkDetailView: BaseView {
     
+    private var walkRecord: WalkRecord?
+    
     // MARK: - UI Components
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -193,6 +195,20 @@ final class WalkDetailView: BaseView {
         return label
     }()
     
+    private lazy var photosCollectionView: UICollectionView = {
+            let layout = UICollectionViewFlowLayout()
+            layout.scrollDirection = .horizontal
+            layout.minimumInteritemSpacing = 0
+            layout.minimumLineSpacing = Spacing.s
+            layout.itemSize = CGSize(width: 200, height: 200)
+        layout.sectionInset = UIEdgeInsets(top: 0, left: Spacing.screenMargin, bottom: 0, right: Spacing.screenMargin)
+            let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+            collectionView.backgroundColor = .clear
+            collectionView.showsHorizontalScrollIndicator = false
+            collectionView.register(WalkDetailPhotoCell.self, forCellWithReuseIdentifier: WalkDetailPhotoCell.identifier)
+            return collectionView
+        }()
+    
     // MARK: - Configuration
     override func configureHierarchy() {
         addSubview(scrollView)
@@ -203,7 +219,8 @@ final class WalkDetailView: BaseView {
             weatherView,
             mapContainer,
             locationContainer,
-            statsContainer
+            statsContainer,
+            photosCollectionView
         )
         
         headerView.addSubviews(dateLabel, titleLabel)
@@ -334,7 +351,6 @@ final class WalkDetailView: BaseView {
         statsContainer.snp.makeConstraints { make in
             make.top.equalTo(locationContainer.snp.bottom).offset(Spacing.screenMargin)
             make.leading.trailing.equalToSuperview().inset(Spacing.screenMargin)
-            make.bottom.equalToSuperview().offset(-Spacing.screenMargin)
         }
         
         // 소요 시간 (첫 번째 행)
@@ -413,6 +429,13 @@ final class WalkDetailView: BaseView {
             make.top.equalTo(caloriesLabel.snp.bottom).offset(Spacing.xxxs)
             make.leading.bottom.equalToSuperview()
         }
+        // 사진 컬렉션 뷰
+        photosCollectionView.snp.makeConstraints { make in
+            make.top.equalTo(statsContainer.snp.bottom).offset(Spacing.screenMargin)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(200) // 셀 크기에 맞춤
+            make.bottom.equalToSuperview().offset(-Spacing.screenMargin)
+        }
     }
     
     override func configureView() {
@@ -428,6 +451,7 @@ final class WalkDetailView: BaseView {
     
     /// 데이터로 UI 업데이트
     func configure(with walkRecord: WalkRecord) {
+        self.walkRecord = walkRecord
         // 날짜 포맷팅
         dateLabel.text = FormatManager.shared.formattedDate(walkRecord.date)
         
@@ -443,6 +467,9 @@ final class WalkDetailView: BaseView {
         caloriesValueLabel.text = "\(Int(walkRecord.calories)) kcal"
         
         timeValueLabel.text = FormatManager.shared.formattedDuration(seconds: walkRecord.duration)
+        
+        photosCollectionView.dataSource = self
+        photosCollectionView.reloadData()
     }
     
     /// 날씨 정보 설정
@@ -474,5 +501,25 @@ final class WalkDetailView: BaseView {
             
         dustStatusText.append(gradeAttributedString)
         weatherStatusLabel.attributedText = dustStatusText
+    }
+}
+
+extension WalkDetailView: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return walkRecord?.photos.count ?? 0
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: WalkDetailPhotoCell.identifier, for: indexPath) as? WalkDetailPhotoCell,
+              let walkRecord = walkRecord,
+              indexPath.item < walkRecord.photos.count else {
+            return UICollectionViewCell()
+        }
+        
+        let photo = walkRecord.photos[indexPath.item]
+        if let image = photo.getImage() { // WalkPhoto에서 이미지 로드
+            cell.configure(with: image)
+        }
+        return cell
     }
 }

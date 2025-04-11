@@ -77,6 +77,7 @@ final class WalkDetailViewController: BaseViewController {
                     owner.displayRoute(walkRecord: walkRecord, coordinates: coordinates)
                 }
                 owner.walkDetailView.configure(with: walkRecord)
+                print("WalkRecord photos count: \(walkRecord.photos.count)")
             }
             .store(in: &cancellables)
         
