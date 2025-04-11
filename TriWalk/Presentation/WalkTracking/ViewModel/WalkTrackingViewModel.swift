@@ -60,7 +60,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private var tripType: TripType = .roundTrip
     private let walkRepository: WalkRepositoryProtocol
     // 사용자 정보 (칼로리 계산에 필요)
-    private let userWeight: Double = 70.0  // kg 단위, 기본값 (나중에 설정에서 변경 가능하게 만들 수 있음)
+    private let userWeight: Double = 60.0
     private var savedWalkRecord: WalkRecord?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
     private var lastStartLocationLookup: Bool = false
@@ -74,12 +74,6 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         setupLocationTracking()
         setupBackgroundNotifications()
     }
-    
-//    override init() {
-//        super.init()
-//        setupLocationTracking()
-//        setupBackgroundNotifications()
-//    }
     
     deinit {
         stopTracking()
@@ -405,22 +399,15 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     }
     
     private func calculateCalories() {
-        // MET(Metabolic Equivalent of Task) 값 사용
-        // 걷기의 MET 값은 대략 3.5 ~ 4.0 정도
-        let distanceCalories = distanceSubject.value * 60.0 * (userWeight / 70.0)
-            
-        // 걸음 수 기반 칼로리 (약 100걸음당 5kcal 정도)
-        let stepsCalories = Double(stepsCountSubject.value) * 0.05 * (userWeight / 70.0)
-        
-        // 두 계산 방식의 평균치를 사용하거나, 더 높은 값을 사용할 수 있음
-        // 여기서는 더 높은 값을 사용 (더 정확하다고 가정)
+        let distanceCalories = distanceSubject.value * 60.0
+        let stepsCalories = Double(stepsCountSubject.value) * 0.05
         let caloriesBurned = max(distanceCalories, stepsCalories)
-        
-        // 너무 작은 값(노이즈)은 무시
+
         if caloriesBurned < 1.0 && (distanceSubject.value < 0.01 || stepsCountSubject.value < 10) {
             caloriesSubject.send(0.0)
         } else {
             caloriesSubject.send(caloriesBurned)
         }
+        print("칼로리 계산: \(caloriesBurned)")
     }
 }
