@@ -85,8 +85,9 @@ class HomeViewController: BaseViewController {
         setupNavigationBar()
         setupCollectionView()
         NotificationCenterManager.locationPermissionGranted.publisher()
-                .sink { [weak self] _ in
-                    self?.viewDidAppearSubject.send(())  // 권한 획득 시 데이터 새로고침
+            .withUnretained(self)
+                .sink { owner, _ in
+                    owner.viewDidAppearSubject.send(())  // 권한 획득 시 데이터 새로고침
                 }
                 .store(in: &cancellables)
     }
@@ -206,6 +207,13 @@ class HomeViewController: BaseViewController {
                 owner.titleLabel.text = "날씨 정보를 가져오지\n못했어요 :("
                 print("날씨 데이터 로드 실패: \(errorMessage)")
                 // 에러 처리 UI (필요시 알림창 등 표시)
+            }
+            .store(in: &cancellables)
+        
+        output.isDelete
+            .withUnretained(self)
+            .sink { owner, _ in
+                ToastView.showSuccess(in: owner, message: "산책 기록을 삭제했습니다.")
             }
             .store(in: &cancellables)
     }
@@ -371,7 +379,13 @@ extension HomeViewController: UICollectionViewDelegate {
         
         var snapshot = NSDiffableDataSourceSnapshot<Int, CardItem>()
         snapshot.appendSections([HomeViewController.sectionIdentifier])
-        snapshot.appendItems(cardItems, toSection: HomeViewController.sectionIdentifier)
+        let validCardItems = cardItems.filter { item in
+            if let walkRecord = item.walkRecord {
+                return !walkRecord.isInvalidated
+            }
+            return true
+        }
+        snapshot.appendItems(validCardItems, toSection: HomeViewController.sectionIdentifier)
         
         // 인터랙션 중 업데이트 방지
         let isInteracting = collectionView.isDragging || collectionView.isDecelerating

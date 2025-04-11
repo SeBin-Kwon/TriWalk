@@ -147,6 +147,13 @@ final class CalendarViewController: BaseViewController {
                 }
             }
             .store(in: &cancellables)
+        
+        NotificationCenterManager.walkRecordDeleted.publisher()
+            .withUnretained(self)
+            .sink { owner, _ in
+                ToastView.showSuccess(in: owner, message: "산책 기록을 삭제했습니다.")
+            }
+            .store(in: &cancellables)
     }
 }
 

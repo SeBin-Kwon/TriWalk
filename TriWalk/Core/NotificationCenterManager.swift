@@ -32,7 +32,8 @@ enum NotificationCenterManager: NotificationCenterHandler {
     case locationPermissionChanged
     case motionPermissionGranted
     case motionPermissionChanged
-   case backgroundLocationChanged
+    case backgroundLocationChanged
+    case walkRecordDeleted
 
     var name: Notification.Name {
         switch self {
@@ -50,6 +51,8 @@ enum NotificationCenterManager: NotificationCenterHandler {
             return Notification.Name("motionPermissionChanged")
         case .backgroundLocationChanged:
             return Notification.Name("backgroundLocationChanged")
+        case .walkRecordDeleted:
+            return Notification.Name("walkRecordDeleted")
         }
     }
 }

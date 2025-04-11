@@ -91,4 +91,18 @@ final class AlertService: AlertServiceProtocol {
         
         viewController.present(alert, animated: true)
     }
+    
+    func showDeleteAlert(on viewController: UIViewController,
+                             title: String,
+                             message: String,
+                             confirmAction: @escaping () -> Void) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "확인", style: .destructive) { _ in
+            confirmAction()
+        })
+        
+        viewController.present(alert, animated: true)
+    }
 }

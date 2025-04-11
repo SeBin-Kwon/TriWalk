@@ -47,21 +47,21 @@ final class WalkDetailViewController: BaseViewController {
         )
         navigationItem.leftBarButtonItem = backButton
         
-        // 공유 버튼 추가
-        let shareButton = UIBarButtonItem(
-            image: UIImage(systemName: "square.and.arrow.up"),
+        // 삭제 액션 시트 버튼 추가
+        let deleteButton = UIBarButtonItem(
+            image: UIImage(systemName: "minus.circle"),
             style: .plain,
             target: self,
-            action: #selector(shareButtonTapped)
+            action: #selector(deleteButtonTapped)
         )
-        navigationItem.rightBarButtonItem = shareButton
+        navigationItem.rightBarButtonItem = deleteButton
     }
     
     override func bindViewModel() {
         // ViewModel Input 구성
         let input = WalkDetailViewModel.Input(
             viewDidLoadTrigger: Just(()).eraseToAnyPublisher(),
-            shareButtonTapped: PassthroughSubject<Void, Never>().eraseToAnyPublisher()
+            deleteButtonTapped: PassthroughSubject<Void, Never>().eraseToAnyPublisher()
         )
         
         // ViewModel Output 처리
@@ -99,9 +99,25 @@ final class WalkDetailViewController: BaseViewController {
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, errorMessage in
-                owner.showAlert(title: "오류", message: errorMessage)
+                let alertService = AlertService()
+                alertService.showErrorAlert(on: self, title: "오류", message: errorMessage)
+//                owner.showAlert(title: "오류", message: errorMessage)
             }
             .store(in: &cancellables)
+        
+        output.deleteCompleted
+                .receive(on: RunLoop.main)
+                .withUnretained(self)
+                .sink { owner, _ in
+                     // CalendarViewController로 pop 시도
+                    if let calendarVC = owner.navigationController?.viewControllers.first(where: { $0 is CalendarViewController }) {
+                        owner.navigationController?.popToViewController(calendarVC, animated: true)
+                    } else {
+                        // CalendarViewController가 없으면 기본 pop
+                        owner.navigationController?.popViewController(animated: true)
+                    }
+                }
+                .store(in: &cancellables)
     }
     
     // MARK: - Actions
@@ -109,17 +125,21 @@ final class WalkDetailViewController: BaseViewController {
         navigationController?.popViewController(animated: true)
     }
     
-    @objc private func shareButtonTapped() {
+    @objc private func deleteButtonTapped() {
         // 공유 액션은 ViewModel에 위임
-        viewModel.shareWalkRecord()
+        let alertService = AlertService()
+        alertService.showDeleteAlert(on: self, title: "삭제 확인", message: "산책 기록을 삭제할까요?") { [weak self] in
+            self?.viewModel.deleteWalkRecord()
+        }
+//        viewModel.deleteWalkRecord()
     }
     
     // MARK: - Private Methods
-    private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
-    }
+//    private func showAlert(title: String, message: String) {
+//        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+//        alert.addAction(UIAlertAction(title: "확인", style: .default))
+//        present(alert, animated: true)
+//    }
     
     /// 지도에 산책 경로 표시
     private func displayRoute(walkRecord: WalkRecord, coordinates: [CLLocationCoordinate2D]) {

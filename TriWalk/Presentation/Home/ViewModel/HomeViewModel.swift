@@ -21,6 +21,7 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         let isLoading: AnyPublisher<Bool, Never>
         let error: AnyPublisher<String, Never>
         let walkRecords: AnyPublisher<[WalkRecord], Never>
+        let isDelete: AnyPublisher<Void, Never>
     }
     
     // MARK: - Private Properties
@@ -41,6 +42,8 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
     private let weatherRefreshInterval: TimeInterval = 900
     private let walkRecordsRefreshInterval: TimeInterval = 300
     
+    private let isDeleteSubject = PassthroughSubject<Void, Never>()
+    
     // MARK: - Initialization
     init(weatherService: WeatherServiceProtocol = WeatherService(),
          airKoreaService: AirKoreaServiceProtocol = AirKoreaService(),
@@ -51,6 +54,14 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
         self.locationManager = locationManager
         self.walkRepository = walkRepository
         super.init()
+        
+        NotificationCenterManager.walkRecordDeleted.publisher()
+            .withUnretained(self)
+            .sink { owner, _ in
+                owner.loadWalkRecords()
+                owner.isDeleteSubject.send()
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Transform Method
@@ -96,7 +107,8 @@ final class HomeViewModel: BaseViewModel, ViewModelType {
             weatherData: weatherDataSubject.eraseToAnyPublisher(),
             isLoading: isLoadingSubject.eraseToAnyPublisher(),
             error: errorSubject.eraseToAnyPublisher(),
-            walkRecords: walkRecordsSubject.eraseToAnyPublisher()
+            walkRecords: walkRecordsSubject.eraseToAnyPublisher(),
+            isDelete: isDeleteSubject.eraseToAnyPublisher()
         )
     }
     
