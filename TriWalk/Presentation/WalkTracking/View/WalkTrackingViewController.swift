@@ -8,6 +8,7 @@
 import UIKit
 import MapKit
 import CoreLocation
+import CoreMotion
 import Combine
 import SnapKit
 
@@ -45,6 +46,10 @@ final class WalkTrackingViewController: BaseViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+//        checkPermissions() { [weak self] in
+//                // 권한 체크 후 시트 표시
+//                self?.presentTrackingSheet()
+//            }
         presentTrackingSheet()
         viewDidAppearSubject.send(())
     }
@@ -172,6 +177,24 @@ final class WalkTrackingViewController: BaseViewController {
                 owner.updateRoute(with: location.coordinate)
             }
             .store(in: &cancellables)
+        
+//        output.permissionStatus
+//            .receive(on: RunLoop.main)
+//            .withUnretained(self)
+//            .sink { owner, status in
+//                switch status {
+//                case .motionDenied:
+//                    owner.showMotionPermissionAlert()
+//                case .locationDenied:
+//                    owner.showLocationPermissionAlert()
+//                case .backgroundLocationDenied:
+//                    owner.showBackgroundLocationPermissionAlert()
+//                case .allGranted:
+//                    // 모든 권한이 허용된 경우 처리할 내용
+//                    break
+//                }
+//            }
+//            .store(in: &cancellables)
     }
     
     // MARK: - Public Methods
@@ -192,6 +215,65 @@ final class WalkTrackingViewController: BaseViewController {
     
     // MARK: - Private Methods
     
+    // checkPermissions 메서드 수정
+//    private func checkPermissions(completion: @escaping () -> Void) {
+//            print("checkPermissions 시작")
+//            
+//            guard CMPedometer.isStepCountingAvailable() else {
+//                print("CMPedometer 사용 불가")
+//                completion()
+//                return
+//            }
+//            
+//            print("CMPedometer 사용 가능")
+//            let authStatus = CMPedometer.authorizationStatus()
+//            print("CMPedometer 권한 상태: \(authStatus)")
+//            
+//            switch authStatus {
+//            case .notDetermined, .restricted, .denied:
+//                print("동작 및 피트니스 권한 없음")
+//                showMotionPermissionAlert()
+//                completion()
+//            case .authorized:
+//                print("동작 및 피트니스 권한 허용됨")
+//                viewModel.startPedometer() // 뷰모델에서 걸음 수 추적 시작
+//                completion() // 바로 진행
+//            @unknown default:
+//                print("알 수 없는 권한 상태")
+//                completion()
+//            }
+//        }
+    
+//    // 동작 및 피트니스 권한 알림
+//    private func showMotionPermissionAlert() {
+//        let alertService = AlertService()
+//        alertService.showSettingsAlert(
+//            on: self,
+//            title: "동작 및 피트니스 권한 필요",
+//            message: "걸음 수와 칼로리 소모량을 측정하려면 동작 및 피트니스 권한이 필요합니다. 권한이 없으면 이 데이터를 기록할 수 없습니다."
+//        )
+//    }
+//
+//    // 위치 권한 알림 (기존과 동일)
+//    private func showLocationPermissionAlert() {
+//        let alertService = AlertService()
+//        alertService.showSettingsAlert(
+//            on: self,
+//            title: "위치 서비스 권한 필요",
+//            message: "산책 경로를 기록하려면 위치 서비스 권한이 필요합니다."
+//        )
+//    }
+//
+//    // 백그라운드 위치 권한 알림
+//    private func showBackgroundLocationPermissionAlert() {
+//        let alertService = AlertService()
+//        alertService.showSettingsAlert(
+//            on: self,
+//            title: "백그라운드 위치 권한 필요",
+//            message: "화면이 꺼져도 계속해서 산책 경로를 기록하려면 '항상 허용' 권한이 필요합니다."
+//        )
+//    }
+
     /// 출발지 핀 추가
     private func addStartAnnotation(at coordinate: CLLocationCoordinate2D) {
         LocationManager.shared.removeAnnotations(from: mapView, withTitle: "출발지")

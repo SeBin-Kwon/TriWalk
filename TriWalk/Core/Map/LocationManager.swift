@@ -227,42 +227,42 @@ final class LocationManager: NSObject {
             .store(in: &cancellables)
     }
     
-        /// 주소 형식화
+    /// 주소 형식화
     func formattedAddress(from placemark: CLPlacemark) -> String {
-            // 시설명 우선 사용 (예: 건물 이름, 랜드마크 등)
-            if let name = placemark.name, !name.isEmpty {
-                return name
-            }
-            
-            // 도로명 주소 시도
-            if let thoroughfare = placemark.thoroughfare, !thoroughfare.isEmpty {
-                // 도로명 + 번지
-                if let subThoroughfare = placemark.subThoroughfare, !subThoroughfare.isEmpty {
-                    return "\(thoroughfare) \(subThoroughfare)"
-                }
-                return thoroughfare
-            }
-            
-            // 동/읍/면 사용
-            if let locality = placemark.locality, !locality.isEmpty {
-                if let subLocality = placemark.subLocality, !subLocality.isEmpty {
-                    return "\(locality) \(subLocality)"
-                }
-                return locality
-            }
-            
-            // 시/도 정보만이라도 표시
-            if let administrativeArea = placemark.administrativeArea, !administrativeArea.isEmpty {
-                return administrativeArea
-            }
-            
-            // 아무것도 없으면 기본 조합 시도
-            return [
-                placemark.thoroughfare,  // 도로
-                placemark.locality,      // 시/군/구
-                placemark.administrativeArea  // 시/도
-            ].compactMap { $0 }.joined(separator: ", ")
+        // 시설명 우선 사용 (예: 건물 이름, 랜드마크 등)
+        if let name = placemark.name, !name.isEmpty {
+            return name
         }
+        
+        // 도로명 주소 시도
+        if let thoroughfare = placemark.thoroughfare, !thoroughfare.isEmpty {
+            // 도로명 + 번지
+            if let subThoroughfare = placemark.subThoroughfare, !subThoroughfare.isEmpty {
+                return "\(thoroughfare) \(subThoroughfare)"
+            }
+            return thoroughfare
+        }
+        
+        // 동/읍/면 사용
+        if let locality = placemark.locality, !locality.isEmpty {
+            if let subLocality = placemark.subLocality, !subLocality.isEmpty {
+                return "\(locality) \(subLocality)"
+            }
+            return locality
+        }
+        
+        // 시/도 정보만이라도 표시
+        if let administrativeArea = placemark.administrativeArea, !administrativeArea.isEmpty {
+            return administrativeArea
+        }
+        
+        // 아무것도 없으면 기본 조합 시도
+        return [
+            placemark.thoroughfare,  // 도로
+            placemark.locality,      // 시/군/구
+            placemark.administrativeArea  // 시/도
+        ].compactMap { $0 }.joined(separator: ", ")
+    }
     
     // 백업용 Apple Geocoder 메서드
     private func lookupAddressWithGeocoder(for coordinate: CLLocationCoordinate2D, purpose: AddressLookupPurpose = .start, completion: ((String?) -> Void)? = nil) {
@@ -385,7 +385,7 @@ extension LocationManager: CLLocationManagerDelegate {
             // 권한이 있으면 바로 위치 요청 시작
             requestLocation()
         }
-    
+        
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
             // 권한이 있으면 위치 요청 시작
@@ -396,5 +396,42 @@ extension LocationManager: CLLocationManagerDelegate {
         default:
             break
         }
+    }
+    
+    func requestMotionPermission() {
+        if CMMotionActivityManager.isActivityAvailable() && CMPedometer.isStepCountingAvailable() {
+            // 권한 요청을 위해 임시 데이터 요청
+            let motionManager = CMMotionActivityManager()
+            motionManager.queryActivityStarting(from: Date(), to: Date(), to: .main) { activities, error in
+                if let error = error {
+                    if (error as NSError).code == CMErrorMotionActivityNotAuthorized.rawValue {
+                        // 권한 거부됨
+                        NotificationCenterManager.motionPermissionChanged.post(object: false)
+                    } else {
+                        // 권한 승인됨
+                        NotificationCenterManager.motionPermissionChanged.post(object: true)
+                    }
+                } else {
+                    // 권한 승인됨
+                    NotificationCenterManager.motionPermissionGranted.post()
+                }
+                motionManager.stopActivityUpdates()
+            }
+        } else {
+            // 기기에서 지원하지 않음
+            NotificationCenterManager.motionPermissionChanged.post(object: false)
+        }
+    }
+    
+    // 백그라운드 위치 업데이트 권한 요청
+    func requestBackgroundLocationPermission() {
+        if authorizationStatus == .authorizedWhenInUse {
+            locationManager.requestAlwaysAuthorization()
+        }
+    }
+    
+    // 모션 권한 상태 확인
+    func checkMotionPermissionStatus() -> Bool {
+        return CMMotionActivityManager.isActivityAvailable() && CMPedometer.isStepCountingAvailable()
     }
 }

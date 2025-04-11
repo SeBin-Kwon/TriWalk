@@ -10,6 +10,13 @@ import CoreLocation
 import CoreMotion
 import Combine
 
+enum PermissionStatus {
+    case locationDenied
+    case motionDenied
+    case backgroundLocationDenied
+    case allGranted
+}
+
 final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     
     // MARK: - Input-Output 정의
@@ -27,6 +34,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         let time: AnyPublisher<TimeInterval, Never>  // 초 단위
         let isPaused: AnyPublisher<Bool, Never>
         let walkRecord: AnyPublisher<WalkRecord, Never>
+        let permissionStatus: AnyPublisher<PermissionStatus, Never>
     }
     
     // MARK: - Private Subjects
@@ -55,6 +63,7 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private var savedWalkRecord: WalkRecord?
     private var routeCoordinates: [CLLocationCoordinate2D] = []
     private var lastStartLocationLookup: Bool = false
+    private let permissionsSubject = PassthroughSubject<PermissionStatus, Never>()
     
     // MARK: - Initialization
     override init() {
@@ -99,7 +108,8 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             calories: caloriesSubject.eraseToAnyPublisher(),
             time: timeSubject.eraseToAnyPublisher(),
             isPaused: isPausedSubject.eraseToAnyPublisher(),
-            walkRecord: walkRecordSubject.eraseToAnyPublisher()
+            walkRecord: walkRecordSubject.eraseToAnyPublisher(),
+            permissionStatus: permissionsSubject.eraseToAnyPublisher()
         )
     }
     
@@ -131,6 +141,22 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     }
     
     // MARK: - Private Methods
+    
+    private func checkPermissions() {
+        let locationAuth = LocationManager.shared.authorizationStatus
+        let motionAvailable = CMPedometer.isStepCountingAvailable() && CMMotionActivityManager.isActivityAvailable()
+        
+        if locationAuth == .denied || locationAuth == .restricted {
+            permissionsSubject.send(.locationDenied)
+        } else if !motionAvailable {
+            permissionsSubject.send(.motionDenied)
+        } else if locationAuth != .authorizedAlways {
+            permissionsSubject.send(.backgroundLocationDenied)
+        } else {
+            permissionsSubject.send(.allGranted)
+        }
+    }
+    
     private func setupLocationTracking() {
         // 위치 업데이트 구독
         locationManager.locationPublisher
@@ -315,18 +341,30 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         }
     }
     
-    private func startPedometer() {
+    func startPedometer() {
         // 현재 날짜 기준 또는 마지막으로 일시정지한 시점부터
         let fromDate = isPausedSubject.value ? Date() : (startDate ?? Date())
         
         if CMPedometer.isStepCountingAvailable() {
             pedometer.startUpdates(from: fromDate) { [weak self] data, error in
-                guard let self = self, let data = data, error == nil else {
-                    print("만보계 오류: \(error?.localizedDescription ?? "알 수 없는 오류")")
+                guard let self = self else { return }
+                
+                // 권한 오류 확인
+                if let error = error as NSError? {
+                    if error.code == CMErrorMotionActivityNotAuthorized.rawValue {
+                        print("동작 및 피트니스 권한이 없습니다.")
+                        // 메인 쓰레드에서 에러 메시지 표시
+                        DispatchQueue.main.async {
+                            self.permissionsSubject.send(.motionDenied)
+                        }
+                    } else {
+                        print("만보계 오류: \(error.localizedDescription)")
+                    }
                     return
                 }
                 
-                if !self.isPausedSubject.value {
+                // 정상 데이터 처리
+                if let data = data {
                     // 이전 단계에서 축적된 걸음 수 + 현재 걸음 수
                     let totalSteps = self.previousSteps + (data.numberOfSteps.intValue)
                     self.stepsCountSubject.send(totalSteps)
