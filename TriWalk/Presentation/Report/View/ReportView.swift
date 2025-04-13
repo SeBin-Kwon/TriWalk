@@ -121,7 +121,7 @@ final class ReportView: BaseView {
     
     // MARK: - Public Methods
     func updateSubtitle(walkCount: Int) {
-        subtitleLabel.text = "이번 주 총 \(walkCount)번 산책"
+        subtitleLabel.text = "최근 1주일간 총 \(walkCount)번 산책"
         
         // 강조 색상 적용
 //        let attributedText = NSMutableAttributedString(string: subtitleLabel.text ?? "")
