@@ -23,15 +23,6 @@ final class WalkSetupView: BaseView {
         let button = ConfigButton(title: "현재 위치")
         button.applySetupPointButtonStyle()
         button.isEnabled = false
-        
-//        let button = UIButton()
-//        button.setTitle("현재 위치", for: .normal)
-//        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
-//        button.backgroundColor = Color.contentPrimary.withAlphaComponent(0.4)
-//        button.setTitleColor(.background, for: .disabled)
-//        button.layer.cornerRadius = 30
-//        button.isEnabled = false
-        
         return button
     }()
     

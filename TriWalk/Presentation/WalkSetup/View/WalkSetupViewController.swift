@@ -343,14 +343,35 @@ final class WalkSetupViewController: BaseViewController {
     }
     
     private func startWalking(_ walkInfo: WalkSetupViewModel.WalkInfo) {
-        let vc = WalkTrackingViewController()
-        vc.setDestination(coordinate: walkInfo.destinationCoordinate)
-        vc.setWalkInfo(
-            startAddress: walkInfo.startAddress,
-            destinationAddress: walkInfo.destinationAddress,
-            tripType: walkInfo.tripType
+        
+        let alertService = AlertService()
+        alertService.showConfirmationAlert(
+            on: self,
+            title: "여행 시작",
+            message: "지금 바로 여행을 떠나볼까요?",
+            confirmAction: { [weak self] in
+                // 확인 버튼 클릭 시 실행될 코드
+                guard let self = self else { return }
+                
+                let vc = WalkTrackingViewController()
+                vc.setDestination(coordinate: walkInfo.destinationCoordinate)
+                vc.setWalkInfo(
+                    startAddress: walkInfo.startAddress,
+                    destinationAddress: walkInfo.destinationAddress,
+                    tripType: walkInfo.tripType
+                )
+                self.changeRootViewController(rootView: vc)
+            }
         )
-        changeRootViewController(rootView: vc)
+        
+//        let vc = WalkTrackingViewController()
+//        vc.setDestination(coordinate: walkInfo.destinationCoordinate)
+//        vc.setWalkInfo(
+//            startAddress: walkInfo.startAddress,
+//            destinationAddress: walkInfo.destinationAddress,
+//            tripType: walkInfo.tripType
+//        )
+//        changeRootViewController(rootView: vc)
     }
     
     override func configureHierarchy() {

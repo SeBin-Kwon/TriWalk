@@ -301,9 +301,9 @@ final class WalkTrackingViewController: BaseViewController {
             }
         case .denied, .restricted:
             // 권한이 거부되었거나 제한된 경우
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-            }
+//            DispatchQueue.main.async { [weak self] in
+//                guard let self = self else { return }
+//            }
             completion(false)
         @unknown default:
             completion(false)

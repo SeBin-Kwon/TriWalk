@@ -106,8 +106,8 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             .subscribe(showFinishAlertSubject)
             .store(in: &cancellables)
         
-        let walkRecord = walkRecordSubject
-            .eraseToAnyPublisher()
+//        let walkRecord = walkRecordSubject
+//            .eraseToAnyPublisher()
         
         return Output(
             stepsCount: stepsCountSubject.eraseToAnyPublisher(),
