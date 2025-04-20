@@ -94,6 +94,7 @@ final class DestinationSearchViewModel: BaseViewModel, ViewModelType {
     //    }
     
     func transform(input: Input) -> Output {
+        cancellables.removeAll()
         // 검색어 입력 처리 - 카카오 API 사용
         input.searchQuery
             .debounce(for: .seconds(0.8), scheduler: RunLoop.main)

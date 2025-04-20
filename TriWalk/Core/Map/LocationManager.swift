@@ -105,26 +105,26 @@ final class LocationManager: NSObject {
         }
     }
     
-    func checkMotionPermission(completion: @escaping (Bool) -> Void) {
-        if CMPedometer.isStepCountingAvailable() {
-            // 현재 날짜로 임시 쿼리 생성
-            let now = Date()
-            pedometer.queryPedometerData(from: now.addingTimeInterval(-60), to: now) { _, error in
-                // 에러가 nil이면 권한이 있다고 가정
-                let hasPermission = error == nil
-                if hasPermission {
-                    NotificationCenterManager.motionPermissionGranted.post()
-                }
-                completion(hasPermission)
-            }
-        } else {
-            completion(false)
-        }
-    }
+//    func checkMotionPermission(completion: @escaping (Bool) -> Void) {
+//        if CMPedometer.isStepCountingAvailable() {
+//            // 현재 날짜로 임시 쿼리 생성
+//            let now = Date()
+//            pedometer.queryPedometerData(from: now.addingTimeInterval(-60), to: now) { _, error in
+//                // 에러가 nil이면 권한이 있다고 가정
+//                let hasPermission = error == nil
+//                if hasPermission {
+//                    NotificationCenterManager.motionPermissionGranted.post()
+//                }
+//                completion(hasPermission)
+//            }
+//        } else {
+//            completion(false)
+//        }
+//    }
     
-    func checkBackgroundPermission() -> Bool {
-        return authorizationStatus == .authorizedAlways
-    }
+//    func checkBackgroundPermission() -> Bool {
+//        return authorizationStatus == .authorizedAlways
+//    }
     
     
     /// 단일 위치 업데이트 요청
@@ -398,40 +398,40 @@ extension LocationManager: CLLocationManagerDelegate {
         }
     }
     
-    func requestMotionPermission() {
-        if CMMotionActivityManager.isActivityAvailable() && CMPedometer.isStepCountingAvailable() {
-            // 권한 요청을 위해 임시 데이터 요청
-            let motionManager = CMMotionActivityManager()
-            motionManager.queryActivityStarting(from: Date(), to: Date(), to: .main) { activities, error in
-                if let error = error {
-                    if (error as NSError).code == CMErrorMotionActivityNotAuthorized.rawValue {
-                        // 권한 거부됨
-                        NotificationCenterManager.motionPermissionChanged.post(object: false)
-                    } else {
-                        // 권한 승인됨
-                        NotificationCenterManager.motionPermissionChanged.post(object: true)
-                    }
-                } else {
-                    // 권한 승인됨
-                    NotificationCenterManager.motionPermissionGranted.post()
-                }
-                motionManager.stopActivityUpdates()
-            }
-        } else {
-            // 기기에서 지원하지 않음
-            NotificationCenterManager.motionPermissionChanged.post(object: false)
-        }
-    }
+//    func requestMotionPermission() {
+//        if CMMotionActivityManager.isActivityAvailable() && CMPedometer.isStepCountingAvailable() {
+//            // 권한 요청을 위해 임시 데이터 요청
+//            let motionManager = CMMotionActivityManager()
+//            motionManager.queryActivityStarting(from: Date(), to: Date(), to: .main) { activities, error in
+//                if let error = error {
+//                    if (error as NSError).code == CMErrorMotionActivityNotAuthorized.rawValue {
+//                        // 권한 거부됨
+//                        NotificationCenterManager.motionPermissionChanged.post(object: false)
+//                    } else {
+//                        // 권한 승인됨
+//                        NotificationCenterManager.motionPermissionChanged.post(object: true)
+//                    }
+//                } else {
+//                    // 권한 승인됨
+//                    NotificationCenterManager.motionPermissionGranted.post()
+//                }
+//                motionManager.stopActivityUpdates()
+//            }
+//        } else {
+//            // 기기에서 지원하지 않음
+//            NotificationCenterManager.motionPermissionChanged.post(object: false)
+//        }
+//    }
     
     // 백그라운드 위치 업데이트 권한 요청
-    func requestBackgroundLocationPermission() {
-        if authorizationStatus == .authorizedWhenInUse {
-            locationManager.requestAlwaysAuthorization()
-        }
-    }
+//    func requestBackgroundLocationPermission() {
+//        if authorizationStatus == .authorizedWhenInUse {
+//            locationManager.requestAlwaysAuthorization()
+//        }
+//    }
     
     // 모션 권한 상태 확인
-    func checkMotionPermissionStatus() -> Bool {
-        return CMMotionActivityManager.isActivityAvailable() && CMPedometer.isStepCountingAvailable()
-    }
+//    func checkMotionPermissionStatus() -> Bool {
+//        return CMMotionActivityManager.isActivityAvailable() && CMPedometer.isStepCountingAvailable()
+//    }
 }
