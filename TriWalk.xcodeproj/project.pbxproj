@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AE45DC732DB797230009D341 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE45DC722DB797230009D341 /* WidgetKit.framework */; };
+		AE45DC752DB797230009D341 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE45DC742DB797230009D341 /* SwiftUI.framework */; };
+		AE45DC802DB797260009D341 /* TriWalkWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AE45DC702DB797230009D341 /* TriWalkWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AED799082D954C2A0013D16E /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = AED799072D954C2A0013D16E /* .gitignore */; };
 		AED799A82D95582E0013D16E /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = AED799A72D95582E0013D16E /* SnapKit */; };
 		AED799AB2D95587D0013D16E /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = AED799AA2D95587D0013D16E /* RealmSwift */; };
@@ -15,7 +18,28 @@
 		AED79B072D97E5280013D16E /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = AED799AA2D95587D0013D16E /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AE45DC7E2DB797260009D341 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AED798E72D954BF80013D16E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AE45DC6F2DB797230009D341;
+			remoteInfo = TriWalkWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
+		AE45DC812DB797260009D341 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AE45DC802DB797260009D341 /* TriWalkWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AED79B082D97E5280013D16E /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -30,11 +54,21 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AE45DC702DB797230009D341 /* TriWalkWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TriWalkWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE45DC722DB797230009D341 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		AE45DC742DB797230009D341 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		AED798EF2D954BF80013D16E /* TriWalk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TriWalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AED799072D954C2A0013D16E /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AE45DC852DB797260009D341 /* Exceptions for "TriWalkWidget" folder in "TriWalkWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AE45DC6F2DB797230009D341 /* TriWalkWidgetExtension */;
+		};
 		AED799012D954BFB0013D16E /* Exceptions for "TriWalk" folder in "TriWalk" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -45,6 +79,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		AE45DC762DB797230009D341 /* TriWalkWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AE45DC852DB797260009D341 /* Exceptions for "TriWalkWidget" folder in "TriWalkWidgetExtension" target */,
+			);
+			path = TriWalkWidget;
+			sourceTree = "<group>";
+		};
 		AED798F12D954BF80013D16E /* TriWalk */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -56,6 +98,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AE45DC6D2DB797230009D341 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE45DC752DB797230009D341 /* SwiftUI.framework in Frameworks */,
+				AE45DC732DB797230009D341 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AED798EC2D954BF80013D16E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -70,11 +121,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AE45DC712DB797230009D341 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AE45DC722DB797230009D341 /* WidgetKit.framework */,
+				AE45DC742DB797230009D341 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		AED798E62D954BF80013D16E = {
 			isa = PBXGroup;
 			children = (
 				AED799072D954C2A0013D16E /* .gitignore */,
 				AED798F12D954BF80013D16E /* TriWalk */,
+				AE45DC762DB797230009D341 /* TriWalkWidget */,
+				AE45DC712DB797230009D341 /* Frameworks */,
 				AED798F02D954BF80013D16E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -83,6 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				AED798EF2D954BF80013D16E /* TriWalk.app */,
+				AE45DC702DB797230009D341 /* TriWalkWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -90,6 +153,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		AE45DC6F2DB797230009D341 /* TriWalkWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE45DC842DB797260009D341 /* Build configuration list for PBXNativeTarget "TriWalkWidgetExtension" */;
+			buildPhases = (
+				AE45DC6C2DB797230009D341 /* Sources */,
+				AE45DC6D2DB797230009D341 /* Frameworks */,
+				AE45DC6E2DB797230009D341 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AE45DC762DB797230009D341 /* TriWalkWidget */,
+			);
+			name = TriWalkWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = TriWalkWidgetExtension;
+			productReference = AE45DC702DB797230009D341 /* TriWalkWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		AED798EE2D954BF80013D16E /* TriWalk */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AED799022D954BFB0013D16E /* Build configuration list for PBXNativeTarget "TriWalk" */;
@@ -98,10 +183,12 @@
 				AED798EC2D954BF80013D16E /* Frameworks */,
 				AED798ED2D954BF80013D16E /* Resources */,
 				AED79B082D97E5280013D16E /* Embed Frameworks */,
+				AE45DC812DB797260009D341 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AE45DC7F2DB797260009D341 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AED798F12D954BF80013D16E /* TriWalk */,
@@ -127,6 +214,9 @@
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
+					AE45DC6F2DB797230009D341 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 					AED798EE2D954BF80013D16E = {
 						CreatedOnToolsVersion = 16.2;
 					};
@@ -153,11 +243,19 @@
 			projectRoot = "";
 			targets = (
 				AED798EE2D954BF80013D16E /* TriWalk */,
+				AE45DC6F2DB797230009D341 /* TriWalkWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		AE45DC6E2DB797230009D341 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AED798ED2D954BF80013D16E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -169,6 +267,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		AE45DC6C2DB797230009D341 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AED798EB2D954BF80013D16E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -178,7 +283,69 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		AE45DC7F2DB797260009D341 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AE45DC6F2DB797230009D341 /* TriWalkWidgetExtension */;
+			targetProxy = AE45DC7E2DB797260009D341 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		AE45DC822DB797260009D341 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HFR7W36699;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TriWalkWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TriWalkWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sebin.identifier.TriWalk.TriWalkWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AE45DC832DB797260009D341 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HFR7W36699;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TriWalkWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TriWalkWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sebin.identifier.TriWalk.TriWalkWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		AED799032D954BFB0013D16E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -367,6 +534,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		AE45DC842DB797260009D341 /* Build configuration list for PBXNativeTarget "TriWalkWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE45DC822DB797260009D341 /* Debug */,
+				AE45DC832DB797260009D341 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AED798EA2D954BF80013D16E /* Build configuration list for PBXProject "TriWalk" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
