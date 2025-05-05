@@ -70,6 +70,13 @@
 			);
 			target = AE45DC6F2DB797230009D341 /* TriWalkWidgetExtension */;
 		};
+		AE51745D2DC908D000F28E25 /* Exceptions for "TriWalk" folder in "TriWalkWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/WidgetDataManager.swift,
+			);
+			target = AE45DC6F2DB797230009D341 /* TriWalkWidgetExtension */;
+		};
 		AED799012D954BFB0013D16E /* Exceptions for "TriWalk" folder in "TriWalk" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -92,6 +99,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				AED799012D954BFB0013D16E /* Exceptions for "TriWalk" folder in "TriWalk" target */,
+				AE51745D2DC908D000F28E25 /* Exceptions for "TriWalk" folder in "TriWalkWidgetExtension" target */,
 			);
 			path = TriWalk;
 			sourceTree = "<group>";

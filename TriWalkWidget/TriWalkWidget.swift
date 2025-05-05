@@ -54,13 +54,7 @@ struct Provider: TimelineProvider {
 //    }
 }
 
-struct WalkTodaySummary {
-    let date: Date
-    let distance: Double
-    let steps: Int
-    let duration: TimeInterval
-    let isWalkToday: Bool
-}
+
 
 struct WalkTodaySummaryEntry: TimelineEntry {
     let date: Date
