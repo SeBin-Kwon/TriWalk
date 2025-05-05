@@ -31,6 +31,7 @@ class MainContainerViewController: UIPageViewController {
         
         setupViewControllers()
         setupPageViewController()
+        view.backgroundColor = .background
     }
     
     private func setupViewControllers() {
