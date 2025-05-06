@@ -69,21 +69,6 @@ final class WalkCompletedViewModel: BaseViewModel, ViewModelType {
         }
     }
     
-    // 샘플 데이터 생성 (테스트용)
-//    private func createSampleData() -> WalkCompletedData {
-//        return WalkCompletedData(
-//            date: "2025.04.02",
-//            weekday: "WED",
-//            startLocation: "현재",
-//            startTime: "04:26 PM",
-//            endLocation: "어디든",
-//            endTime: "05:38 PM",
-//            steps: 426,
-//            distance: 1.3,
-//            calories: 122,
-//            duration: "01:12:48"
-//        )
-//    }
     
     // MARK: - Public Methods
     // 산책 기록 업데이트

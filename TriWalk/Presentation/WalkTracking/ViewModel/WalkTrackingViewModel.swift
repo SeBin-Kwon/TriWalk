@@ -9,6 +9,7 @@ import Foundation
 import CoreLocation
 import CoreMotion
 import Combine
+import WidgetKit
 
 enum PermissionStatus {
     case locationDenied
@@ -335,6 +336,22 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
             print("저장된 경로 좌표 수: \(savedRecord.loadCoordinates().count)")
         })
         .store(in: &cancellables)
+        
+        updateWidgetData(with: walkRecord)
+    }
+    
+    // 산책 완료 시 위젯 데이터 업데이트
+    private func updateWidgetData(with walkRecord: WalkRecord) {
+        let todaySummary = WalkTodaySummary(
+            date: Date(),
+            distance: walkRecord.distance,
+            steps: walkRecord.steps,
+            duration: walkRecord.duration,
+            isWalkToday: true
+        )
+        
+        WidgetDataManager.saveWalkSummary(todaySummary)
+        WidgetCenter.shared.reloadTimelines(ofKind: "TriWalkWidget")
     }
     
     private func startTimer() {
