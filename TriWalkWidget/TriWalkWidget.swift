@@ -19,10 +19,10 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WalkTodaySummaryEntry) -> ()) {
-        let entry = WalkTodaySummaryEntry(
-            date: Date(),
-            summary: WalkTodaySummary(date: Date(), distance: 2.5, steps: 3500, duration: 1800, isWalkToday: true)
-        )
+        let summary = WidgetDataManager.loadWalkSummary() ??
+        WalkTodaySummary(date: Date(), distance: 2.5, steps: 3500, duration: 1800, isWalkToday: true)
+        
+        let entry = WalkTodaySummaryEntry(date: Date(), summary: summary)
         completion(entry)
     }
 
@@ -31,21 +31,17 @@ struct Provider: TimelineProvider {
 
         // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            
-            // MARK: 데이터 가져오기
-            
-            let entry = WalkTodaySummaryEntry(
-                date: Date(),
-                summary: WalkTodaySummary(date: Date(), distance: 2.5, steps: 3500, duration: 1800, isWalkToday: true)
-            )
-            
-            
-            entries.append(entry)
-        }
+        
+        let summary = WidgetDataManager.loadWalkSummary() ??
+        WalkTodaySummary(date: currentDate, distance: 0, steps: 0,
+                         duration: 0, isWalkToday: false)
+        
+        let entry = WalkTodaySummaryEntry(date: currentDate, summary: summary)
+        entries.append(entry)
 
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+        let nextUpdateDate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate)!
+        
+        let timeline = Timeline(entries: entries, policy: .after(nextUpdateDate))
         completion(timeline)
     }
 
