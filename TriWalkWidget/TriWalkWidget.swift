@@ -36,7 +36,9 @@ struct Provider: TimelineProvider {
         entries.append(entry)
         
         let tomorrow = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: .day, value: 1, to: currentDate)!)
-        let nextUpdateDate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate) ?? tomorrow
+        let thirtyMinutesLater = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate) ?? tomorrow
+        
+        let nextUpdateDate = min(tomorrow, thirtyMinutesLater)
         
         let timeline = Timeline(entries: entries, policy: .after(nextUpdateDate))
         completion(timeline)
