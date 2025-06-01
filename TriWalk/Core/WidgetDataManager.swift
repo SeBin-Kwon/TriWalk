@@ -10,7 +10,7 @@ import Foundation
 enum WidgetDataManager {
     static let appGroupIdentifier = "group.sebin.triwalk"
     
-    static func updateTodayWalkSummary(with newWalkRecord: WalkRecord) {
+    static func updateTodayWalkSummary(with newWalkRecord: WalkTodaySummary) {
         let userDefaults = UserDefaults(suiteName: appGroupIdentifier)
         
         // 기존 데이터 로드
