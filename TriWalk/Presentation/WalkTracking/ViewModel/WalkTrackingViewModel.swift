@@ -337,22 +337,24 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         })
         .store(in: &cancellables)
         
-        updateWidgetData(with: walkRecord)
+//        updateWidgetData(with: walkRecord)
+        WidgetDataManager.updateTodayWalkSummary(with: walkRecord)
+        WidgetCenter.shared.reloadTimelines(ofKind: "TriWalkWidget")
     }
     
     // 산책 완료 시 위젯 데이터 업데이트
-    private func updateWidgetData(with walkRecord: WalkRecord) {
-        let todaySummary = WalkTodaySummary(
-            date: Date(),
-            distance: walkRecord.distance,
-            steps: walkRecord.steps,
-            duration: walkRecord.duration,
-            isWalkToday: true
-        )
-        
-        WidgetDataManager.saveWalkSummary(todaySummary)
-        WidgetCenter.shared.reloadTimelines(ofKind: "TriWalkWidget")
-    }
+//    private func updateWidgetData(with walkRecord: WalkRecord) {
+//        let todaySummary = WalkTodaySummary(
+//            date: Date(),
+//            distance: walkRecord.distance,
+//            steps: walkRecord.steps,
+//            duration: walkRecord.duration,
+//            isWalkToday: true
+//        )
+//        print("위젯 데이터 업데이트: \(todaySummary)")
+//        WidgetDataManager.updateTodayWalkSummary(with: todaySummary)
+//        WidgetCenter.shared.reloadTimelines(ofKind: "TriWalkWidget")
+//    }
     
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in

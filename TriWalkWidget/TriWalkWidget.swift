@@ -18,7 +18,7 @@ struct Provider: TimelineProvider {
     
     func getSnapshot(in context: Context, completion: @escaping (WalkTodaySummaryEntry) -> ()) {
         let summary = WidgetDataManager.loadWalkSummary() ??
-        WalkTodaySummary(date: Date(), distance: 2.5, steps: 3500, duration: 1800, isWalkToday: true)
+        WalkTodaySummary(date: Date(), distance: 0.0, steps: 0, duration: 0, isWalkToday: false)
         
         let entry = WalkTodaySummaryEntry(date: Date(), summary: summary)
         completion(entry)
@@ -26,8 +26,6 @@ struct Provider: TimelineProvider {
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [WalkTodaySummaryEntry] = []
-        
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
         
         let summary = WidgetDataManager.loadWalkSummary() ??
@@ -37,7 +35,8 @@ struct Provider: TimelineProvider {
         let entry = WalkTodaySummaryEntry(date: currentDate, summary: summary)
         entries.append(entry)
         
-        let nextUpdateDate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate)!
+        let tomorrow = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: .day, value: 1, to: currentDate)!)
+        let nextUpdateDate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate) ?? tomorrow
         
         let timeline = Timeline(entries: entries, policy: .after(nextUpdateDate))
         completion(timeline)
@@ -82,7 +81,7 @@ struct TriWalkWidgetEntryView : View {
                 }
                 .padding(.bottom, 4)
                 
-                if entry.summary.isWalkToday {
+            if entry.summary.isWalkToday && (entry.summary.distance > 0 || entry.summary.steps > 0 || entry.summary.duration > 0) {
                     HStack {
                         Image(systemName: "ruler")
                             .frame(width: 20)
