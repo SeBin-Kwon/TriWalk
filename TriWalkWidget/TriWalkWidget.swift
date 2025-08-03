@@ -75,10 +75,13 @@ struct TriWalkWidgetEntryView : View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Image(systemName: "figure.walk")
-                        .font(.title2)
+                    Image("logo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 25)
                     Text("오늘의 산책")
-                        .font(.headline)
+                        .font(.subheadline)
+                        .bold()
                     Spacer()
                 }
                 .padding(.bottom, 4)
@@ -88,26 +91,31 @@ struct TriWalkWidgetEntryView : View {
                         Image(systemName: "ruler")
                             .frame(width: 20)
                         Text(String(format: "%.1f km", entry.summary.distance))
+                            .font(.body)
                     }
                     
                     HStack {
                         Image(systemName: "shoe")
                             .frame(width: 20)
                         Text("\(entry.summary.steps) 걸음")
+                            .font(.body)
                     }
                     
                     HStack {
                         Image(systemName: "clock")
                             .frame(width: 20)
                         Text(formattedDuration)
+                            .font(.body)
                     }
                     Spacer()
                 } else {
                     Text("아직 산책을\n하지 않았어요!")
-                        .font(.title3)
+                        .font(.body)
                     Spacer()
                 }
             }
+        .padding(.top, 15)
+        .padding(.leading, 5)
     }
 }
 
@@ -118,16 +126,16 @@ struct TriWalkWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 TriWalkWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
+                    .containerBackground(Color.white, for: .widget)
             } else {
                 TriWalkWidgetEntryView(entry: entry)
                     .padding()
-                    .background()
+                    .background(Color.white)
             }
         }
         .configurationDisplayName("오늘의 산책 여행")
         .description("오늘의 산책 여행 기록을 확인해 보세요.")
-        .supportedFamilies([.systemSmall])
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
