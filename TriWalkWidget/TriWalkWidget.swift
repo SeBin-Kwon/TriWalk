@@ -43,10 +43,6 @@ struct Provider: TimelineProvider {
         let timeline = Timeline(entries: entries, policy: .after(nextUpdateDate))
         completion(timeline)
     }
-    
-    //    func relevances() async -> WidgetRelevances<Void> {
-    //        // Generate a list containing the contexts this widget is relevant in.
-    //    }
 }
 
 
@@ -126,7 +122,7 @@ struct TriWalkWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 TriWalkWidgetEntryView(entry: entry)
-                    .containerBackground(Color.white, for: .widget)
+                    .containerBackground(Color.background, for: .widget)
             } else {
                 TriWalkWidgetEntryView(entry: entry)
                     .padding()
