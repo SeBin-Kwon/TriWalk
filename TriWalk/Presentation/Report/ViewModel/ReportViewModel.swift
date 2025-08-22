@@ -34,8 +34,9 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
         let routeItems: AnyPublisher<[RouteVisualizationManager.RouteItem], Never>
         let isLoading: AnyPublisher<Bool, Never>
         let walkCount: AnyPublisher<Int, Never>
-        let walkStats: AnyPublisher<WalkStats, Never> // 통계 데이터 추가
+        let walkStats: AnyPublisher<WalkStats, Never>
         let hasData: AnyPublisher<Bool, Never>
+        let displayText: AnyPublisher<String, Never> // 표시 텍스트
     }
     
     // MARK: - Private Properties
@@ -43,8 +44,13 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
     private let routeItemsSubject = CurrentValueSubject<[RouteVisualizationManager.RouteItem], Never>([])
     private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     private let walkCountSubject = CurrentValueSubject<Int, Never>(0)
-    private let walkStatsSubject = PassthroughSubject<WalkStats, Never>() // 통계 데이터 Subject
+    private let walkStatsSubject = PassthroughSubject<WalkStats, Never>()
     private let hasDataSubject = CurrentValueSubject<Bool, Never>(true)
+    private let displayTextSubject = CurrentValueSubject<String, Never>("전체")
+    
+    // 스마트 필터링을 위한 속성들
+    private var displayedPeriodText: String = "전체"
+    private let maxDisplayCount: Int = 30
     
     // MARK: - Initialization
     init(walkRepository: WalkRepositoryProtocol = WalkRepository()) {
@@ -67,42 +73,107 @@ final class ReportViewModel: BaseViewModel, ViewModelType {
             isLoading: isLoadingSubject.eraseToAnyPublisher(),
             walkCount: walkCountSubject.eraseToAnyPublisher(),
             walkStats: walkStatsSubject.eraseToAnyPublisher(),
-            hasData: hasDataSubject.eraseToAnyPublisher()
+            hasData: hasDataSubject.eraseToAnyPublisher(),
+            displayText: displayTextSubject.eraseToAnyPublisher()
         )
     }
     
     // MARK: - Private Methods
     
-    /// 산책 기록 로드
+    /// 산책 기록 로드 (전체 데이터 조회 후 스마트 필터링)
     private func loadWalkRecords() {
         isLoadingSubject.send(true)
-//        hasDataSubject.send(true)
         
-        // 최근 1주 이내의 산책 기록만 가져오기
-        let today = Date()
-        let oneWeeksAgo = Calendar.current.date(byAdding: .day, value: -7, to: today) ?? today
-        
-        guard let walkRecords = walkRepository.getWalks(fromDate: oneWeeksAgo, toDate: today) else {
-            isLoadingSubject.send(false)
-            routeItemsSubject.send([])
-            walkCountSubject.send(0)
-            hasDataSubject.send(false)
+        // 전체 데이터 조회
+        guard let allWalkRecords = walkRepository.getAllWalks() else {
+            finishLoadingWithNoData()
             return
         }
         
-        let hasData = !walkRecords.isEmpty
-        hasDataSubject.send(hasData)
+        let allRecords = Array(allWalkRecords).sorted { $0.date > $1.date } // 최신순 정렬
+        
+        if allRecords.isEmpty {
+            finishLoadingWithNoData()
+            return
+        }
+        
+        // 스마트 필터링 적용
+        let filteredResult = applySmartFiltering(to: allRecords)
+        
+        finishLoadingWithData(filteredResult.records, displayText: filteredResult.displayText)
+    }
+    
+    /// 스마트 필터링 로직
+    private func applySmartFiltering(to records: [WalkRecord]) -> (records: [WalkRecord], displayText: String) {
+        let totalCount = records.count
+        
+        if totalCount < maxDisplayCount {
+            // 30개 미만: 전체 표시
+            return (records, "전체 \(totalCount)번 산책")
+        } else {
+            // 30개 이상: 최근 30개만 표시
+            let recentRecords = Array(records.prefix(maxDisplayCount))
+            let oldestRecord = recentRecords.last!
+            let daysDifference = Calendar.current.dateComponents([.day], from: oldestRecord.date, to: Date()).day ?? 0
+            
+            let displayText: String
+            if daysDifference <= 30 {
+                displayText = "최근 1개월간 총 30번 산책"
+            } else if daysDifference <= 180 {
+                displayText = "최근 6개월간 총 30번 산책"
+            } else {
+                displayText = "최근 데이터 중 30번 산책"
+            }
+            
+            return (recentRecords, displayText)
+        }
+    }
+    
+    /// 데이터 로드 완료 (데이터 있음)
+    private func finishLoadingWithData(_ records: [WalkRecord], displayText: String) {
+        hasDataSubject.send(true)
         
         // 산책 횟수 업데이트
-        walkCountSubject.send(walkRecords.count)
+        walkCountSubject.send(records.count)
+        
+        // 표시 텍스트 저장 및 전송
+        displayedPeriodText = displayText
+        displayTextSubject.send(displayText)
         
         // 지도에 표시할 경로 아이템 생성
-        processWalkRecords(Array(walkRecords))
+        processWalkRecords(records)
         
         // 통계 데이터 계산 및 업데이트
-        calculateStats(from: Array(walkRecords))
+        calculateStats(from: records)
         
         isLoadingSubject.send(false)
+        print("최종 로드 완료: \(records.count)개 기록, \(displayText)")
+    }
+    
+    /// 데이터 로드 완료 (데이터 없음)
+    private func finishLoadingWithNoData() {
+        hasDataSubject.send(false)
+        routeItemsSubject.send([])
+        walkCountSubject.send(0)
+        
+        // 기본 통계 데이터 전송
+        let defaultStats = WalkStats(
+            maxSteps: 0,
+            maxStepsDate: "--",
+            maxDistance: 0.0,
+            maxDistanceDate: "--",
+            maxCalories: 0,
+            maxCaloriesDate: "--",
+            maxDuration: "00:00:00",
+            maxDurationDate: "--"
+        )
+        walkStatsSubject.send(defaultStats)
+        
+        displayedPeriodText = "전체"
+        displayTextSubject.send("전체")
+        
+        isLoadingSubject.send(false)
+        print("데이터 없음으로 로드 완료")
     }
     
     /// 기록 가공 (색상 및 투명도 계산)

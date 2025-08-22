@@ -120,16 +120,32 @@ final class ReportView: BaseView {
     }
     
     // MARK: - Public Methods
-    func updateSubtitle(walkCount: Int) {
-        subtitleLabel.text = "최근 1주일간 총 \(walkCount)번 산책"
+    func updateSubtitle(with displayText: String) {
+        subtitleLabel.text = displayText
         
-        // 강조 색상 적용
-//        let attributedText = NSMutableAttributedString(string: subtitleLabel.text ?? "")
-//        let range = (subtitleLabel.text! as NSString).range(of: "\(walkCount)")
-//        attributedText.addAttribute(.foregroundColor, value: UIColor.textRed, range: range)
-//        
-//        subtitleLabel.attributedText = attributedText
-//        showEmptyStateIfNeeded(walkCount: walkCount)
+        // EmptyState 메시지도 텍스트에 맞게 업데이트
+        updateEmptyStateMessage(for: displayText)
+    }
+    
+    private func updateEmptyStateMessage(for displayText: String) {
+        let title: String
+        let message: String
+        
+        if displayText.contains("1개월") {
+            title = "최근 1개월간 산책 기록이 없어요"
+            message = "오늘부터 산책 습관을 시작해보는 건 어떨까요?"
+        } else if displayText.contains("6개월") {
+            title = "최근 6개월간 산책 기록이 없어요"
+            message = "건강한 산책으로 새로운 시작을 해보세요!"
+        } else if displayText.contains("전체") {
+            title = "아직 산책 기록이 없어요"
+            message = "첫 번째 산책 여행을 떠나보세요!"
+        } else {
+            title = "산책 기록이 없어요"
+            message = "새로운 산책을 시작해보세요!"
+        }
+        
+        emptyStateView.update(icon: .location, title: title, message: message)
     }
     
     func updateStats(steps: Int, distance: Double, calories: Int, time: String,
@@ -150,10 +166,13 @@ final class ReportView: BaseView {
     func showLoading(_ show: Bool) {
         if show {
             loadingIndicator.startAnimating()
+            // 로딩 중에는 EmptyState와 다른 콘텐츠들을 숨김
             emptyStateView.isHidden = true
-            
+            statsCardView.isHidden = true
+            subtitleLabel.isHidden = true
         } else {
             loadingIndicator.stopAnimating()
+            // 로딩 완료 후에는 데이터 유무에 따라 표시할 것들이 결정됨
         }
     }
     

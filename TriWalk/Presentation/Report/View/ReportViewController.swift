@@ -75,12 +75,12 @@ final class ReportViewController: BaseViewController {
             }
             .store(in: &cancellables)
         
-        // 산책 횟수 업데이트
-        output.walkCount
+        // 표시 텍스트 업데이트
+        output.displayText
             .receive(on: RunLoop.main)
             .withUnretained(self)
-            .sink { owner, count in
-                owner.reportView.updateSubtitle(walkCount: count)
+            .sink { owner, displayText in
+                owner.reportView.updateSubtitle(with: displayText)
             }
             .store(in: &cancellables)
         
@@ -102,16 +102,24 @@ final class ReportViewController: BaseViewController {
             }
             .store(in: &cancellables)
         
+        // 로딩과 데이터 상태에 따른 즉시 분기 처리
         Publishers.CombineLatest(output.isLoading, output.hasData)
             .receive(on: RunLoop.main)
             .withUnretained(self)
             .sink { owner, combined in
                 let (isLoading, hasData) = combined
-                print("isLoading: \(isLoading), hasData: \(hasData)")
-                // 로딩이 끝난 후에만 EmptyView 표시 여부 결정
-                if !isLoading {
-                    print("Setting empty state visibility: \(!hasData)")
+                print("로딩 상태: \(isLoading), 데이터 존재: \(hasData)")
+                
+                if isLoading {
+                    // 로딩 중: 로딩만 표시, 나머지는 숨김
+                    owner.reportView.emptyStateView.isHidden = true
+                    owner.reportView.statsCardView.isHidden = true
+                    owner.reportView.subtitleLabel.isHidden = true
+                } else {
+                    // 로딩 완료: 데이터 유무에 따라 즉시 분기
                     owner.reportView.emptyStateView.isHidden = hasData
+                    owner.reportView.statsCardView.isHidden = !hasData
+                    owner.reportView.subtitleLabel.isHidden = !hasData
                 }
             }
             .store(in: &cancellables)
