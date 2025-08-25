@@ -52,7 +52,6 @@ enum WidgetDataManager {
            return createEmptyTodaySummary()
        }
        
-       
        if Calendar.current.isDateInToday(summary.date) && summary.isWalkToday {
            print("오늘 산책 기록 발견: \(summary)")
            return summary

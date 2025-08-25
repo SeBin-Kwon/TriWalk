@@ -25,6 +25,11 @@ protocol AlertServiceProtocol {
                              title: String,
                              message: String,
                              confirmAction: @escaping () -> Void)
+    
+    func showDeleteAlert(on viewController: UIViewController,
+                        title: String,
+                        message: String,
+                        confirmAction: @escaping () -> Void)
 }
 
 final class AlertService: AlertServiceProtocol {
