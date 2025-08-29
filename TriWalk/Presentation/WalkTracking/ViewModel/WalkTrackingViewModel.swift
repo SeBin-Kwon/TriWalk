@@ -67,12 +67,18 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     private var lastStartLocationLookup: Bool = false
     private let permissionsSubject = PassthroughSubject<PermissionStatus, Never>()
     private let showFinishAlertSubject = PassthroughSubject<Void, Never>()
+    // 모션 활동 관련 속성
+    private var currentActivity: CMMotionActivity?
+    private var isAutomaticallyPaused: Bool = false
+    private var autoPauseTimer: Timer?
+    private let stationaryThreshold: TimeInterval = 300 // 5분
     
     // MARK: - Initialization
     init(walkRepository: WalkRepositoryProtocol = WalkRepository()) {
         self.walkRepository = walkRepository
         super.init()
         setupLocationTracking()
+        setupMotionActivityTracking()
         setupBackgroundNotifications()
     }
     
@@ -193,6 +199,62 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
                     .store(in: &cancellables)
     }
     
+    private func setupMotionActivityTracking() {
+        // 모션 활동 상태 구독
+        locationManager.motionActivityPublisher
+            .sink { [weak self] activity in
+                guard let self = self, let activity = activity else { return }
+                
+                self.currentActivity = activity
+                self.handleActivityChange(activity)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func handleActivityChange(_ activity: CMMotionActivity) {
+        // 신뢰도가 낮으면 무시
+        guard activity.confidence == .high || activity.confidence == .medium else {
+            return
+        }
+        
+        if activity.automotive && startDate != nil && !isPausedSubject.value {
+            // 차량 탑승 감지 시 자동 일시정지 제안
+            print("차량 이동 감지 - 산책 자동 일시정지 제안")
+            showFinishAlertSubject.send()
+        } else if activity.stationary && startDate != nil && !isPausedSubject.value {
+            // 정적 상태 감지 - 자동 일시정지 타이머 시작
+            startAutoPauseTimer()
+        } else if (activity.walking || activity.running) && isAutomaticallyPaused {
+            // 다시 걷기 시작하면 자동 재개
+            resumeFromAutoPause()
+        }
+    }
+    
+    private func startAutoPauseTimer() {
+        autoPauseTimer?.invalidate()
+        autoPauseTimer = Timer.scheduledTimer(withTimeInterval: stationaryThreshold, repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+            
+            if let activity = self.currentActivity, activity.stationary && !self.isPausedSubject.value {
+                print("장시간 정적 상태로 산책 자동 일시정지")
+                self.isAutomaticallyPaused = true
+                self.togglePause()
+            }
+        }
+    }
+    
+    private func resumeFromAutoPause() {
+        guard isAutomaticallyPaused else { return }
+        
+        print("활동 감지로 산책 자동 재개")
+        isAutomaticallyPaused = false
+        autoPauseTimer?.invalidate()
+        
+        if isPausedSubject.value {
+            togglePause()
+        }
+    }
+    
     // 출발 위치 주소 조회 (최초 1회만 실행)
         private func lookupStartAddress(at coordinate: CLLocationCoordinate2D) {
             locationManager.lookupAddress(for: coordinate) { [weak self] address in
@@ -231,6 +293,9 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         startDate = Date()
         isPausedSubject.send(false)
         
+        // Motion Activity 추적 시작
+        locationManager.startMotionActivityTracking()
+        
         // 타이머 시작
         startTimer()
         
@@ -247,6 +312,13 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         
         pedometer.stopUpdates()
         locationManager.stopUpdatingLocation()
+        
+        // Motion Activity 추적 중지
+        locationManager.stopMotionActivityTracking()
+        
+        // 자동 일시정지 타이머도 정리
+        autoPauseTimer?.invalidate()
+        autoPauseTimer = nil
     }
     
     private func togglePause() {
@@ -390,6 +462,12 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
                 
                 // 정상 데이터 처리
                 if let data = data {
+                    // 활동 상태 필터링 적용
+                    if self.shouldFilterPedometerData() {
+                        print("비보행 활동 중으로 걸음 수 데이터 필터링")
+                        return
+                    }
+                    
                     // 이전 단계에서 축적된 걸음 수 + 현재 걸음 수
                     let totalSteps = self.previousSteps + (data.numberOfSteps.intValue)
                     self.stepsCountSubject.send(totalSteps)
@@ -410,14 +488,47 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         }
     }
     
+    private func shouldFilterPedometerData() -> Bool {
+        guard let activity = currentActivity else {
+            return false
+        }
+        
+        // 신뢰도가 높은 경우에만 필터링 적용
+        guard activity.confidence == .high else {
+            return false
+        }
+        
+        // 차량, 자전거 등 비보행 활동 시 걸음 수 데이터 필터링
+        return activity.automotive || activity.cycling
+    }
+    
     private func updateDistance(with location: CLLocation) {
+        // 활동 상태 기반 위치 데이터 필터링
+        if shouldFilterLocationData() {
+            print("비보행 활동 중으로 위치 기반 거리 계산 제외")
+            return
+        }
+        
         // 위치 데이터로 거리 계산하는 로직
         // (CMPedometer에서 이미 거리를 계산해주므로, 여기서는 필요한 경우만 보정)
     }
     
+    private func shouldFilterLocationData() -> Bool {
+        guard let activity = currentActivity else {
+            return false
+        }
+        
+        // 신뢰도가 높고 차량 이동 중일 때 위치 데이터 필터링
+        return activity.confidence == .high && activity.automotive
+    }
+    
     private func calculateCalories() {
-        let distanceCalories = distanceSubject.value * 60.0
-        let stepsCalories = Double(stepsCountSubject.value) * 0.05
+        // 활동 강도에 따른 METs 값 적용
+        let mets = getActivityMETs()
+        
+        // 기존 계산 방식 유지하되 활동 강도 반영
+        let distanceCalories = distanceSubject.value * 60.0 * (mets / 3.5)
+        let stepsCalories = Double(stepsCountSubject.value) * 0.05 * (mets / 3.5)
         let caloriesBurned = max(distanceCalories, stepsCalories)
 
         if caloriesBurned < 1.0 && (distanceSubject.value < 0.01 || stepsCountSubject.value < 10) {
@@ -425,6 +536,20 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
         } else {
             caloriesSubject.send(caloriesBurned)
         }
-        print("칼로리 계산: \(caloriesBurned)")
+        print("칼로리 계산 (METs: \(mets)): \(caloriesBurned)")
+    }
+    
+    private func getActivityMETs() -> Double {
+        guard let activity = currentActivity, activity.confidence == .high else {
+            return 3.5 // 기본 걷기 값
+        }
+        
+        if activity.running {
+            return 8.0 // 달리기
+        } else if activity.walking {
+            return 3.5 // 걷기
+        } else {
+            return 3.5 // 기본값
+        }
     }
 }

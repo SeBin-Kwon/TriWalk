@@ -28,11 +28,14 @@ final class LocationManager: NSObject {
     private var lastLocationUpdate: Date = Date(timeIntervalSince1970: 0)
     private let walkingUpdateInterval: TimeInterval = 1.0
     private let pedometer = CMPedometer()
+    private let motionActivityManager = CMMotionActivityManager()
+    private var currentActivity: CMMotionActivity?
     // Publishers
     private let locationSubject = PassthroughSubject<CLLocation, Error>()
     private let startAddressSubject = PassthroughSubject<String, Error>()
     private let destinationAddressSubject = PassthroughSubject<String, Error>()
     private let authorizationSubject = CurrentValueSubject<CLAuthorizationStatus, Never>(.notDetermined)
+    private let motionActivitySubject = CurrentValueSubject<CMMotionActivity?, Never>(nil)
     
     // MARK: - Public properties
     var locationPublisher: AnyPublisher<CLLocation, Error> {
@@ -51,6 +54,10 @@ final class LocationManager: NSObject {
         return authorizationSubject.eraseToAnyPublisher()
     }
     
+    var motionActivityPublisher: AnyPublisher<CMMotionActivity?, Never> {
+        return motionActivitySubject.eraseToAnyPublisher()
+    }
+    
     var currentLocation: CLLocation? {
         return locationManager.location
     }
@@ -61,6 +68,25 @@ final class LocationManager: NSObject {
     
     var hasBackgroundPermission: Bool {
         return authorizationStatus == .authorizedAlways
+    }
+    
+    var hasMotionPermission: Bool {
+        return CMMotionActivityManager.isActivityAvailable()
+    }
+    
+    var isWalking: Bool {
+        guard let activity = currentActivity else { return false }
+        return activity.walking || activity.running
+    }
+    
+    var isStationary: Bool {
+        guard let activity = currentActivity else { return false }
+        return activity.stationary
+    }
+    
+    var isInVehicle: Bool {
+        guard let activity = currentActivity else { return false }
+        return activity.automotive
     }
     
     private var isRequestingLocation = false
@@ -78,9 +104,59 @@ final class LocationManager: NSObject {
         locationManager.distanceFilter = 5.0
         authorizationSubject.send(locationManager.authorizationStatus)
         
+        // Motion Activity는 산책 시작 시에만 활성화하도록 변경
+        // setupMotionActivityManager() 제거
+        
         if locationManager.authorizationStatus == .authorizedWhenInUse ||
             locationManager.authorizationStatus == .authorizedAlways {
             self.startUpdatingLocation()
+        }
+    }
+    
+    private func setupMotionActivityManager() {
+        guard CMMotionActivityManager.isActivityAvailable() else {
+            print("Motion Activity가 지원되지 않는 기기입니다.")
+            return
+        }
+        
+        motionActivityManager.startActivityUpdates(to: .main) { [weak self] activity in
+            guard let self = self, let activity = activity else { return }
+            
+            self.currentActivity = activity
+            self.motionActivitySubject.send(activity)
+            self.optimizeLocationSettings(for: activity)
+            
+            print("Motion Activity: walking=\(activity.walking), running=\(activity.running), stationary=\(activity.stationary), automotive=\(activity.automotive), confidence=\(activity.confidence.rawValue)")
+        }
+    }
+    
+    private func optimizeLocationSettings(for activity: CMMotionActivity) {
+        // 신뢰도 기준을 완화하고 낮은 신뢰도도 허용
+        guard activity.confidence != .low else {
+            print("활동 감지: 신뢰도 낮음 - 설정 변경 없음")
+            return
+        }
+        
+        if activity.walking || activity.running {
+            // 보행/달리기: 고정밀도 GPS, 짧은 업데이트 간격
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager.distanceFilter = 3.0
+            print("활동 감지: 보행/달리기 - 고정밀도 모드 (신뢰도: \(activity.confidence.rawValue))")
+        } else if activity.stationary {
+            // 정지: 매우 낮은 정밀도, 매우 긴 업데이트 간격으로 불필요한 업데이트 방지
+            locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+            locationManager.distanceFilter = 100.0
+            print("활동 감지: 정지 - 절전 모드 (신뢰도: \(activity.confidence.rawValue))")
+        } else if activity.automotive {
+            // 차량: 중간 정밀도, 중간 업데이트 간격
+            locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+            locationManager.distanceFilter = 20.0
+            print("활동 감지: 차량 이동 - 중간 정밀도 모드 (신뢰도: \(activity.confidence.rawValue))")
+        } else {
+            // 알 수 없는 상태: 기본 걷기 모드로 설정
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager.distanceFilter = 5.0
+            print("활동 감지: 알 수 없음 - 기본 모드 (신뢰도: \(activity.confidence.rawValue))")
         }
     }
     
@@ -105,22 +181,46 @@ final class LocationManager: NSObject {
         }
     }
     
-//    func checkMotionPermission(completion: @escaping (Bool) -> Void) {
-//        if CMPedometer.isStepCountingAvailable() {
-//            // 현재 날짜로 임시 쿼리 생성
-//            let now = Date()
-//            pedometer.queryPedometerData(from: now.addingTimeInterval(-60), to: now) { _, error in
-//                // 에러가 nil이면 권한이 있다고 가정
-//                let hasPermission = error == nil
-//                if hasPermission {
-//                    NotificationCenterManager.motionPermissionGranted.post()
-//                }
-//                completion(hasPermission)
-//            }
-//        } else {
-//            completion(false)
-//        }
-//    }
+    func checkMotionPermission(completion: @escaping (Bool) -> Void) {
+        guard CMMotionActivityManager.isActivityAvailable() && CMPedometer.isStepCountingAvailable() else {
+            completion(false)
+            return
+        }
+        
+        let now = Date()
+        pedometer.queryPedometerData(from: now.addingTimeInterval(-60), to: now) { _, error in
+            let hasPermission = error == nil
+            if hasPermission {
+                NotificationCenterManager.motionPermissionGranted.post()
+            }
+            completion(hasPermission)
+        }
+    }
+    
+    func requestMotionPermission() {
+        guard CMMotionActivityManager.isActivityAvailable() else {
+            print("Motion Activity가 지원되지 않는 기기입니다.")
+            return
+        }
+        
+        motionActivityManager.queryActivityStarting(from: Date(), to: Date(), to: .main) { [weak self] activities, error in
+            guard let self = self else { return }
+            
+            if let error = error {
+                let nsError = error as NSError
+                if nsError.code == CMErrorMotionActivityNotAuthorized.rawValue {
+                    print("모션 권한이 거부되었습니다.")
+                    NotificationCenterManager.motionPermissionChanged.post(object: false)
+                } else {
+                    print("모션 권한 확인 중 오류: \(error.localizedDescription)")
+                }
+            } else {
+                print("모션 권한이 승인되었습니다.")
+                NotificationCenterManager.motionPermissionGranted.post()
+                NotificationCenterManager.motionPermissionChanged.post(object: true)
+            }
+        }
+    }
     
 //    func checkBackgroundPermission() -> Bool {
 //        return authorizationStatus == .authorizedAlways
@@ -166,6 +266,20 @@ final class LocationManager: NSObject {
             let error = NSError(domain: "com.app.location", code: 1, userInfo: [NSLocalizedDescriptionKey: "위치 권한이 없습니다."])
             locationSubject.send(completion: .failure(error))
         }
+    }
+    
+    /// Motion Activity 수동 시작
+    func startMotionActivityTracking() {
+        setupMotionActivityManager()
+        print("Motion Activity 추적 시작")
+    }
+    
+    /// Motion Activity 수동 중지
+    func stopMotionActivityTracking() {
+        motionActivityManager.stopActivityUpdates()
+        currentActivity = nil
+        motionActivitySubject.send(nil)
+        print("Motion Activity 추적 중지")
     }
     
     /// 위치 업데이트 중지
