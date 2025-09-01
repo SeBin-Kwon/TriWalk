@@ -439,8 +439,8 @@ final class WalkTrackingViewModel: BaseViewModel, ViewModelType {
     }
     
     func startPedometer() {
-        // 현재 날짜 기준 또는 마지막으로 일시정지한 시점부터
-        let fromDate = isPausedSubject.value ? Date() : (startDate ?? Date())
+        // 항상 현재 시점부터 측정 시작 (중복 카운팅 방지)
+        let fromDate = Date()
         
         if CMPedometer.isStepCountingAvailable() {
             pedometer.startUpdates(from: fromDate) { [weak self] data, error in
